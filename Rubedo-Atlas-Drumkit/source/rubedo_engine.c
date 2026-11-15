@@ -76,9 +76,9 @@ void rubedo_unload_bank(void){if(!rubedo_users)return;if(--rubedo_users)return;
 }
 void rubedo_init_engine(RubedoEngine *e){
  rb_zero(e,sizeof(*e));e->sample_rate=48000.;e->gain=0.7;e->kit=0;
- for(int i=0;i<24;++i)e->mappings[i]=(int16_t)(36+i);
+ for(int i=0;i<24;++i)atomic_init(&e->mappings[i],36+i);
  for(int i=0;i<34;i++)e->params[i]=0.5;
- e->bpm=126.;atomic_init(&e->midi_learn_target,-1);atomic_init(&e->ui_note_seq,0);atomic_init(&e->ui_last_pad,-1);atomic_init(&e->ui_pending_mask,0);atomic_init(&e->audition_head,0);atomic_init(&e->audition_tail,0);atomic_init(&e->ui_learn_seq,0);atomic_init(&e->ui_learn_note,-1);e->chance=1.0f;e->swing=.14f;e->scatter=.18f;for(int z=0;z<24;z++){e->pitch[z]=.5f;e->decay_shape[z]=.5f;e->fm_depth[z]=.5f;e->pad_gain[z]=.5f;e->pad_attack[z]=0.f;e->pad_release[z]=.5f;}e->steps[0]=0x1111;e->steps[2]=0x1010;e->steps[4]=0x5555;e->steps[5]=0xaaaa;
+ e->bpm=126.;atomic_init(&e->midi_learn_target,-1);atomic_init(&e->ui_note_seq,0);atomic_init(&e->ui_last_pad,-1);atomic_init(&e->ui_pending_mask,0);atomic_init(&e->audition_head,0);atomic_init(&e->audition_tail,0);atomic_init(&e->ui_learn_seq,0);atomic_init(&e->ui_learn_note,-1);atomic_init(&e->host_mapping_dirty,0);atomic_init(&e->ui_unmapped_note,-1);atomic_init(&e->ui_unmapped_seq,0);e->chance=1.0f;e->swing=.14f;e->scatter=.18f;for(int z=0;z<24;z++){e->pitch[z]=.5f;e->decay_shape[z]=.5f;e->fm_depth[z]=.5f;e->pad_gain[z]=.5f;e->pad_attack[z]=0.f;e->pad_release[z]=.5f;}e->steps[0]=0x1111;e->steps[2]=0x1010;e->steps[4]=0x5555;e->steps[5]=0xaaaa;
  for(int v=0;v<4;v++)for(int pad=0;pad<RUBEDO_PADS;pad++){
   uint16_t s=e->steps[pad];unsigned rotation=(unsigned)(4*v);e->patterns[v][pad]=(uint16_t)((s<<rotation)|(s>>(16-rotation)));
  }e->variation=0;e->params[0]=0.;e->params[1]=0.65;e->params[2]=0.5;e->params[3]=0.5;e->params[4]=0.;e->params[5]=0.5;
@@ -133,20 +133,57 @@ void rubedo_request_audition(RubedoEngine*e,int pad,double velocity){
  e->audition_queue[head&63u]=((uint32_t)pad<<8)|(uint32_t)(velocity*255.+.5);
  atomic_store_explicit(&e->audition_head,head+1,memory_order_release);
 }
+// One authoritative MIDI-note -> voice mapping, shared by audio and GUI.
+int rubedo_note_to_pad(const RubedoEngine *e,int note){
+ if(!e||note<0||note>127)return -1;
+ for(int pad=0;pad<RUBEDO_PADS;pad++)
+  if(atomic_load_explicit(&e->mappings[pad],memory_order_acquire)==note)return pad;
+ return -1;
+}
+int rubedo_assign_note(RubedoEngine *e,int pad,int note){
+ if(!e||pad<0||pad>=RUBEDO_PADS||note<0||note>127)return 0;
+ int old=atomic_load_explicit(&e->mappings[pad],memory_order_acquire);
+ int conflict=rubedo_note_to_pad(e,note);
+ if(conflict==pad)return 1;
+ // If another pad owns the target note, swap; no silent duplicate/unreachable pads.
+ if(conflict>=0)atomic_store_explicit(&e->mappings[conflict],old,memory_order_release);
+ atomic_store_explicit(&e->mappings[pad],note,memory_order_release);
+ return 1;
+}
+void rubedo_import_mappings(RubedoEngine*e,const int16_t notes[RUBEDO_PADS]){
+ if(!e||!notes)return;
+ // Preserve every unique mapping from old CP08/CP09 projects, repair duplicates and
+ // out-of-range assignments deterministically using free original MIDI numbers.
+ uint8_t used[128]={0};int repaired[RUBEDO_PADS];
+ for(int pad=0;pad<RUBEDO_PADS;pad++){
+  int n=notes[pad];
+  if(n>=0&&n<=127&&!used[n]){used[n]=1;repaired[pad]=n;}
+  else repaired[pad]=-1;
+ }
+ for(int pad=0;pad<RUBEDO_PADS;pad++)if(repaired[pad]<0){
+  int n=36+pad;
+  if(used[n]){for(n=0;n<128&&used[n];n++);}
+  if(n>=128)n=36+pad;
+  used[n]=1;repaired[pad]=n;
+ }
+ for(int pad=0;pad<RUBEDO_PADS;pad++)
+  atomic_store_explicit(&e->mappings[pad],repaired[pad],memory_order_release);
+}
 void rubedo_note_on(RubedoEngine *e,int note,double velocity){
  if(!e||velocity<=0||note<0||note>127)return;
  e->ui_last_note=(uint32_t)note;
  int target=atomic_exchange_explicit(&e->midi_learn_target,-1,memory_order_acq_rel);
  if(target>=0&&target<RUBEDO_PADS){
-  // Swap the conflicting assignment instead of creating an unreachable duplicate note.
-  int old=e->mappings[target];
-  for(int j=0;j<RUBEDO_PADS;j++)if(j!=target&&e->mappings[j]==note){e->mappings[j]=(int16_t)old;break;}
-  e->mappings[target]=(int16_t)note;
+  rubedo_assign_note(e,target,note);
   atomic_store_explicit(&e->ui_learn_note,note,memory_order_relaxed);
   atomic_fetch_add_explicit(&e->ui_learn_seq,1,memory_order_release);
+  atomic_store_explicit(&e->host_mapping_dirty,1,memory_order_release);
   rb_start_voice(e,target,velocity);rb_mark_pad(e,target);return;
  }
- for(int pad=0;pad<RUBEDO_PADS;pad++)if(e->mappings[pad]==note){rb_start_voice(e,pad,velocity);rb_mark_pad(e,pad);return;}
+ int pad=rubedo_note_to_pad(e,note);
+ if(pad>=0){rb_start_voice(e,pad,velocity);rb_mark_pad(e,pad);}
+ else {atomic_store_explicit(&e->ui_unmapped_note,note,memory_order_relaxed);
+       atomic_fetch_add_explicit(&e->ui_unmapped_seq,1,memory_order_release);}
 }
 void rubedo_pattern_changed(RubedoEngine*e){
  if(e)for(int i=0;i<RUBEDO_PADS;i++)e->patterns[e->variation&3u][i]=e->steps[i];
