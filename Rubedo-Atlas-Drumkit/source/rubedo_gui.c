@@ -9,24 +9,11 @@ extern void *rubedo_module;
 typedef intptr_t LRESULT;typedef uintptr_t WPARAM;typedef intptr_t LPARAM;
 typedef struct {int32_t left,top,right,bottom;}RECT;
 typedef struct {uint32_t cbSize;uint32_t style;void*proc;int32_t clsExtra,wndExtra;void*instance,*icon,*cursor,*background;const char*menu,*className;void*smallIcon;} WNDCLASSEXA;
-// The real Win32 CREATESTRUCTA layout begins with lpCreateParams. CP08R1
-// incorrectly placed createParams at the end, leaving GWLP_USERDATA invalid.
-// This is a 64-bit Win32 ABI structure, not an arbitrary C data record.
-typedef struct {
- void *createParams;  // lpCreateParams, offset 0
- void *instance;      // hInstance, offset 8
- void *menu;          // hMenu, offset 16
- void *parent;        // hwndParent, offset 24
- int32_t cy,cx,y,x;   // offsets 32..47
- int32_t style;       // offset 48
- const char *name;    // lpszName, offset 56
- const char *cls;     // lpszClass, offset 64
- uint32_t exStyle;    // dwExStyle, offset 72
-} CREATESTRUCTA;
-_Static_assert(sizeof(CREATESTRUCTA)==80,"Win64 CREATESTRUCTA size mismatch");
+/* Win64 CREATESTRUCTA must begin with lpCreateParams; CP08R1 crashed here. */
+typedef struct {void*createParams,*instance,*menu,*parent;int32_t cy,cx,y,x,style;const char*name,*cls;uint32_t exStyle;} CREATESTRUCTA;
+_Static_assert(sizeof(CREATESTRUCTA)==80,"Win64 CREATESTRUCTA layout mismatch");
 _Static_assert(offsetof(CREATESTRUCTA,createParams)==0,"Win64 CREATESTRUCTA lpCreateParams offset mismatch");
 _Static_assert(offsetof(CREATESTRUCTA,style)==48,"Win64 CREATESTRUCTA style offset mismatch");
-_Static_assert(offsetof(CREATESTRUCTA,exStyle)==72,"Win64 CREATESTRUCTA dwExStyle offset mismatch");
 typedef struct {void*hdc;int erased;RECT rect;int restore,update;uint8_t reserved[32];} PAINTSTRUCT;
 typedef struct {uint32_t size;int32_t width,height;uint16_t planes,bits;uint32_t compression,imageSize;int32_t xppu,yppu;uint32_t colorsUsed,important;}BITMAPINFOHEADER;
 typedef struct {BITMAPINFOHEADER h;uint32_t colors[1];}BITMAPINFO;
@@ -115,7 +102,7 @@ static void rb_str(void*dc,RBGui*g,int x,int y,const char*label,uint32_t color,i
  int n=0;while(label[n]&&n<99)n++;
  SetBkMode(dc,1);SetTextColor(dc,color);
  if(bgwidth){RECT box={rb_scale_x(g,x-3),rb_scale_y(g,y-2),rb_scale_x(g,x+bgwidth),rb_scale_y(g,y+17)};
- SetBkColor(dc,0x00e6d9be);ExtTextOutA(dc,rb_scale_x(g,x),rb_scale_y(g,y),2,&box,label,n,0);
+ SetBkColor(dc,0x00BED6E3);ExtTextOutA(dc,rb_scale_x(g,x),rb_scale_y(g,y),2,&box,label,n,0);
  }else TextOutA(dc,rb_scale_x(g,x),rb_scale_y(g,y),label,n);
 }
 static void rb_uint(char*dst,unsigned n){char t[16];int p=0,j=0;do{t[p++]=(char)('0'+n%10);n/=10;}while(n&&p<15);while(p)dst[j++]=t[--p];dst[j]=0;}
@@ -129,34 +116,48 @@ static int rb_get_knob_id(int x,int y){
  return -1;
 }
 static int rb_knob_param(RBGui*g,int id){
- // Native engine has 10 global parameters and 24 per-voice levels. Do not pretend
- // pitch/filter/FM controls are available unless native DSP actually implements them.
- static const int idmap[16]={-1,-1,2,-1,6,4,9,-1,1,1,6,7,-1,-1,8,-1};
- if(id<0||id>=16)return -1;
- if(id==7)return 10+(int)g->selected;
- return idmap[id];
+ if(!g||id<0||id>=16)return -1;
+ // Explicit 1:1 correspondence to the printed controls. No duplicate fake connections.
+ static const int ids[16]={-1,-1,2,-1,6,4,9,-1,-1,1,-1,-1,-1,-1,8,-1};
+ if(id==7)return 10+(int)g->selected; // VOICE LEVEL
+ return ids[id];
+}
+static double rb_knob_value(RBGui*g,int id){
+ RubedoEngine*e=g->engine;unsigned pad=g->selected;
+ int par=rb_knob_param(g,id);
+ if(par>=0)return e->params[par];
+ switch(id){
+  case 0:return e->pitch[pad];case 1:return e->decay_shape[pad];
+  case 3:return e->fm_depth[pad];case 8:return e->pad_gain[pad];
+  case 10:return e->pad_attack[pad];case 11:return e->pad_release[pad];
+  case 12:return e->swing;case 13:return e->scatter;case 15:return e->chance;
+  default:return .5;
+ }
 }
 static void rb_set_knob(RBGui*g,int id,double value){
- if(!g||!g->engine)return;int param=rb_knob_param(g,id);
+ if(!g||!g->engine||id<0||id>=16)return;
+ RubedoEngine*e=g->engine;unsigned pad=g->selected;int par=rb_knob_param(g,id);
  if(value<0)value=0;if(value>1)value=1;
- if(id==0)g->engine->pitch[g->selected]=(float)value;
- else if(id==1)g->engine->decay_shape[g->selected]=(float)value;
- else if(id==3)g->engine->fm_depth[g->selected]=(float)value;
- else if(id==12)g->engine->swing=(float)value;
- else if(id==13)g->engine->scatter=(float)value;
- else if(id==15)g->engine->chance=(float)value;
- else if(param>=0)rubedo_set_param(g->engine,(unsigned)param,value);
- if(g->param_changed){
-  if(param>=0)g->param_changed(g->callback_context,(unsigned)param,value);
-  else if(id==0)g->param_changed(g->callback_context,60+g->selected,value);
-  else if(id==1)g->param_changed(g->callback_context,84+g->selected,value);
-  else if(id==3)g->param_changed(g->callback_context,108+g->selected,value);
-  else if(id==12)g->param_changed(g->callback_context,132,value);
-  else if(id==13)g->param_changed(g->callback_context,133,value);
-  else if(id==15)g->param_changed(g->callback_context,134,value);
+ if(par>=0){rubedo_set_param(e,(unsigned)par,value);
+  if(g->param_changed)g->param_changed(g->callback_context,(unsigned)par,value);
+ }else switch(id){
+  case 0:e->pitch[pad]=(float)value;break;
+  case 1:e->decay_shape[pad]=(float)value;e->decay_active[pad]=1;break;
+  case 3:e->fm_depth[pad]=(float)value;e->fm_active[pad]=1;break;
+  case 8:e->pad_gain[pad]=(float)value;break;
+  case 10:e->pad_attack[pad]=(float)value;break;
+  case 11:e->pad_release[pad]=(float)value;break;
+  case 12:e->swing=(float)value;break;
+  case 13:e->scatter=(float)value;break;
+  case 15:e->chance=(float)value;break;
  }
- g->hover_control=id;g->changed_tick++;
- InvalidateRect(g->hwnd,0,0);
+ g->hover_control=id;g->changed_tick++;InvalidateRect(g->hwnd,0,0);
+}
+static void rb_flash_pad(RBGui*g,int pad){
+ if(!g||pad<0||pad>=24)return;
+ g->selected=(uint32_t)pad;g->bank=(uint32_t)(pad>=16);
+ g->flash_pad=pad;g->flash_until=GetTickCount()+220;g->pad_flash_until[pad]=g->flash_until;
+ if(g->hwnd)InvalidateRect(g->hwnd,0,0);
 }
 static void rb_show_overlay(void*hdc,RBGui*g){
  if(!g)return;
@@ -164,16 +165,7 @@ static void rb_show_overlay(void*hdc,RBGui*g){
  const uint32_t gold=0x00619bb7,deep=0x00262f29,green=0x003a6552;
  // Current kit name (replaces the static first-kit title with repaint-safe background).
  if(g->kit){const char*name=rubedo_kit_names[g->kit];rb_str(hdc,g,75,122,name,deep,324);}
- // In-host diagnostic: visibly changes with native mouse and wheel events.
- // This is drawn in WM_PAINT, not part of the baked screenshot.
- if(g->input_events){
-  char line[48]="INPUT OK #";char number[18];rb_uint(number,g->input_events);
-  int pos=10;for(int z=0;number[z]&&pos<42;z++)line[pos++]=number[z];line[pos]=0;
-  rb_outline(hdc,g,1276,8,222,69,gold,2);
-  rb_str(hdc,g,1286,12,line,green,180);
-  if(g->editor_only)rb_str(hdc,g,1286,33,"VST3: HOST PARAM MODE",deep,194);
-  else rb_str(hdc,g,1286,33,"LIVE ENGINE LINKED",deep,194);
- }
+ // CP09: remove opaque diagnostics that covered the approved top-right artwork.
  // Four active transformation forces and four modal choices.
  static const int fx[4]={756,622,893,757};static const int fy[4]={333,442,443,557};
  rb_disc(hdc,g,fx[g->force],fy[g->force],36,gold,0);
@@ -191,6 +183,9 @@ static void rb_show_overlay(void*hdc,RBGui*g){
   int row=j/4,col=j%4,pad=bankstart+j;
   int x=24+col*110,y=256+row*96;
   if((unsigned)pad==g->selected){rb_outline(hdc,g,x,y,101,90,gold,4);rb_disc(hdc,g,x+90,y+11,4,0x0077f2df,1);}
+  if((int32_t)(g->pad_flash_until[pad]-GetTickCount())>0){
+    rb_outline(hdc,g,x+2,y+2,97,86,green,5);rb_disc(hdc,g,x+90,y+11,6,gold,1);
+  }
  }
  // Selected instrument name, MIDI note number and voice number (not a fake static label).
  if(e){
@@ -201,8 +196,13 @@ static void rb_show_overlay(void*hdc,RBGui*g){
   char maptext[24]="MIDI ";rb_uint(numb,(unsigned)e->mappings[g->selected]);j=5;for(int k=0;numb[k]&&j<22;k++)maptext[j++]=numb[k];maptext[j]=0;
   rb_str(hdc,g,366,745,maptext,deep,78);
  }
- if(g->editor_only)rb_str(hdc,g,38,650,"VST3: MIDI NOTE FOR AUDIO",0x00262f29,250);
- if(g->learn_active)rb_str(hdc,g,275,655,g->editor_only?"VST3: USE HOST MIDI MAP":"LEARN: HIT MIDI NOTE",0x00003ba8,190);
+ if(g->learn_active)rb_str(hdc,g,269,651,g->editor_only?"USE HOST MIDI MAP":"PLAY NOTE TO ASSIGN",0x00262f29,174);
+ else if(g->learn_notice&&(int32_t)(g->learn_notice_until-GetTickCount())>0){
+  char label[40]="MIDI ",digits[16];rb_uint(digits,(unsigned)atomic_load(&e->ui_learn_note));
+  int i=5;for(int j=0;digits[j]&&i<18;j++)label[i++]=digits[j];
+  const char suffix[]=" ASSIGNED";for(int j=0;suffix[j]&&i<38;j++)label[i++]=suffix[j];label[i]=0;
+  rb_str(hdc,g,269,651,label,green,174);
+ }
  // Sequencer progress, enabled beats and active transport highlighting.
  if(e){
   for(int step=0;step<16;step++){
@@ -210,13 +210,13 @@ static void rb_show_overlay(void*hdc,RBGui*g){
    if(e->steps[g->selected]&(1u<<step))rb_outline(hdc,g,x,848,67,66,green,3);
    if(e->playing&&(e->step_index+15)%16==(unsigned)step)rb_outline(hdc,g,x+2,849,62,63,gold,4);
   }
-  if(e->playing){rb_outline(hdc,g,688,29,48,48,green,3);rb_str(hdc,g,968,41,"PLAYING",green,65);}
+  if(e->playing)rb_outline(hdc,g,688,29,48,48,green,3);
+  char vtxt[3];rb_uint(vtxt,(unsigned)e->variation+1u);rb_str(hdc,g,1131,814,vtxt,deep,0);
   char bpm[16];rb_uint(bpm,(unsigned)(e->bpm+.5));rb_str(hdc,g,815,40,bpm,deep,44);
   for(int k=0;k<16;k++){
-   int param=rb_knob_param(g,k);
    int x=(k/4==3?(k%4==0?1247:k%4==1?1317:k%4==2?1386:1455):1117+(k%4)*106),
        y=(k/4==0?303:k/4==1?412:k/4==2?678:867);
-   double v=param>=0?e->params[param]:(k==0?e->pitch[g->selected]:k==1?e->decay_shape[g->selected]:k==3?e->fm_depth[g->selected]:k==12?e->swing:k==13?e->scatter:e->chance);
+   double v=rb_knob_value(g,k);
    // Dynamic gold pointer dot, independent of the baked default knob drawing.
    int px=x+(int)((v-.5)*34.),py=y-29;
    rb_disc(hdc,g,px,py,3,gold,1);
@@ -233,7 +233,7 @@ static void rb_broadcast(RBGui*g,unsigned id,double normalized){
 static void rb_audition(RBGui*g,int pad,double velocity){
  if(!g||!g->engine||pad<0||pad>=24)return;
  // CLAP owns its audio engine, VST3 conveys trigger via host automation.
- if(!g->editor_only)rubedo_note_on(g->engine,g->engine->mappings[pad],velocity);
+ if(!g->editor_only)rubedo_request_audition(g->engine,pad,velocity);
  // Toggle least-significant trigger bit to distinguish repeated pad hits.
  unsigned code=2u*(unsigned)pad+1u+(g->audition_serial++&1u);
  rb_broadcast(g,135,(double)code/49.0);
@@ -253,14 +253,17 @@ static void rb_click(RBGui*g,int x,int y){if(!g||!g->engine)return;
   g->kit=k;rubedo_set_param(e,0,k);if(g->kit_changed)g->kit_changed(g->callback_context,(double)k/23.);rb_notify_change(g);return;}
  if(y0>=217&&y0<=252&&x0>=20&&x0<=187){g->bank=x0>=94?1:0;g->selected=g->bank?16:0;rb_notify_change(g);return;}
  if(y0>=256&&y0<637&&x0>=24&&x0<452){int c=(x0-24)/110,r=(y0-256)/96;if(c<0||c>3||r<0||r>3)return;
-  int pad=r*4+c+g->bank*16;if(pad>23)return;g->selected=pad;
+  int pad=r*4+c+g->bank*16;if(pad>23)return;rb_flash_pad(g,pad);
   rb_audition(g,pad,.88);rb_notify_change(g);return;}
  if(x0>=38&&x0<170&&y0>=739&&y0<=775){
-  g->selected=(g->selected+1)%24;g->bank=g->selected>=16?1:0;rb_notify_change(g);return;}
+  rb_flash_pad(g,(int)((g->selected+1)%24));return;}
  if(x0>=345&&x0<452&&y0>=218&&y0<=252){
-  g->learn_active=1;if(!g->editor_only)e->midi_learn_target=(int16_t)g->selected;
+  g->learn_active=(uint8_t)!g->learn_active;
+  if(!g->editor_only)atomic_store(&e->midi_learn_target,g->learn_active?(int)g->selected:-1);
   rb_notify_change(g);return;}
- if(x0>=345&&x0<452&&y0>=639&&y0<=674){g->learn_active=1;if(!g->editor_only)e->midi_learn_target=(int16_t)g->selected;rb_notify_change(g);return;}
+ if(x0>=345&&x0<452&&y0>=639&&y0<=674){g->learn_active=(uint8_t)!g->learn_active;
+   if(!g->editor_only)atomic_store(&e->midi_learn_target,g->learn_active?(int)g->selected:-1);
+   rb_notify_change(g);return;}
  if(y0>695&&y0<726&&x0>=611&&x0<899){
   g->mode=(uint8_t)(x0<678?0:x0<748?1:x0<834?2:3);
   static const double tones[4]={.5,.6,.8,.35};
@@ -278,7 +281,7 @@ static void rb_click(RBGui*g,int x,int y){if(!g||!g->engine)return;
  }
  if(y0>=739&&y0<772&&x0>=1402&&x0<=1494){g->routing^=1;
   rubedo_set_param(e,5,g->routing?.85:.5);rb_broadcast(g,5,e->params[5]);rb_notify_change(g);return;}
- if(x0>=706&&x0<815&&y0>387&&y0<513){rb_audition(g,(int)g->selected,.95);rb_notify_change(g);return;}
+ if(x0>=706&&x0<815&&y0>387&&y0<513){rb_flash_pad(g,(int)g->selected);rb_audition(g,(int)g->selected,.95);return;}
  if(y0>20&&y0<80&&x0>=686&&x0<740){e->playing^=1;e->step_clock=0;e->step_index=0;rb_broadcast(g,58,e->playing?1.:0.);rb_notify_change(g);return;}
  if(y0>=29&&y0<=74&&x0>=919&&x0<=955){
   uint32_t now=GetTickCount();
@@ -286,42 +289,65 @@ static void rb_click(RBGui*g,int x,int y){if(!g||!g->engine)return;
    if(delta>=240&&delta<=1500)e->bpm=60000.0/(double)delta;}
   g->last_tap_ms=now;rb_broadcast(g,59,(e->bpm-40.)/210.);rb_notify_change(g);return;}
  if(y0>20&&y0<80&&x0>=956&&x0<1030){e->playing=0;e->step_index=0;e->step_clock=0;rb_broadcast(g,58,0.);rb_notify_change(g);return;}
+ if(x0>=1065&&x0<=1487&&y0>=543&&y0<=638){
+  // Envelope graph: drag attack, decay, gain or release region directly.
+  int id=x0<1155?10:x0<1282?1:x0<1385?8:11;
+  g->dragging=1;g->drag_param=id;g->drag_y=y0;g->hover_control=id;
+  rb_set_knob(g,id,rb_knob_value(g,id));return;
+ }
  int knob=rb_get_knob_id(x0,y0);if(knob>=0){g->dragging=1;g->drag_param=knob;g->drag_y=y0;g->hover_control=knob;
-  int par=rb_knob_param(g,knob);rb_set_knob(g,knob,par>=0?e->params[par]:knob==0?e->pitch[g->selected]:knob==1?e->decay_shape[g->selected]:knob==3?e->fm_depth[g->selected]:knob==12?e->swing:knob==13?e->scatter:e->chance);return;}
- if(y0>=812&&y0<842&&x0>=954&&x0<1181){if(x0<1032){for(int i=0;i<16;i+=4)e->steps[g->selected]|=(uint16_t)(1u<<i);}else if(x0<1099)e->steps[g->selected]=0;else e->steps[g->selected]^=0xaaaa;
-  rb_broadcast(g,34+g->selected,(double)e->steps[g->selected]/65535.0);rb_notify_change(g);return;}
- if(y0>=847&&y0<915&&x0>=24&&x0<1173){int step=(x0-24)/72;if(step>=0&&step<16)e->steps[g->selected]^=(uint16_t)(1u<<step);rb_broadcast(g,34+g->selected,(double)e->steps[g->selected]/65535.0);rb_notify_change(g);return;}
+  rb_set_knob(g,knob,rb_knob_value(g,knob));return;}
+ if(y0>=812&&y0<842&&x0>=954&&x0<1181){
+  if(x0<1032){uint32_t z=(uint32_t)(g->kit*1009u+g->selected*199u+ ++g->changed_tick*7919u);
+    uint16_t pattern=0;for(int i=0;i<16;i++){z^=z<<13;z^=z>>17;z^=z<<5;
+     if((z&255u)<(i%4==0?195u:103u))pattern|=(uint16_t)(1u<<i);}
+    e->steps[g->selected]=pattern?pattern:0x1111;
+  }else if(x0<1099)e->steps[g->selected]=0;
+  else {rubedo_select_variation(e,(e->variation+1)&3u);rb_notify_change(g);return;}
+  rubedo_pattern_changed(e);rb_notify_change(g);return;}
+ if(y0>=847&&y0<915&&x0>=24&&x0<1173){int step=(x0-24)/72;if(step>=0&&step<16)e->steps[g->selected]^=(uint16_t)(1u<<step);rubedo_pattern_changed(e);rb_notify_change(g);return;}
  if(y0>=28&&y0<80&&x0>=745&&x0<914){if(x0<790)e->bpm-=1;else e->bpm+=1;if(e->bpm<40)e->bpm=40;if(e->bpm>250)e->bpm=250;rb_broadcast(g,59,(e->bpm-40.)/210.);rb_notify_change(g);return;}
 }
 static LRESULT W32 rb_window_proc(void*hwnd,uint32_t message,WPARAM wp,LPARAM lp){
  // WM_NCCREATE: store the instance pointer before any input, size, or paint dispatch.
- if(message==129){ // WM_NCCREATE: Windows supplies CREATESTRUCTA.lpCreateParams at offset 0.
-  const CREATESTRUCTA *cs=(const CREATESTRUCTA*)lp;
-  if(!cs||!cs->createParams)return 0;
+ if(message==129){CREATESTRUCTA *cs=(CREATESTRUCTA*)lp;
   SetWindowLongPtrA(hwnd,-21,(intptr_t)cs->createParams);
   return DefWindowProcA(hwnd,message,wp,lp);
  }
- if(message==1){ // WM_CREATE: retrieve the same stable editor object.
-  const CREATESTRUCTA *cs=(const CREATESTRUCTA*)lp;
-  if(!cs||!cs->createParams)return -1;
-  SetWindowLongPtrA(hwnd,-21,(intptr_t)cs->createParams);
-  return 0;
- }
+ if(message==1){CREATESTRUCTA *cs=(CREATESTRUCTA*)lp;
+  SetWindowLongPtrA(hwnd,-21,(intptr_t)cs->createParams);return 0;}
  RBGui *gui=(RBGui*)GetWindowLongPtrA(hwnd,-21);
  if(message==20)return 1; // WM_ERASEBKGND: no flash over approved artwork.
  if(message==5&&gui){rb_actual_size(gui);InvalidateRect(hwnd,0,0);return 0;}
  if(message==15){PAINTSTRUCT ps;void*dc=BeginPaint(hwnd,&ps);
   if(dc&&rb_picture&&gui){
    rb_actual_size(gui);
-   if(gui->engine){gui->kit=gui->engine->kit;
-    if(gui->learn_active&&gui->engine->midi_learn_target<0)gui->learn_active=0;}
+   if(gui->engine)gui->kit=gui->engine->kit;
    BITMAPINFO bitmap={{40,RB_GUI_WIDTH,-RB_GUI_HEIGHT,1,24,0,0,0,0,0,0},{0}};
    StretchDIBits(dc,0,0,gui->width,gui->height,0,0,RB_GUI_WIDTH,RB_GUI_HEIGHT,rb_picture,&bitmap,0,0x00CC0020);
    rb_show_overlay(dc,gui);
   }
   EndPaint(hwnd,&ps);return 0;
  }
- if(message==275){if(gui&&gui->engine&&gui->engine->playing)InvalidateRect(hwnd,0,0);return 0;}
+ if(message==275){if(gui&&gui->engine){RubedoEngine*e=gui->engine;
+   uint32_t seq=atomic_load_explicit(&e->ui_note_seq,memory_order_acquire);
+   if(seq!=gui->ui_seen_seq){gui->ui_seen_seq=seq;
+    uint32_t mask=atomic_exchange_explicit(&e->ui_pending_mask,0,memory_order_acquire);
+    uint32_t until=GetTickCount()+220;
+    for(int i=0;i<RUBEDO_PADS;i++)if(mask&(1u<<i))gui->pad_flash_until[i]=until;
+    int pad=atomic_load_explicit(&e->ui_last_pad,memory_order_relaxed);
+    if(pad>=0&&pad<RUBEDO_PADS)rb_flash_pad(gui,pad);
+   }
+   uint32_t learned=atomic_load_explicit(&e->ui_learn_seq,memory_order_acquire);
+   if(learned!=gui->learn_seen_seq){gui->learn_seen_seq=learned;gui->learn_active=0;
+    gui->learn_notice=1;gui->learn_notice_until=GetTickCount()+1800;InvalidateRect(hwnd,0,0);
+   }
+   uint32_t now=GetTickCount();
+   if(gui->flash_pad>=0&&(int32_t)(now-gui->flash_until)>=0){gui->flash_pad=-1;InvalidateRect(hwnd,0,0);}
+   for(int pad=0;pad<RUBEDO_PADS;pad++)if(gui->pad_flash_until[pad]&&(int32_t)(now-gui->pad_flash_until[pad])>=0){gui->pad_flash_until[pad]=0;InvalidateRect(hwnd,0,0);}
+   if(gui->learn_notice&&(int32_t)(now-gui->learn_notice_until)>=0){gui->learn_notice=0;InvalidateRect(hwnd,0,0);}
+   if(e->playing)InvalidateRect(hwnd,0,0);
+  }return 0;}
  if(message==513){ // WM_LBUTTONDOWN
   if(gui){rb_actual_size(gui);SetFocus(hwnd);SetCapture(hwnd);
    rb_click(gui,(int)(int16_t)(lp&0xffff),(int)(int16_t)((lp>>16)&0xffff));}
@@ -332,10 +358,12 @@ static LRESULT W32 rb_window_proc(void*hwnd,uint32_t message,WPARAM wp,LPARAM lp
  }
  if(message==533){if(gui)gui->dragging=0;return 0;} // WM_CAPTURECHANGED
  if(message==256&&gui&&gui->engine){
+  if(wp==27){gui->learn_active=0;atomic_store(&gui->engine->midi_learn_target,-1);InvalidateRect(hwnd,0,0);return 0;}
+  if(lp&(1ll<<30))return 0; // suppress held-key retriggers
   const char *keys="1234QWERASDFZXCV";
   for(int j=0;j<16;j++)if((int)wp==(int)keys[j]){
    int pad=j+gui->bank*16;
-   if(pad<24){gui->selected=pad;rb_audition(gui,pad,.88);
+   if(pad<24){rb_flash_pad(gui,pad);rb_audition(gui,pad,.88);
     gui->input_events++;InvalidateRect(hwnd,0,0);}return 0;}
  }
  if(message==512&&gui&&gui->engine){ // WM_MOUSEMOVE
@@ -344,9 +372,8 @@ static LRESULT W32 rb_window_proc(void*hwnd,uint32_t message,WPARAM wp,LPARAM lp
   int cy=(int)((int64_t)(int16_t)((lp>>16)&0xffff)*RB_GUI_HEIGHT/gui->height);
   if(gui->dragging){
    if(!(wp&0x0001u)){gui->dragging=0;ReleaseCapture();return 0;}
-   int id=gui->drag_param,par=rb_knob_param(gui,id);
-   double old=par>=0?gui->engine->params[par]:id==0?gui->engine->pitch[gui->selected]:id==1?gui->engine->decay_shape[gui->selected]:id==3?gui->engine->fm_depth[gui->selected]:id==12?gui->engine->swing:id==13?gui->engine->scatter:gui->engine->chance;
-   rb_set_knob(gui,id,old+(gui->drag_y-cy)*.004);gui->drag_y=cy;
+   int id=gui->drag_param;
+   rb_set_knob(gui,id,rb_knob_value(gui,id)+(gui->drag_y-cy)*.004);gui->drag_y=cy;
    return 0;
   }
   int id=rb_get_knob_id(cx,cy);
@@ -360,10 +387,14 @@ static LRESULT W32 rb_window_proc(void*hwnd,uint32_t message,WPARAM wp,LPARAM lp
   int xx=(int)((int64_t)pt.x*RB_GUI_WIDTH/gui->width);
   int yy=(int)((int64_t)pt.y*RB_GUI_HEIGHT/gui->height);
   int knob=rb_get_knob_id(xx,yy);
-  if(knob>=0){int par=rb_knob_param(gui,knob);
-   double old=par>=0?gui->engine->params[par]:knob==0?gui->engine->pitch[gui->selected]:knob==1?gui->engine->decay_shape[gui->selected]:knob==3?gui->engine->fm_depth[gui->selected]:knob==12?gui->engine->swing:knob==13?gui->engine->scatter:gui->engine->chance;
+  if(knob>=0){
    int delta=(int16_t)((wp>>16)&0xffff);
-   rb_set_knob(gui,knob,old+(delta/120.)*.015);gui->input_events++;
+   rb_set_knob(gui,knob,rb_knob_value(gui,knob)+(delta/120.)*.012);gui->input_events++;
+  }else if(xx>=744&&xx<=915&&yy>=26&&yy<=80){
+    gui->engine->bpm+=(int16_t)((wp>>16)&0xffff)/120.0;
+    if(gui->engine->bpm<40)gui->engine->bpm=40;
+    if(gui->engine->bpm>250)gui->engine->bpm=250;
+    InvalidateRect(hwnd,0,0);
   }
   return 0;
  }
@@ -371,14 +402,16 @@ static LRESULT W32 rb_window_proc(void*hwnd,uint32_t message,WPARAM wp,LPARAM lp
 }
 int rb_gui_attach(RBGui *g,void*parent,RubedoEngine*e,void*ctx,void(*fn)(void*,double)){
  if(!g||!parent)return 0;g->engine=e;g->callback_context=ctx;g->kit_changed=fn;
- g->kit=e?e->kit:g->kit;g->selected=0;g->width=RB_GUI_WIDTH;g->height=RB_GUI_HEIGHT;g->hover_control=-1;g->learn_active=0;g->force=0;g->mode=0;g->routing=0;g->dragging=0;g->input_events=0;g->editor_only=0;
+ g->kit=e?e->kit:g->kit;g->selected=0;g->width=RB_GUI_WIDTH;g->height=RB_GUI_HEIGHT;g->hover_control=-1;g->learn_active=0;g->force=0;g->mode=0;g->routing=0;g->dragging=0;g->input_events=0;g->editor_only=0;g->flash_pad=-1;g->flash_until=0;g->learn_notice=0;for(int i=0;i<24;i++)g->pad_flash_until[i]=0;
+ g->ui_seen_seq=e?atomic_load_explicit(&e->ui_note_seq,memory_order_acquire):0;
+ g->learn_seen_seq=e?atomic_load_explicit(&e->ui_learn_seq,memory_order_acquire):0;
  if(!rb_read_picture())return 0;
- WNDCLASSEXA cls={0};cls.cbSize=sizeof(cls);cls.style=3;cls.proc=(void*)rb_window_proc;cls.instance=rubedo_module;cls.className="RubedoAtlasDrumkitInputCP08R2";cls.background=0;cls.clsExtra=0;cls.wndExtra=0;cls.style=3;
+ WNDCLASSEXA cls={0};cls.cbSize=sizeof(cls);cls.style=3;cls.proc=(void*)rb_window_proc;cls.instance=rubedo_module;cls.className="RubedoAtlasDrumkitInputCP05";cls.background=0;cls.clsExtra=0;cls.wndExtra=0;cls.style=3;
  cls.smallIcon=0;cls.icon=0;cls.cursor=0;cls.menu=0;cls.style=3;
  RegisterClassExA(&cls);
  void*hwnd=CreateWindowExA(0,cls.className,"Rubedo Atlas Drumkit",0x50000000,0,0,RB_GUI_WIDTH,RB_GUI_HEIGHT,parent,0,rubedo_module,g);
  if(!hwnd){rb_drop_picture();return 0;}g->hwnd=hwnd;
- rb_actual_size(g);SetTimer(hwnd,1,95,0);InvalidateRect(hwnd,0,0);return 1;
+ rb_actual_size(g);SetTimer(hwnd,1,35,0);InvalidateRect(hwnd,0,0);return 1;
 }
 void rb_gui_detach(RBGui *g){if(g&&g->hwnd){KillTimer(g->hwnd,1);DestroyWindow(g->hwnd);g->hwnd=0;rb_drop_picture();}}
 void rb_gui_show(RBGui*g,int visible){if(g&&g->hwnd)ShowWindow(g->hwnd,visible?5:0);}
