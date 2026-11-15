@@ -1,0 +1,39 @@
+{
+  "project": "Rubedo Atlas Drumkit",
+  "checkpoint": "CP08 Hi-Fi",
+  "version": "0.9.3-cp08",
+  "platform": "Windows x64",
+  "sources": "CP05 interactive native editor + CP07 Vitriolic sound bank + CP08 hi-fi SRC and linked soft ceiling",
+  "formats": [
+    "CLAP",
+    "VST3"
+  ],
+  "kits": 24,
+  "sounds": 2304,
+  "sample_format": "mono 96kHz signed PCM24",
+  "max_true_peak_dbfs": -2.4167280413650207,
+  "clip_files": 0,
+  "source_bank_sha256": "968aa26a3fe0b7abf89e68ff6354977c2e24d30b270e0036219e2906dc856454",
+  "approved_CP07_image_sha256": "0714527cfd768349daa8698e4b5044a53b12117c76e43a8a1bc7ae3d082cea41",
+  "test_status": "offline Linux DSP, native Windows compilation/exports; no Windows Bitwig runtime test",
+  "known_limits": [
+    "GUI from CP05 still not certified to be responsive in Bitwig",
+    "Host state and headroom under user projects unverified",
+    "CLAP UI parameters are not all safely marshaled to audio thread",
+    "96k FLAC assets were not resynthesized in CP08; playback engine corrected"
+  ],
+  "CLAP": {
+    "zip": "Rubedo_Atlas_Drumkit_CP08_HiFi_CLAP_Windows_x64.zip",
+    "archive_size": 339374874,
+    "zip_sha256": "63835c7bbac944b34ad6f24f6fea89e58073cefa847dce93bc858a685a2a49eb",
+    "binary_size": 378449180,
+    "binary_sha256": "f91d9f521d29d4b126a4d05c6add16fd18e6d39729ee3003b2e82c5c625bd18c"
+  },
+  "VST3": {
+    "zip": "Rubedo_Atlas_Drumkit_CP08_HiFi_VST3_Windows_x64.zip",
+    "archive_size": 339366515,
+    "zip_sha256": "39dc06e25dcce259cad06f4a06dfda22706c4f659bb24fc49973ac1d40419466",
+    "binary_size": 378457884,
+    "binary_sha256": "5938adfb54f3b90a7b5f08dd11a662d7657dc842014c7d9bf13f4e992a0874d6"
+  }
+}
