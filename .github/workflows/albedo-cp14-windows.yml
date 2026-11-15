@@ -1,0 +1,175 @@
+name: Albedo CP14 Windows x64 CLAP + VST3
+on:
+  push:
+    branches: [albedo-cp14-rgnes]
+    paths:
+      - '.github/workflows/albedo-cp14-windows.yml'
+      - 'patches/albedo_cp14_part*.txt'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-binaries:
+    runs-on: windows-2022
+    timeout-minutes: 75
+    steps:
+      - name: Check out exact Albedo sources
+        uses: actions/checkout@v4
+      - name: Prepare Python 3.12 for deterministic bank generation
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify archive and extract Albedo
+        shell: pwsh
+        run: |
+          $archive='build-sources/Albedo_CP13_CI_Source_NoBank.zip'
+          if (!(Test-Path $archive)) { throw 'Missing complete source archive' }
+          $hash=(Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne '5d5bceedcb6b0a4c78880dd6339d12250c51c9a543e80826c78189028d71d325') { throw "Source SHA256 mismatch: $hash" }
+          Expand-Archive -LiteralPath $archive -DestinationPath . -Force
+          if (!(Test-Path 'Albedo-Quintessential-Synth/Build_Windows_x64.ps1')) { throw 'Missing native Windows build entrypoint' }
+      - name: Regenerate original 32-material PCM bank
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check numpy scipy
+          python 'Albedo-Quintessential-Synth/resources/generate_soundbank.py' --output 'Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb'
+          if ($LASTEXITCODE -ne 0) { throw 'Material bank regeneration failed' }
+          $hash=(Get-FileHash 'Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb' -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne 'ee5e625a17833cd8d8640151a98ae8ae52038e0f830db1890a583eb98da0a838') { throw "Deterministic bank does not match original: $hash" }
+      - name: Verify original sources, graphics, presets and DSP before build
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          python tools/verify_source_assets.py
+          if ($LASTEXITCODE -ne 0) { throw 'Immutable source gate failed' }
+      - name: RGNES CP13 repair - CTest multi-config argument
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          $script='Build_Windows_x64.ps1'
+          $source=Get-Content -LiteralPath $script -Raw
+          $before='& ctest --test-dir $build --config $Configuration --output-on-failure'
+          $after='& ctest --test-dir $build -C $Configuration --output-on-failure'
+          if (!$source.Contains($before)) { throw 'Expected CTest command absent; refusing blind patch' }
+          $patched=$source.Replace($before,$after)
+          Set-Content -LiteralPath $script -Value $patched -NoNewline -Encoding utf8
+          if (!(Select-String -Path $script -SimpleMatch $after -Quiet)) { throw 'CTest CLI repair did not persist' }
+          Write-Host 'RGNES: use supported CTest -C multi-configuration argument'
+      - name: RGNES CP13 repair - Win64 DSP QA stack and UTF-8 source checker
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          # Synth contains ~6 MiB of per-voice physical-model buffers.
+          # Windows test executables have a smaller default main-thread stack.
+          # Fix only the five standalone QA/audition clients; plugins already use heap allocation.
+          $fixes=@(
+            @{path='tests/bank_integration.cpp';old=' vitriol::Synth s;';new=' auto heapSynth=std::make_unique<vitriol::Synth>(); vitriol::Synth& s=*heapSynth;'},
+            @{path='tests/cp06_quality.cpp';old=' Synth s;';new=' auto heapSynth=std::make_unique<Synth>(); Synth& s=*heapSynth;'},
+            @{path='tests/factory_qa.cpp';old=' Synth synth;';new=' auto heapSynth=std::make_unique<Synth>(); Synth& synth=*heapSynth;'},
+            @{path='tools/render_factory_audition.cpp';old=' Synth synth;constexpr int SR=48000;';new=' auto heapSynth=std::make_unique<Synth>(); Synth& synth=*heapSynth;constexpr int SR=48000;'},
+            @{path='tools/render_audition.cpp';old=' Synth s;if(!s.loadResourceBank';new=' auto heapSynth=std::make_unique<Synth>(); Synth& s=*heapSynth;if(!s.loadResourceBank'}
+          )
+          foreach ($fix in $fixes) {
+            $source=Get-Content -LiteralPath $fix.path -Raw -Encoding utf8
+            if (!$source.Contains($fix.old)) { throw "Stack fix anchor absent: $($fix.path)" }
+            $updated="#include <memory>`n"+$source.Replace($fix.old,$fix.new)
+            Set-Content -LiteralPath $fix.path -Value $updated -NoNewline -Encoding utf8
+            Write-Host "Win64 QA allocated on heap: $($fix.path)"
+          }
+          $check='tests/rgnes_cp10_source_gate.py'
+          $py=Get-Content -LiteralPath $check -Raw -Encoding utf8
+          if (!$py.Contains('.read_text()')) { throw 'UTF-8 source check anchor missing' }
+          $py=$py.Replace('.read_text()',".read_text(encoding='utf-8')")
+          Set-Content -LiteralPath $check -Value $py -NoNewline -Encoding utf8
+          Write-Host 'CP10 source checker uses explicit UTF-8 on Windows'
+      - name: RGNES CP13 repair - conform VST3 Win64 export gate to Steinberg specification
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          # Steinberg specifies InitDll and ExitDll are OPTIONAL on Windows,
+          # while GetPluginFactory is mandatory. SDK validator independently ran 47/47.
+          $buildScript='Build_Windows_x64.ps1'
+          $source=Get-Content -LiteralPath $buildScript -Raw -Encoding utf8
+          $before='--require GetPluginFactory InitDll ExitDll'
+          $after='--require GetPluginFactory'
+          if (!$source.Contains($before)) { throw 'Expected VST3 export gate anchor missing' }
+          Set-Content -LiteralPath $buildScript -Value $source.Replace($before,$after) -NoNewline -Encoding utf8
+          $validator='tools/validate_windows_release.py'
+          $py=Get-Content -LiteralPath $validator -Raw -Encoding utf8
+          $old="['GetPluginFactory','InitDll','ExitDll']"
+          $new="['GetPluginFactory']"
+          if (!$py.Contains($old)) { throw 'Expected independent VST3 validator anchor missing' }
+          Set-Content -LiteralPath $validator -Value $py.Replace($old,$new) -NoNewline -Encoding utf8
+          Write-Host 'VST3 Windows: mandatory GetPluginFactory, optional InitDll and ExitDll'
+      - name: Apply verified RGNES CP14 source changes
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/albedo_cp14_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,8)); assert len(s)==20676,'incomplete patch'; d=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(d).hexdigest()=='eae0e51f6fc9c42e2ecebf5fa02485ac1551a51d49e14feab03296a25a006340','unverified patch'; pathlib.Path('Albedo_CP14_Changes.patch').write_bytes(d); print('Verified RGNES CP14 source delta SHA256')"
+          if ($LASTEXITCODE -ne 0) { throw 'RGNES CP14 source patch decode/checksum failed' }
+          git apply --check 'Albedo_CP14_Changes.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'RGNES CP14 source delta cannot apply cleanly' }
+          git apply 'Albedo_CP14_Changes.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'RGNES CP14 source patch failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'RGNES CP14 source content checksum/compatibility failed' }
+          Write-Host 'RGNES CP14: verified source change set applied; previous CP13 release preserved'
+      - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          .\Launch_Windows_Build.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Native Windows build or release verification failed' }
+      - name: Publish genuine Windows binaries only after verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP14_Windows_x64_CLAP_VST3
+          path: |
+            Albedo-Quintessential-Synth/Albedo_Quintessential_Synth_Windows_x64_CP14.zip
+            Albedo-Quintessential-Synth/WINDOWS_BUILD_LOG.txt
+          if-no-files-found: error
+      - name: RGNES CP13 stage install-only CLAP and VST3 for Drive
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          $src='dist_windows_CP14'
+          $dst='dist_windows_runtime_CP14'
+          if (Test-Path $dst) { Remove-Item -LiteralPath $dst -Recurse -Force }
+          New-Item -ItemType Directory -Path $dst | Out-Null
+          foreach ($file in @('Albedo_Quintessential_Synth.clap','RELEASE_MANIFEST.json')) {
+            $inputPath=Join-Path $src $file
+            if (!(Test-Path -LiteralPath $inputPath -PathType Leaf)) { throw "Runtime staging input missing: $file" }
+            Copy-Item -LiteralPath $inputPath -Destination (Join-Path $dst $file) -Force
+          }
+          $bundle=Join-Path $src 'Albedo_Quintessential_Synth.vst3'
+          if (!(Test-Path -LiteralPath $bundle -PathType Container)) { throw 'VST3 runtime bundle missing' }
+          Copy-Item -LiteralPath $bundle -Destination (Join-Path $dst 'Albedo_Quintessential_Synth.vst3') -Recurse -Force
+          $clap=Join-Path $dst 'Albedo_Quintessential_Synth.clap'
+          $vst=Get-ChildItem -LiteralPath (Join-Path $dst 'Albedo_Quintessential_Synth.vst3') -Recurse -File -Filter '*.vst3' | Select-Object -First 1
+          if (!$vst) { throw 'No actual VST3 module inside install-only bundle' }
+          & python tools/verify_pe_exports.py $clap --require clap_entry
+          if ($LASTEXITCODE -ne 0) { throw 'Runtime-only CLAP export gate failed' }
+          & python tools/verify_pe_exports.py $vst.FullName --require GetPluginFactory
+          if ($LASTEXITCODE -ne 0) { throw 'Runtime-only VST3 export gate failed' }
+          $abs=(Resolve-Path $dst).Path
+          $checks=@(Get-ChildItem -LiteralPath $dst -Recurse -File | ForEach-Object {
+            [PSCustomObject]@{path=$_.FullName.Substring($abs.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant();size_bytes=$_.Length}
+          })
+          $checks | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $dst 'SHA256_runtime.json') -Encoding utf8
+          Write-Host "RGNES runtime-only staged files: $($checks.Count)"
+      - name: Publish runtime-only CLAP and VST3 distribution for Drive transfer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP14_Windows_x64_RuntimeOnly
+          path: |
+            Albedo-Quintessential-Synth/dist_windows_runtime_CP14/*
+          if-no-files-found: error
+      - name: Preserve Windows build log if compilation failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP14_Windows_x64_Failure_Logs
+          path: |
+            Albedo-Quintessential-Synth/WINDOWS_BUILD_LOG.txt
+            Albedo-Quintessential-Synth/build_windows_x64/CMakeCache.txt
+            Albedo-Quintessential-Synth/build_windows_x64/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
