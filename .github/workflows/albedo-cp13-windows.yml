@@ -82,6 +82,25 @@ jobs:
           $py=$py.Replace('.read_text()',".read_text(encoding='utf-8')")
           Set-Content -LiteralPath $check -Value $py -NoNewline -Encoding utf8
           Write-Host 'CP10 source checker uses explicit UTF-8 on Windows'
+      - name: RGNES CP13 repair - conform VST3 Win64 export gate to Steinberg specification
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          # Steinberg specifies InitDll and ExitDll are OPTIONAL on Windows,
+          # while GetPluginFactory is mandatory. SDK validator independently ran 47/47.
+          $buildScript='Build_Windows_x64.ps1'
+          $source=Get-Content -LiteralPath $buildScript -Raw -Encoding utf8
+          $before='--require GetPluginFactory InitDll ExitDll'
+          $after='--require GetPluginFactory'
+          if (!$source.Contains($before)) { throw 'Expected VST3 export gate anchor missing' }
+          Set-Content -LiteralPath $buildScript -Value $source.Replace($before,$after) -NoNewline -Encoding utf8
+          $validator='tools/validate_windows_release.py'
+          $py=Get-Content -LiteralPath $validator -Raw -Encoding utf8
+          $old="['GetPluginFactory','InitDll','ExitDll']"
+          $new="['GetPluginFactory']"
+          if (!$py.Contains($old)) { throw 'Expected independent VST3 validator anchor missing' }
+          Set-Content -LiteralPath $validator -Value $py.Replace($old,$new) -NoNewline -Encoding utf8
+          Write-Host 'VST3 Windows: mandatory GetPluginFactory, optional InitDll and ExitDll'
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
