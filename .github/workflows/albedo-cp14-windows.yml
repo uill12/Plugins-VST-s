@@ -110,6 +110,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'RGNES CP14 source delta cannot apply cleanly' }
           git apply 'Albedo_CP14_Changes.patch'
           if ($LASTEXITCODE -ne 0) { throw 'RGNES CP14 source patch failed' }
+          # Git for Windows applies CRLF by default; CP14 uses canonical LF source
+          # signatures to preserve exact SHA-256 across platforms.
+          python -c "import json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP14_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in m['changed_source_sha256']]; print('Normalized CP14 source signatures to canonical LF')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP14 source line-ending normalization failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'RGNES CP14 source content checksum/compatibility failed' }
           Write-Host 'RGNES CP14: verified source change set applied; previous CP13 release preserved'
