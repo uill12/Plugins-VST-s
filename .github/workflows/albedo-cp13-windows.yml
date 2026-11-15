@@ -115,6 +115,42 @@ jobs:
             Albedo-Quintessential-Synth/Albedo_Quintessential_Synth_Windows_x64_CP12.zip
             Albedo-Quintessential-Synth/WINDOWS_BUILD_LOG.txt
           if-no-files-found: error
+      - name: RGNES CP13 stage install-only CLAP and VST3 for Drive
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          $src='dist_windows_CP12'
+          $dst='dist_windows_runtime_CP13'
+          if (Test-Path $dst) { Remove-Item -LiteralPath $dst -Recurse -Force }
+          New-Item -ItemType Directory -Path $dst | Out-Null
+          foreach ($file in @('Albedo_Quintessential_Synth.clap','RELEASE_MANIFEST.json')) {
+            $inputPath=Join-Path $src $file
+            if (!(Test-Path -LiteralPath $inputPath -PathType Leaf)) { throw "Runtime staging input missing: $file" }
+            Copy-Item -LiteralPath $inputPath -Destination (Join-Path $dst $file) -Force
+          }
+          $bundle=Join-Path $src 'Albedo_Quintessential_Synth.vst3'
+          if (!(Test-Path -LiteralPath $bundle -PathType Container)) { throw 'VST3 runtime bundle missing' }
+          Copy-Item -LiteralPath $bundle -Destination (Join-Path $dst 'Albedo_Quintessential_Synth.vst3') -Recurse -Force
+          $clap=Join-Path $dst 'Albedo_Quintessential_Synth.clap'
+          $vst=Get-ChildItem -LiteralPath (Join-Path $dst 'Albedo_Quintessential_Synth.vst3') -Recurse -File -Filter '*.vst3' | Select-Object -First 1
+          if (!$vst) { throw 'No actual VST3 module inside install-only bundle' }
+          & python tools/verify_pe_exports.py $clap --require clap_entry
+          if ($LASTEXITCODE -ne 0) { throw 'Runtime-only CLAP export gate failed' }
+          & python tools/verify_pe_exports.py $vst.FullName --require GetPluginFactory
+          if ($LASTEXITCODE -ne 0) { throw 'Runtime-only VST3 export gate failed' }
+          $abs=(Resolve-Path $dst).Path
+          $checks=@(Get-ChildItem -LiteralPath $dst -Recurse -File | ForEach-Object {
+            [PSCustomObject]@{path=$_.FullName.Substring($abs.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant();size_bytes=$_.Length}
+          })
+          $checks | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $dst 'SHA256_runtime.json') -Encoding utf8
+          Write-Host "RGNES runtime-only staged files: $($checks.Count)"
+      - name: Publish runtime-only CLAP and VST3 distribution for Drive transfer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP13_Windows_x64_RuntimeOnly
+          path: |
+            Albedo-Quintessential-Synth/dist_windows_runtime_CP13/*
+          if-no-files-found: error
       - name: Preserve Windows build log if compilation failed
         if: failure()
         uses: actions/upload-artifact@v4
