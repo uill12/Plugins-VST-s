@@ -1,0 +1,68 @@
+name: Albedo CP13 Windows x64 CLAP + VST3
+on:
+  push:
+    branches: [albedo-cp13-windows]
+    paths:
+      - '.github/workflows/albedo-cp13-windows.yml'
+      - 'build-sources/Albedo_CP13_CI_Source_NoBank.zip'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-binaries:
+    runs-on: windows-2022
+    timeout-minutes: 75
+    steps:
+      - name: Check out exact Albedo sources
+        uses: actions/checkout@v4
+      - name: Prepare Python 3.12 for deterministic bank generation
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify archive and extract Albedo
+        shell: pwsh
+        run: |
+          $archive='build-sources/Albedo_CP13_CI_Source_NoBank.zip'
+          if (!(Test-Path $archive)) { throw 'Missing complete source archive' }
+          $hash=(Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne '26b3abd3f840017d7f143c4f75da0071e5d4a85a5eca795e9cd60d4f71c66b97') { throw "Source SHA256 mismatch: $hash" }
+          Expand-Archive -LiteralPath $archive -DestinationPath . -Force
+          if (!(Test-Path 'Albedo-Quintessential-Synth/Build_Windows_x64.ps1')) { throw 'Missing native Windows build entrypoint' }
+      - name: Regenerate original 32-material PCM bank
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check numpy scipy
+          python 'Albedo-Quintessential-Synth/resources/generate_soundbank.py' --output 'Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb'
+          if ($LASTEXITCODE -ne 0) { throw 'Material bank regeneration failed' }
+          $hash=(Get-FileHash 'Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb' -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne 'ee5e625a17833cd8d8640151a98ae8ae52038e0f830db1890a583eb98da0a838') { throw "Deterministic bank does not match original: $hash" }
+      - name: Verify original sources, graphics, presets and DSP before build
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          python tools/verify_source_assets.py
+          if ($LASTEXITCODE -ne 0) { throw 'Immutable source gate failed' }
+      - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          .\Launch_Windows_Build.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Native Windows build or release verification failed' }
+      - name: Publish genuine Windows binaries only after verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP13_Windows_x64_CLAP_VST3
+          path: |
+            Albedo-Quintessential-Synth/Albedo_Quintessential_Synth_Windows_x64_CP12.zip
+            Albedo-Quintessential-Synth/WINDOWS_BUILD_LOG.txt
+          if-no-files-found: error
+      - name: Preserve Windows build log if compilation failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP13_Windows_x64_Failure_Logs
+          path: |
+            Albedo-Quintessential-Synth/WINDOWS_BUILD_LOG.txt
+            Albedo-Quintessential-Synth/build_windows_x64/CMakeCache.txt
+            Albedo-Quintessential-Synth/build_windows_x64/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
