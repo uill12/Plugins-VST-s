@@ -1,1 +1,22 @@
-The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.
+RUBEDO ATLAS DRUMKIT — CP08 Hi-Fi 0.9.3-cp08
+Windows x64 CLAP/VST3 developer build. NOT validated in Windows Bitwig.
+
+AUDIO
+24 kits / 2,304 hits, 96 kHz 24-bit embedded PCM from CP07 (Ethereal, Vitriolic, Scientific, Transmutation).
+CP08 preserves the CP07 audio files; no forced acoustic-drum normalization.
+CP08 engine: 24-tap polyphase bandlimited resampling where sample-rate/pitch step requires it; linked soft output ceiling instead of per-channel hard clipping; 64 voices; same 24-note map 36–59.
+CP07 file audit: 2304/2304 correct lossless format; maximum reconstructed 4x true peak -2.42 dBFS; 0 missing/silent/invalid assets; dynamic hard/soft hierarchy maintained.
+All 576 kit/pad combinations pass offline native-engine audible test at 88.2k; heavy-layer stress test shows no flat-topped output ceiling.
+
+INSTALL
+Close Bitwig; back up your prior CP05 binaries. Install ONE format at a time.
+CLAP: copy Rubedo_Atlas_Drumkit.clap to C:\Program Files\Common Files\CLAP\.
+VST3: copy Rubedo Atlas Drumkit.vst3 bundle folder into C:\Program Files\Common Files\VST3\.
+Rescan/restart Bitwig. Plugin keeps ID com.rubedo.atlas-drumkit (CLAP), parameter IDs and default MIDI note map. Old CP05 sessions should be backed up; compatibility in Windows Bitwig is unverified.
+
+LIMITATIONS
+The CP05 native editor is retained, with the approved GUI canvas updated only for Vitriolic names. Its in-host responsiveness was previously reported as defective and cannot be certified from offline tests here. This build fixes audio fidelity, not the host UI.
+VST3 implementation is a developer implementation of the ABI; no Windows Bitwig interoperability certification. Audio under real song loads, MIDI mapping and saving/loading requires real-world verification.
+
+DISTRIBUTION
+This Git repository exports source and validation documents. No complete installer or binary asset was uploaded to GitHub Releases by the ChatGPT connector.
