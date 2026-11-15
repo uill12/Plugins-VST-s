@@ -154,6 +154,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP16 design-time raster dependencies unavailable' }
           python 'Albedo-Quintessential-Synth/tools/render_typography_cp16.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP16 light/Nigredo bitmap regeneration failed' }
+          # Git for Windows normalizes new source files to CRLF; source manifest
+          # contains canonical LF SHA-256 hashes. Rendered BMPs are unaffected.
+          python -c "import pathlib,json; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP16_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in m['changed_source_sha256']]; print('CP16 source files normalized to canonical LF')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP16 source line-ending normalization failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP16 source and artwork verification failed' }
           python 'Albedo-Quintessential-Synth/tests/check_cp16_typography.py'
