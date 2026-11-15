@@ -1,0 +1,63 @@
+name: RGNES Windows CLAP + VST3 Build Gate
+on:
+  workflow_dispatch:
+    inputs:
+      project_path:
+        description: 'Directory containing the actual plugin build source, relative to repository root'
+        required: true
+        type: string
+      artifact_path:
+        description: 'Path to freshly generated binaries, runtime ZIP, or .7z.001 relative to project root'
+        required: true
+        type: string
+      build_mode:
+        description: 'Project build method'
+        type: choice
+        required: true
+        default: Auto
+        options: [Auto, PowerShell, CMake, MSBuild]
+      formats:
+        description: 'Comma-separated formats to verify (both required by default)'
+        required: true
+        type: choice
+        default: clap,vst3
+        options: [clap,vst3, clap, vst3]
+permissions:
+  contents: read
+jobs:
+  windows-x64-build:
+    runs-on: windows-2022
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test RGNES PE verification logic (synthetic fixtures only)
+        shell: pwsh
+        run: python -m unittest discover -s standards/tools -p 'test_rgnes_verify_win64.py' -v
+      - name: Compile from real source and statically validate Windows plugins
+        shell: pwsh
+        env:
+          RG_PROJECT: ${{ inputs.project_path }}
+          RG_ARTIFACT: ${{ inputs.artifact_path }}
+          RG_MODE: ${{ inputs.build_mode }}
+          RG_FORMATS: ${{ inputs.formats }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & ./standards/tools/rgnes_win64_build.ps1 `
+            -ProjectRoot $env:RG_PROJECT `
+            -ArtifactPath $env:RG_ARTIFACT `
+            -BuildMode $env:RG_MODE `
+            -Formats $env:RG_FORMATS `
+            -StageOut (Join-Path $env:RUNNER_TEMP 'rgnes-verified-runtime') `
+            -ReportPath (Join-Path $env:RUNNER_TEMP 'rgnes-win64-verification.json')
+      - name: Retain verified build as Actions artifact (NOT a Git commit or Drive upload)
+        uses: actions/upload-artifact@v4
+        with:
+          name: RGNES_Windows_x64_Verified_${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/rgnes-verified-runtime/
+            ${{ runner.temp }}/rgnes-win64-verification.json
