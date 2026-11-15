@@ -2,7 +2,7 @@
 """CP15 Windows resize rounding hotfix, deterministic and fail-closed."""
 from pathlib import Path
 import hashlib, json
-root=Path(__file__).resolve().parents[1]
+root=Path(__file__).resolve().parents[1]/"Albedo-Quintessential-Synth"
 changes={
  "include/vitriol_native_layout.hpp":{
   "before":"e41302fef72df40dcf53d8ed552decbd2e8ed1d2805766b889d872851f4c3615",
