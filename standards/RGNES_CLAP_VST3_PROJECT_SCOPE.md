@@ -1,39 +1,51 @@
-# RGNES — CLAP and VST3 project-wide application
+# RGNES — account-wide CLAP/VST3 routing and release policy
 
-Applied workflow standard: **RGNES v1.3.0** (private ChatGPT plugin `rgnes-gui-engineering`).
-Last registry review: **2026-11-15**.
+**RGNES:** v1.4.0 · **Reviewed:** 2026-11-15 · [Open private plugin](https://chatgpt.com/plugins/plugins_6af97c4f3ef881919ff81384b9fad5ea)
 
-## Scope
+## Automatic application
 
-This is a **shared engineering policy**, not a claim that any project binary has been rebuilt or changed.
-Apply RGNES to every current and future DAW project that produces `.clap`, `.vst3`, or both:
-instruments/synthesizers, drum machines, audio FX and MIDI FX. Include a new project automatically when it enters active development. Preserve its own aesthetics, parameter IDs, plugin identifiers, states and DSP.
+Apply the RGNES engineering method when useful to all current/future .clap and .vst3 synthesizers, instruments, audio effects, MIDI effects, drum machines and build/distribution work. Preserve each project's established architecture, DSP, presets, host identifiers, UI identity, and rollbacks. Choose HTML design-source edits for visual layout changes and native GUI edits for native/host defects rather than forcing a redesign.
 
-### Project registry
+## Two destinations — do not mix them
 
-| Project | CLAP | VST3 | Drive destination |
-| --- | --- | --- | --- |
-| Nereida IntraSynth / Tonal Architecture | In scope | In scope | [Nereida](https://drive.google.com/drive/folders/1lDh4-h7WfZeEAYaLSlc4X9jk5iVDLDv0) |
-| Rubedo Atlas Drumkit | In scope; existing CP11 CLAP distribution verified in Drive | In scope when built; no VST3 distribution verified here | [Rubedo](https://drive.google.com/drive/folders/1wjIN7tcz-17lD6ozlhZpxKogvBZoctMR) |
-| Albedo Quintessential Synth | In scope | In scope | [Albedo](https://drive.google.com/drive/folders/1nGl-deLK2UWgbE-gbs78T7Ivdfac0H42) |
-| Nigredo Opus Septem / Alchemical Effects | In scope | In scope | [Nigredo](https://drive.google.com/drive/folders/1qBm90J-S_LL8e1vBZ-iUuJydeSnQdghF) |
-| Ankarana Percussive Atlas | In scope where actively maintained | In scope where actively maintained | [Ankarana](https://drive.google.com/drive/folders/1ex26ucUkZWXvW35ZivrIXz9VL-43tBtK) |
+| Destination | Store | Do **not** store |
+|---|---|---|
+| **GitHub** `uill12/Plugins-VST-s` | Actual source, build scripts, project checkpoints, test results, release manifests, engineering history | Runtime .clap/.vst3 binaries as ordinary Git blobs |
+| **Google Drive** `PROJETOS/<project>/<checkpoint>` | Installable .clap/.vst3 files, platform-specific runtime-only ZIP or complete multipart .7z distributions; optionally essential minimal install info inside distribution | Source archives, build trees, HTML prototypes, screenshots, separate QA bundles |
 
-**Note:** "In scope" means apply the standard upon edits/builds, not that a compiled artifact was inspected, uploaded, or tested in the host. Check each project's actual source and distribution before stating format support.
+Pre-existing mixed historical Drive folders remain intact; do not destructively reorganize or delete them automatically.
 
-## Required procedure per project revision
+### Project Drive folders
 
-1. Resolve the latest *actual* source/build and prior working rollback. Never infer the newest from filename alone.
-2. Decide UI ownership: canonical HTML/CSS/SVG for approved design changes, native renderer for native/host issues, or both for foundational redesigns. Preserve approved visual identity.
-3. Preserve CLAP plugin ID, VST3 class IDs, stable parameter IDs, preset/state serialization and backwards compatibility unless explicitly changing them through a migration.
-4. Test each delivered format independently: CLAP entrypoint/descriptor, VST3 factory/bundle, GUI life cycle, state, automation, MIDI or audio events, rate/latency, audio quality, resize/DPI and Bitwig host behavior where test access exists. Distinguish compiled/offline/host/user confirmation.
-5. Keep product `version`, `checkpoint`, ISO `build_date`, binary-reported version, `platform`, `formats`, hashes, QA evidence and distribution filenames aligned. Record rollback target; track RG NES skill version separately from product version.
-6. **Automatically attempt to upload only new installable distributions produced directly during the active ChatGPT workflow** to their project Drive folder. Use the Drive connector only if the actual package has a supported file reference; an inaccessible Library file or a sandbox path alone is not sufficient. Do not claim autonomous background sync. Do not upload isolated source/HTML/QA unless explicitly asked.
-7. After every volume is present and verified, highlight exactly one project's latest verified Drive checkpoint as `00_LATEST — <checkpoint>`. If transfer fails or is unavailable, retain the older verified latest marker and report `Drive upload pending`. Preserve earlier versions and rollback files.
+| Project | Drive |
+|---|---|
+| Nereida IntraSynth | [Folder](https://drive.google.com/drive/folders/1lDh4-h7WfZeEAYaLSlc4X9jk5iVDLDv0) |
+| Rubedo Atlas Drumkit | [Folder](https://drive.google.com/drive/folders/1wjIN7tcz-17lD6ozlhZpxKogvBZoctMR) |
+| Albedo Quintessential Synth | [Folder](https://drive.google.com/drive/folders/1nGl-deLK2UWgbE-gbs78T7Ivdfac0H42) |
+| Nigredo Opus Septem | [Folder](https://drive.google.com/drive/folders/1qBm90J-S_LL8e1vBZ-iUuJydeSnQdghF) |
+| Ankarana Percussive Atlas | [Folder](https://drive.google.com/drive/folders/1ex26ucUkZWXvW35ZivrIXz9VL-43tBtK) |
 
-## Verified existing release marker
+## Latest-release detection and sync behavior
 
-- Rubedo Atlas Drumkit: [`00_LATEST — CP11_SkinSync_GUI`](https://drive.google.com/drive/folders/1F6tAkwEtkKyRgiSLVdE4gAd05eFAt3Ah), CLAP Windows x64 v0.9.6-cp11, existing 13-part `.7z` distribution in Drive.
-- Host validation remains unverified based on the existing release notes. No additional projects were built or synchronized merely by creating this registry.
+During active development and during the configured daily RGNES check:
 
-RGNES plugin: https://chatgpt.com/plugins/plugins_6af97c4f3ef881919ff81384b9fad5ea
+1. Search accessible ChatGPT Library/project files, GitHub checkpoints, and existing Google Drive releases for candidate versions. Never assume a search result proves that binary bytes exist or are transferable. Distinguish source-only, prototype, compiled, offline QA, host QA and user-validated evidence.
+2. Compare **product version**, **checkpoint/revision**, **build date**, **platform**, **CLAP/VST3 formats**, internal plugin version/IDs and content hashes (when known). Track RGNES skill version separately.
+3. If a new runtime-only distribution is truly accessible through a connector-supported binary file reference, transfer it to the matching Google Drive folder and verify every byte/part; do not perform the upload merely because a file name was indexed.
+4. Commit newly available project **source/build files** to GitHub through real write tools or an established CI workflow. Do not claim source was committed if no files were obtained. GitHub Actions may build and hand resulting runtimes directly to Drive **only when project-specific build recipes and valid Drive credentials are configured**.
+5. Only after the full distribution is verified on Drive, rename the previous `00_LATEST` folder back to its checkpoint name and mark the newer release `00_LATEST — <checkpoint>`. Preserve rollback releases.
+6. Report separately: latest release **identified in ChatGPT**, latest **source/build committed in GitHub**, latest **runtime distribution confirmed in Drive**, and any transfer blocked by missing bytes or connector access.
+
+**Critical integration limit:** GitHub Actions cannot read the user's private ChatGPT Library. ChatGPT Library file IDs, Files search snippets and sandbox paths are **not** Google Drive `file_uri` handles. A supported bridge or a new build in an accessible execution environment is required. The daily watcher is a scheduled best-effort check, not guaranteed synchronization. Never invent transfers or report blocked work as completed.
+
+## Verified current Rubedo release and rollback
+
+- **Latest verified runtime on Drive:** [Rubedo CP12R1 Pad Map SaveFix — v0.9.7-cp12r1](https://drive.google.com/drive/folders/1IwAehMK6LZMmoJFXn8o5Dd0LYkIHMfmw), all 13 CLAP multipart volumes present in folder and source/QA recorded on [GitHub](https://github.com/uill12/Plugins-VST-s/tree/main/Rubedo-Atlas-Drumkit/checkpoints/CP12R1_Pad_Maps). Windows Bitwig user testing not yet confirmed.
+- **Preserved prior release:** [Rubedo CP11 SkinSync](https://drive.google.com/drive/folders/1F6tAkwEtkKyRgiSLVdE4gAd05eFAt3Ah). Older releases and host-tested rollback states must remain untouched.
+- Other projects' latest ChatGPT candidates need a supported byte-transfer route before any Drive upload may be claimed.
+
+## QA and release manifest invariants
+
+For each format and platform separately, verify descriptor IDs, exports/entrypoints, version strings, stable parameter IDs, saved state/presets and automation, MIDI/audio routing, sample-rate behavior and render/host evidence. Manifest should include project, semver, CP, ISO build date, source commit, OS/arch, formats, internal IDs/versions, SHA-256 for each distributed artifact, compilation/host QA status, exact Drive and GitHub URLs, and rollback reference.
+
+RGNES standard files are in `standards/`; it is an account plugin method applied during work, **not** retroactive recompilation of existing binaries.
