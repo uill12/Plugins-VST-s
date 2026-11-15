@@ -78,7 +78,10 @@ void rubedo_init_engine(RubedoEngine *e){
  rb_zero(e,sizeof(*e));e->sample_rate=48000.;e->gain=0.7;e->kit=0;
  for(int i=0;i<24;++i)e->mappings[i]=(int16_t)(36+i);
  for(int i=0;i<34;i++)e->params[i]=0.5;
- e->bpm=126.;e->midi_learn_target=-1;e->chance=1.0f;e->swing=.14f;e->scatter=.18f;for(int z=0;z<24;z++){e->pitch[z]=.5f;e->decay_shape[z]=.5f;e->fm_depth[z]=.5f;}e->steps[0]=0x1111;e->steps[2]=0x1010;e->steps[4]=0x5555;e->steps[5]=0xaaaa;e->params[0]=0.;e->params[1]=0.65;e->params[2]=0.5;e->params[3]=0.5;e->params[4]=0.;e->params[5]=0.5;
+ e->bpm=126.;atomic_init(&e->midi_learn_target,-1);atomic_init(&e->ui_note_seq,0);atomic_init(&e->ui_last_pad,-1);atomic_init(&e->ui_pending_mask,0);atomic_init(&e->audition_head,0);atomic_init(&e->audition_tail,0);atomic_init(&e->ui_learn_seq,0);atomic_init(&e->ui_learn_note,-1);e->chance=1.0f;e->swing=.14f;e->scatter=.18f;for(int z=0;z<24;z++){e->pitch[z]=.5f;e->decay_shape[z]=.5f;e->fm_depth[z]=.5f;e->pad_gain[z]=.5f;e->pad_attack[z]=0.f;e->pad_release[z]=.5f;}e->steps[0]=0x1111;e->steps[2]=0x1010;e->steps[4]=0x5555;e->steps[5]=0xaaaa;
+ for(int v=0;v<4;v++)for(int pad=0;pad<RUBEDO_PADS;pad++){
+  uint16_t s=e->steps[pad];unsigned rotation=(unsigned)(4*v);e->patterns[v][pad]=(uint16_t)((s<<rotation)|(s>>(16-rotation)));
+ }e->variation=0;e->params[0]=0.;e->params[1]=0.65;e->params[2]=0.5;e->params[3]=0.5;e->params[4]=0.;e->params[5]=0.5;
  for(int i=10;i<34;i++)e->params[i]=1.0;
 }
 void rubedo_activate(RubedoEngine *e,double sr){e->sample_rate=(sr>=8000.&&sr<=384000.)?sr:48000.;rubedo_panic(e);}
@@ -88,15 +91,8 @@ void rubedo_set_param(RubedoEngine *e,unsigned id,double value){
  if(id==0){int k=(int)(value+0.5);if(k<0)k=0;if(k>23)k=23;e->kit=(uint32_t)k;e->params[id]=k;return;}
  if(value<0)value=0;if(value>1)value=1;e->params[id]=value;
 }
-void rubedo_note_on(RubedoEngine *e,int note,double velocity){
- if(!rubedo_bank.data||velocity<=0)return;
- e->ui_last_note=(uint32_t)note;
- if(e->midi_learn_target>=0&&e->midi_learn_target<RUBEDO_PADS){
-   e->mappings[e->midi_learn_target]=(int16_t)note;e->midi_learn_target=-1;
- }
- int pad=-1;
- for(int i=0;i<RUBEDO_PADS;i++)if(e->mappings[i]==note){pad=i;break;}
- if(pad<0)return;
+static void rb_start_voice(RubedoEngine *e,int pad,double velocity){
+ if(!e||!rubedo_bank.data||pad<0||pad>=RUBEDO_PADS||velocity<=0)return;
  if(pad==4){for(int i=0;i<RUBEDO_VOICES;i++)if(e->voices[i].active&&e->voices[i].pad==5)e->voices[i].active=0;}
  uint32_t var=(velocity>=0.52?2:0)+(e->rr[pad]++ & 1);
  uint32_t index=(e->kit*24u+(uint32_t)pad)*4u+var;
@@ -107,6 +103,7 @@ void rubedo_note_on(RubedoEngine *e,int note,double velocity){
  RubedoVoice *v=&e->voices[victim];
  v->active=1;v->position=0;v->step=(96000./e->sample_rate)*(0.70+0.60*(double)e->pitch[pad]);v->kit=e->kit;v->pad=(uint32_t)pad;v->variation=var;
  v->amplitude=rb_clamp((float)(0.16+velocity*0.84),0.f,1.f)*rb_clamp((float)e->params[10+pad],0.f,1.f);
+ if(e->pad_gain[pad]!=.5f)v->amplitude*=(float)(.25+1.5*(double)e->pad_gain[pad]);
  v->last_l=v->last_r=0;
  // Use bandlimited reconstruction when source-position advances faster than 1.15 samples/frame.
  // Preserves natural 96k->88.2k sample rate conversion at neutral pitch; prevents 44.1/48k aliasing.
@@ -118,6 +115,46 @@ void rubedo_note_on(RubedoEngine *e,int note,double velocity){
    }
    if(v->sinc_band==255)v->sinc_band=(uint8_t)(sizeof(rubedo_cutoffs)/sizeof(rubedo_cutoffs[0])-1);
  }
+}
+static void rb_mark_pad(RubedoEngine *e,int pad){
+ atomic_store_explicit(&e->ui_last_pad,pad,memory_order_relaxed);
+ atomic_fetch_or_explicit(&e->ui_pending_mask,1u<<pad,memory_order_release);
+ atomic_fetch_add_explicit(&e->ui_note_seq,1,memory_order_release);
+}
+void rubedo_trigger_pad(RubedoEngine *e,int pad,double velocity){
+ rb_start_voice(e,pad,velocity);if(e&&pad>=0&&pad<24&&velocity>0)rb_mark_pad(e,pad);
+}
+void rubedo_request_audition(RubedoEngine*e,int pad,double velocity){
+ if(!e||pad<0||pad>=RUBEDO_PADS||velocity<=0)return;
+ if(velocity>1.)velocity=1.;
+ unsigned head=atomic_load_explicit(&e->audition_head,memory_order_relaxed);
+ unsigned tail=atomic_load_explicit(&e->audition_tail,memory_order_acquire);
+ if(head-tail>=64)return; // bounded, lock-free SPSC GUI -> audio queue
+ e->audition_queue[head&63u]=((uint32_t)pad<<8)|(uint32_t)(velocity*255.+.5);
+ atomic_store_explicit(&e->audition_head,head+1,memory_order_release);
+}
+void rubedo_note_on(RubedoEngine *e,int note,double velocity){
+ if(!e||velocity<=0||note<0||note>127)return;
+ e->ui_last_note=(uint32_t)note;
+ int target=atomic_exchange_explicit(&e->midi_learn_target,-1,memory_order_acq_rel);
+ if(target>=0&&target<RUBEDO_PADS){
+  // Swap the conflicting assignment instead of creating an unreachable duplicate note.
+  int old=e->mappings[target];
+  for(int j=0;j<RUBEDO_PADS;j++)if(j!=target&&e->mappings[j]==note){e->mappings[j]=(int16_t)old;break;}
+  e->mappings[target]=(int16_t)note;
+  atomic_store_explicit(&e->ui_learn_note,note,memory_order_relaxed);
+  atomic_fetch_add_explicit(&e->ui_learn_seq,1,memory_order_release);
+  rb_start_voice(e,target,velocity);rb_mark_pad(e,target);return;
+ }
+ for(int pad=0;pad<RUBEDO_PADS;pad++)if(e->mappings[pad]==note){rb_start_voice(e,pad,velocity);rb_mark_pad(e,pad);return;}
+}
+void rubedo_pattern_changed(RubedoEngine*e){
+ if(e)for(int i=0;i<RUBEDO_PADS;i++)e->patterns[e->variation&3u][i]=e->steps[i];
+}
+void rubedo_select_variation(RubedoEngine*e,unsigned variation){
+ if(!e)return;
+ rubedo_pattern_changed(e);e->variation=(uint8_t)(variation&3u);
+ for(int i=0;i<RUBEDO_PADS;i++)e->steps[i]=e->patterns[e->variation][i];
 }
 static float rb_sample(const uint8_t*ptr,uint32_t j){
  const uint8_t*p=ptr+3ull*j;
@@ -171,6 +208,14 @@ static void rb_soft_ceiling(float *l,float*r){
 }
 void rubedo_render(RubedoEngine*e,float*l,float*r,double*ld,double*rd,uint32_t frames){
  if(!e||!rubedo_bank.data){for(uint32_t i=0;i<frames;i++){if(l)l[i]=0;if(r)r[i]=0;if(ld)ld[i]=0;if(rd)rd[i]=0;}return;}
+ // UI pad audition is applied on the audio thread, never directly to live voices.
+ unsigned tail=atomic_load_explicit(&e->audition_tail,memory_order_relaxed);
+ unsigned head=atomic_load_explicit(&e->audition_head,memory_order_acquire);
+ while(tail!=head){uint32_t packet=e->audition_queue[tail&63u];
+  int pad=(int)((packet>>8)&255u);double vel=(double)(packet&255u)/255.;
+  rb_start_voice(e,pad,vel);tail++;
+ }
+ atomic_store_explicit(&e->audition_tail,tail,memory_order_release);
  float gain=(float)(e->params[1]*1.25);
  float drive=(float)e->params[4];
  for(uint32_t i=0;i<frames;++i){
@@ -182,7 +227,7 @@ void rubedo_render(RubedoEngine*e,float*l,float*r,double*ld,double*rd,uint32_t f
       // Repeatable non-pitched cellular probability mask, governed by Scatter/Chance.
       uint32_t cell=((st*1103515245u+pad*747796405u+e->note_serial*2891336453u)>>17)&1023u;
       double probability=e->chance*(1.0-e->scatter*.25)*(1.0-e->params[8]*.20);
-      if((double)cell/1023.0 < probability)rubedo_note_on(e,e->mappings[pad],0.85);
+      if((double)cell/1023.0 < probability)rb_start_voice(e,pad,0.85);
     }
     e->step_index=(st+1)&15u;e->note_serial++;
     double sh=e->swing*.45+(e->params[3]-.5)*.10;
@@ -197,9 +242,18 @@ void rubedo_render(RubedoEngine*e,float*l,float*r,double*ld,double*rd,uint32_t f
    if(v->position+1>=reg->frames){v->active=0;continue;}
    float s=(v->sinc_band==255?rb_cubic(rubedo_bank.data+reg->offset,reg->frames,v->position):rb_sinc_sample(rubedo_bank.data+reg->offset,reg->frames,v->position,v->sinc_band))*v->amplitude;
    float d=e->decay_shape[v->pad]+(float)((e->params[7]-.5)*.35);
-   if(d>.5f){double t=v->position/96000.0;float decay=1.0f-(float)(t*(d-.5f)*1.6);
-     if(decay<0)decay=0;s*=decay;}
-   float fm=e->fm_depth[v->pad];if(fm>.5f){float depth=(fm-.5f)*.32f;s+=depth*(s*s*s-s*.33f);}
+   if(d>.5f||(e->decay_active[v->pad]&&d!=.5f)){double t=v->position/96000.0;float decay=1.0f-(float)(t*(d-.5f)*1.6);
+     if(decay<0)decay=0;if(decay>1.18f)decay=1.18f;s*=decay;}
+   float fm=e->fm_depth[v->pad];if(fm>.5f||(e->fm_active[v->pad]&&fm!=.5f)){float depth=(fm-.5f)*.32f;s+=depth*(s*s*s-s*.33f);}
+   // Independent voice envelope controls (defaults are sonically neutral).
+   if(e->pad_attack[v->pad]>.0001f){
+     double age=v->position/96000.0,attack=(double)e->pad_attack[v->pad]*.095;
+     if(age<attack)s*=(float)(age/attack);
+   }
+   float rel=e->pad_release[v->pad];
+   if(rel<.499f){float t=(float)(v->position/(double)reg->frames);float amt=(.5f-rel)*2.f;
+     float fade=1.0f-amt*t*t;if(fade<0)fade=0;s*=fade;
+   }else if(rel>.501f){float t=(float)(v->position/(double)reg->frames);s*=1.f+(rel-.5f)*.38f*t;}
    // Attack contour only softens transients when moved above neutral.
    if(e->params[6]>.5){double age=v->position/96000.0,ms=(e->params[6]-.5)*.07;
      if(age<ms)s*=(float)(age/ms);}
@@ -250,4 +304,25 @@ void rubedo_import_extra(RubedoEngine*e,const RubedoExtraState*s){
  if(s->scatter>=0&&s->scatter<=1)e->scatter=s->scatter;
  if(s->chance>=0&&s->chance<=1)e->chance=s->chance;
  if(s->bpm>=40&&s->bpm<=250)e->bpm=s->bpm;
+}
+
+void rubedo_export_extra_v3(RubedoEngine*e,RubedoExtraStateV3*s){
+ if(!e||!s)return;rubedo_pattern_changed(e);
+ for(int i=0;i<24;i++){
+  s->gain[i]=e->pad_gain[i];s->attack[i]=e->pad_attack[i];s->release[i]=e->pad_release[i];s->decay_active[i]=e->decay_active[i];s->fm_active[i]=e->fm_active[i];
+  for(int v=0;v<4;v++)s->patterns[v][i]=e->patterns[v][i];
+ }
+ s->variation=e->variation;s->reserved[0]=s->reserved[1]=s->reserved[2]=0;
+}
+void rubedo_import_extra_v3(RubedoEngine*e,const RubedoExtraStateV3*s){
+ if(!e||!s)return;
+ for(int i=0;i<24;i++){
+  if(s->gain[i]>=0.f&&s->gain[i]<=1.f)e->pad_gain[i]=s->gain[i];
+  if(s->attack[i]>=0.f&&s->attack[i]<=1.f)e->pad_attack[i]=s->attack[i];
+  if(s->release[i]>=0.f&&s->release[i]<=1.f)e->pad_release[i]=s->release[i];
+  e->decay_active[i]=(uint8_t)(s->decay_active[i]!=0);e->fm_active[i]=(uint8_t)(s->fm_active[i]!=0);
+  for(int v=0;v<4;v++)e->patterns[v][i]=s->patterns[v][i];
+ }
+ e->variation=(uint8_t)(s->variation&3u);
+ for(int i=0;i<24;i++)e->steps[i]=e->patterns[e->variation][i];
 }
