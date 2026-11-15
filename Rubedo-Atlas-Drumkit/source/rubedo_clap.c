@@ -18,7 +18,7 @@ static void rb_u32txt(char *out,int num){char tmp[20];int i=0,j=0;if(num<0){out[
 static void rb_value_txt(char*out,uint32_t size,double x){if(size<12){if(size)out[0]=0;return;}int neg=x<0;if(neg)x=-x;int p=(int)(x*100.+.5);int whole=p/100,frac=p%100;char b[32];rb_u32txt(b,whole);int i=0;if(neg)out[i++]='-';for(int j=0;b[j]&&i<(int)size-4;j++)out[i++]=b[j];out[i++]='.';out[i++]=(char)('0'+frac/10);out[i++]=(char)('0'+frac%10);out[i]=0;}
 static double rb_parse(const char*s){if(!s)return 0;double x=0,frac=.1;int sign=1;if(*s=='-'){sign=-1;s++;}while(*s>='0'&&*s<='9'){x=x*10+(*s-'0');s++;}if(*s=='.'){s++;while(*s>='0'&&*s<='9'){x+=(*s-'0')*frac;frac*=.1;s++;}}return sign*x;}
 static const char *g_features[]={"instrument","drum",NULL};
-static const clap_plugin_descriptor_t g_desc={{1,2,0},"com.rubedo.atlas-drumkit","Rubedo Atlas Drumkit","Rubedo Atlas","","","","0.9.3-cp08r2","24 synthesized percussion kits with 24 voices, original 96k PCM24 bank",g_features};
+static const clap_plugin_descriptor_t g_desc={{1,2,0},"com.rubedo.atlas-drumkit","Rubedo Atlas Drumkit","Rubedo Atlas","","","","0.9.4-cp09","24 synthesized percussion kits with 24 voices, original 96k PCM24 bank",g_features};
 typedef struct RubedoClap {clap_plugin_t api;const clap_host_t*host;RubedoEngine engine;uint8_t initialized,processing,gui_created;RBGui gui;} RubedoClap;
 static const char *g_params[10]={"KIT / ATLAS","MASTER OUTPUT","TONE","MATERIAL MOTION","DRIVE","WIDTH","ATTACK","DECAY","CELLULAR","SPACE"};
 static RubedoClap*context(const clap_plugin_t*p){return (RubedoClap*)p->plugin_data;}
@@ -76,24 +76,29 @@ static const clap_plugin_params_t g_par={par_count,par_info,par_val,par_text,par
 typedef struct RubedoSaved {uint32_t magic,version,kit;double params[RUBEDO_PARAMS];int16_t mappings[RUBEDO_PADS];}RubedoSaved;
 static bool st_save(const clap_plugin_t*p,const clap_ostream_t*stream){
  if(!stream||!stream->write)return false;
- RubedoEngine*e=&context(p)->engine;RubedoSaved state={0};RubedoExtraState extra;
- state.magic=0x42445252u;state.version=2;state.kit=e->kit;
+ RubedoEngine*e=&context(p)->engine;RubedoSaved state={0};RubedoExtraState extra;RubedoExtraStateV3 extra3;
+ state.magic=0x42445252u;state.version=3;state.kit=e->kit;
  for(int i=0;i<34;i++)state.params[i]=e->params[i];
  for(int i=0;i<24;i++)state.mappings[i]=e->mappings[i];
- rubedo_export_extra(e,&extra);
+ rubedo_export_extra(e,&extra);rubedo_export_extra_v3(e,&extra3);
  if(stream->write(stream,&state,sizeof(state))!=(int64_t)sizeof(state))return false;
- return stream->write(stream,&extra,sizeof(extra))==(int64_t)sizeof(extra);
+ if(stream->write(stream,&extra,sizeof(extra))!=(int64_t)sizeof(extra))return false;
+ return stream->write(stream,&extra3,sizeof(extra3))==(int64_t)sizeof(extra3);
 }
 static bool st_load(const clap_plugin_t*p,const clap_istream_t*stream){
  if(!stream||!stream->read)return false;RubedoSaved state;uint8_t*mem=(uint8_t*)&state;uint64_t off=0;
  while(off<sizeof(state)){int64_t n=stream->read(stream,mem+off,sizeof(state)-off);if(n<=0)return false;off+=n;}
- if(state.magic!=0x42445252u||(state.version!=1&&state.version!=2))return false;
+ if(state.magic!=0x42445252u||(state.version!=1&&state.version!=2&&state.version!=3))return false;
  RubedoEngine*e=&context(p)->engine;
  for(int i=0;i<34;i++)rubedo_set_param(e,i,state.params[i]);
  for(int i=0;i<24;i++)if(state.mappings[i]>=0&&state.mappings[i]<=127)e->mappings[i]=state.mappings[i];
- if(state.version==2){RubedoExtraState extra;off=0;mem=(uint8_t*)&extra;
+ if(state.version>=2){RubedoExtraState extra;off=0;mem=(uint8_t*)&extra;
   while(off<sizeof(extra)){int64_t n=stream->read(stream,mem+off,sizeof(extra)-off);if(n<=0)return false;off+=n;}
   rubedo_import_extra(e,&extra);
+ }
+ if(state.version>=3){RubedoExtraStateV3 extra3;off=0;mem=(uint8_t*)&extra3;
+  while(off<sizeof(extra3)){int64_t n=stream->read(stream,mem+off,sizeof(extra3)-off);if(n<=0)return false;off+=n;}
+  rubedo_import_extra_v3(e,&extra3);
  }
  return true;
 }
