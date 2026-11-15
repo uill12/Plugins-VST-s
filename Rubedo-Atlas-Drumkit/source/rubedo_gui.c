@@ -9,7 +9,24 @@ extern void *rubedo_module;
 typedef intptr_t LRESULT;typedef uintptr_t WPARAM;typedef intptr_t LPARAM;
 typedef struct {int32_t left,top,right,bottom;}RECT;
 typedef struct {uint32_t cbSize;uint32_t style;void*proc;int32_t clsExtra,wndExtra;void*instance,*icon,*cursor,*background;const char*menu,*className;void*smallIcon;} WNDCLASSEXA;
-typedef struct {void*hwnd;void*menu;void*parent;int cy,cx,y,x;long style;const char*name,*cls;uint32_t exStyle;void*createParams;} CREATESTRUCTA;
+// The real Win32 CREATESTRUCTA layout begins with lpCreateParams. CP08R1
+// incorrectly placed createParams at the end, leaving GWLP_USERDATA invalid.
+// This is a 64-bit Win32 ABI structure, not an arbitrary C data record.
+typedef struct {
+ void *createParams;  // lpCreateParams, offset 0
+ void *instance;      // hInstance, offset 8
+ void *menu;          // hMenu, offset 16
+ void *parent;        // hwndParent, offset 24
+ int32_t cy,cx,y,x;   // offsets 32..47
+ int32_t style;       // offset 48
+ const char *name;    // lpszName, offset 56
+ const char *cls;     // lpszClass, offset 64
+ uint32_t exStyle;    // dwExStyle, offset 72
+} CREATESTRUCTA;
+_Static_assert(sizeof(CREATESTRUCTA)==80,"Win64 CREATESTRUCTA size mismatch");
+_Static_assert(offsetof(CREATESTRUCTA,createParams)==0,"Win64 CREATESTRUCTA lpCreateParams offset mismatch");
+_Static_assert(offsetof(CREATESTRUCTA,style)==48,"Win64 CREATESTRUCTA style offset mismatch");
+_Static_assert(offsetof(CREATESTRUCTA,exStyle)==72,"Win64 CREATESTRUCTA dwExStyle offset mismatch");
 typedef struct {void*hdc;int erased;RECT rect;int restore,update;uint8_t reserved[32];} PAINTSTRUCT;
 typedef struct {uint32_t size;int32_t width,height;uint16_t planes,bits;uint32_t compression,imageSize;int32_t xppu,yppu;uint32_t colorsUsed,important;}BITMAPINFOHEADER;
 typedef struct {BITMAPINFOHEADER h;uint32_t colors[1];}BITMAPINFO;
@@ -278,12 +295,18 @@ static void rb_click(RBGui*g,int x,int y){if(!g||!g->engine)return;
 }
 static LRESULT W32 rb_window_proc(void*hwnd,uint32_t message,WPARAM wp,LPARAM lp){
  // WM_NCCREATE: store the instance pointer before any input, size, or paint dispatch.
- if(message==129){CREATESTRUCTA *cs=(CREATESTRUCTA*)lp;
+ if(message==129){ // WM_NCCREATE: Windows supplies CREATESTRUCTA.lpCreateParams at offset 0.
+  const CREATESTRUCTA *cs=(const CREATESTRUCTA*)lp;
+  if(!cs||!cs->createParams)return 0;
   SetWindowLongPtrA(hwnd,-21,(intptr_t)cs->createParams);
   return DefWindowProcA(hwnd,message,wp,lp);
  }
- if(message==1){CREATESTRUCTA *cs=(CREATESTRUCTA*)lp;
-  SetWindowLongPtrA(hwnd,-21,(intptr_t)cs->createParams);return 0;}
+ if(message==1){ // WM_CREATE: retrieve the same stable editor object.
+  const CREATESTRUCTA *cs=(const CREATESTRUCTA*)lp;
+  if(!cs||!cs->createParams)return -1;
+  SetWindowLongPtrA(hwnd,-21,(intptr_t)cs->createParams);
+  return 0;
+ }
  RBGui *gui=(RBGui*)GetWindowLongPtrA(hwnd,-21);
  if(message==20)return 1; // WM_ERASEBKGND: no flash over approved artwork.
  if(message==5&&gui){rb_actual_size(gui);InvalidateRect(hwnd,0,0);return 0;}
@@ -350,7 +373,7 @@ int rb_gui_attach(RBGui *g,void*parent,RubedoEngine*e,void*ctx,void(*fn)(void*,d
  if(!g||!parent)return 0;g->engine=e;g->callback_context=ctx;g->kit_changed=fn;
  g->kit=e?e->kit:g->kit;g->selected=0;g->width=RB_GUI_WIDTH;g->height=RB_GUI_HEIGHT;g->hover_control=-1;g->learn_active=0;g->force=0;g->mode=0;g->routing=0;g->dragging=0;g->input_events=0;g->editor_only=0;
  if(!rb_read_picture())return 0;
- WNDCLASSEXA cls={0};cls.cbSize=sizeof(cls);cls.style=3;cls.proc=(void*)rb_window_proc;cls.instance=rubedo_module;cls.className="RubedoAtlasDrumkitInputCP05";cls.background=0;cls.clsExtra=0;cls.wndExtra=0;cls.style=3;
+ WNDCLASSEXA cls={0};cls.cbSize=sizeof(cls);cls.style=3;cls.proc=(void*)rb_window_proc;cls.instance=rubedo_module;cls.className="RubedoAtlasDrumkitInputCP08R2";cls.background=0;cls.clsExtra=0;cls.wndExtra=0;cls.style=3;
  cls.smallIcon=0;cls.icon=0;cls.cursor=0;cls.menu=0;cls.style=3;
  RegisterClassExA(&cls);
  void*hwnd=CreateWindowExA(0,cls.className,"Rubedo Atlas Drumkit",0x50000000,0,0,RB_GUI_WIDTH,RB_GUI_HEIGHT,parent,0,rubedo_module,g);
