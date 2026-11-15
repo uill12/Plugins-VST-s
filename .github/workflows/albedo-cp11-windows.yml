@@ -1,0 +1,48 @@
+name: Albedo CP11 Windows x64 CLAP and VST3
+on:
+  workflow_dispatch:
+  push:
+    branches: [albedo-cp11]
+    paths:
+      - 'Albedo-Quintessential-Synth/**'
+      - '.github/workflows/albedo-cp11-windows.yml'
+permissions:
+  contents: read
+jobs:
+  windows-x64:
+    runs-on: windows-2022
+    timeout-minutes: 75
+    defaults:
+      run:
+        working-directory: Albedo-Quintessential-Synth
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify full source and embedded resources exist
+        shell: pwsh
+        run: |
+          foreach ($p in @('CMakeLists.txt', 'Build_Windows_x64.ps1', 'resources/Albedo_Horizontal_Light.bmp', 'resources/Albedo_Horizontal_Nigredo.bmp', 'resources/Albedo_Materia32_PCM24_96k.vtrb', 'include/albedo_factory_patches.hpp', 'tools/verify_pe_exports.py')) {
+            if (!(Test-Path $p)) { throw "Missing build input: $p" }
+          }
+      - name: Compile and test native Win64 plugins
+        shell: pwsh
+        run: .\Build_Windows_x64.ps1 -Configuration Release
+      - name: Record checksums and native regression evidence
+        shell: pwsh
+        run: |
+          Get-ChildItem dist_windows_CP11 -Recurse -File |
+            ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash, $_.FullName } |
+            Out-File -Encoding utf8 WINDOWS_SHA256.txt
+          ctest --test-dir build_windows_x64 --config Release --output-on-failure |
+            Out-File -Encoding utf8 WINDOWS_CTEST.txt
+      - name: Upload only verified Windows binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP11_Windows_x64_CLAP_VST3
+          path: |
+            Albedo-Quintessential-Synth/Albedo_Quintessential_Synth_Windows_x64_CP11.zip
+            Albedo-Quintessential-Synth/WINDOWS_SHA256.txt
+            Albedo-Quintessential-Synth/WINDOWS_CTEST.txt
+          if-no-files-found: error
