@@ -10,15 +10,24 @@ void *rubedo_module=0;
 #else
 #include <stdlib.h>
 #endif
+// Host callbacks (CLAP 1.2 stable ABI); used to notify Bitwig when a MIDI learn changes state.
+struct clap_host {clap_version_t clap_version;void *host_data;
+ const char *name,*vendor,*url,*version;
+ const void *(*get_extension)(const clap_host_t*,const char*);
+ void (*request_restart)(const clap_host_t*);
+ void (*request_process)(const clap_host_t*);
+ void (*request_callback)(const clap_host_t*);
+};
+typedef struct {void (*mark_dirty)(const clap_host_t*);} rb_clap_host_state_t;
 static void rb_memcpy(void *dst,const void*src,uint32_t len){char*d=dst;const char*s=src;for(uint32_t i=0;i<len;i++)d[i]=s[i];}
 static void rb_bzero(void*dst,uint32_t len){char*p=dst;for(uint32_t i=0;i<len;i++)p[i]=0;}
-static int rb_streq(const char*a,const char*b){if(!a||!b)return 0;for(;*a&&*a==*b;a++,b++);return *a==*b;}
+static int rb_streq(const char*a,const char*b){if(!a||!b)return 0;for(;*a&&*a==*b;a++,b++){}return *a==*b;}
 static void rb_strcpy(char*d,const char*s,uint32_t cap){uint32_t i=0;if(!cap)return;for(;i+1<cap&&s[i];i++)d[i]=s[i];d[i]=0;}
 static void rb_u32txt(char *out,int num){char tmp[20];int i=0,j=0;if(num<0){out[j++]='-';num=-num;}do{tmp[i++]=(char)('0'+(num%10));num/=10;}while(num&&i<18);while(i)out[j++]=tmp[--i];out[j]=0;}
 static void rb_value_txt(char*out,uint32_t size,double x){if(size<12){if(size)out[0]=0;return;}int neg=x<0;if(neg)x=-x;int p=(int)(x*100.+.5);int whole=p/100,frac=p%100;char b[32];rb_u32txt(b,whole);int i=0;if(neg)out[i++]='-';for(int j=0;b[j]&&i<(int)size-4;j++)out[i++]=b[j];out[i++]='.';out[i++]=(char)('0'+frac/10);out[i++]=(char)('0'+frac%10);out[i]=0;}
 static double rb_parse(const char*s){if(!s)return 0;double x=0,frac=.1;int sign=1;if(*s=='-'){sign=-1;s++;}while(*s>='0'&&*s<='9'){x=x*10+(*s-'0');s++;}if(*s=='.'){s++;while(*s>='0'&&*s<='9'){x+=(*s-'0')*frac;frac*=.1;s++;}}return sign*x;}
 static const char *g_features[]={"instrument","drum",NULL};
-static const clap_plugin_descriptor_t g_desc={{1,2,0},"com.rubedo.atlas-drumkit","Rubedo Atlas Drumkit","Rubedo Atlas","","","","0.9.4-cp09","24 synthesized percussion kits with 24 voices, original 96k PCM24 bank",g_features};
+static const clap_plugin_descriptor_t g_desc={{1,2,0},"com.rubedo.atlas-drumkit","Rubedo Atlas Drumkit","Rubedo Atlas","","","","0.9.5-cp10","24 synthesized percussion kits with 24 voices, original 96k PCM24 bank",g_features};
 typedef struct RubedoClap {clap_plugin_t api;const clap_host_t*host;RubedoEngine engine;uint8_t initialized,processing,gui_created;RBGui gui;} RubedoClap;
 static const char *g_params[10]={"KIT / ATLAS","MASTER OUTPUT","TONE","MATERIAL MOTION","DRIVE","WIDTH","ATTACK","DECAY","CELLULAR","SPACE"};
 static RubedoClap*context(const clap_plugin_t*p){return (RubedoClap*)p->plugin_data;}
@@ -56,6 +65,9 @@ static int32_t cb_process(const clap_plugin_t*p,const clap_process_t*pr){
   rb_event(e,h);last=pos;
  }
  if(last<pr->frames_count)rubedo_render(e,lo?lo+last:0,ro?ro+last:0,ld?ld+last:0,rd?rd+last:0,pr->frames_count-last);
+ const clap_host_t*host=context(p)->host;
+ if(atomic_exchange_explicit(&e->host_mapping_dirty,0,memory_order_acq_rel)
+    &&host&&host->request_callback)host->request_callback(host);
  return CLAP_PROCESS_CONTINUE;
 }
 static uint32_t audio_count(const clap_plugin_t*p,bool is_input){(void)p;return is_input?0:1;}
@@ -71,7 +83,11 @@ static bool par_info(const clap_plugin_t*p,uint32_t idx,clap_param_info_t*inf){(
 static bool par_val(const clap_plugin_t*p,clap_id id,double*value){if(!value||id>=RUBEDO_PARAMS)return false;*value=context(p)->engine.params[id];return true;}
 static bool par_text(const clap_plugin_t*p,clap_id id,double value,char*buffer,uint32_t size){(void)p;if(id>=RUBEDO_PARAMS||!buffer)return false;if(id==0){int idx=(int)(value+.5);if(idx<0)idx=0;if(idx>23)idx=23;rb_strcpy(buffer,rubedo_kit_names[idx],size);return true;}rb_value_txt(buffer,size,value);return true;}
 static bool par_parse(const clap_plugin_t*p,clap_id id,const char*text,double*value){(void)p;if(!text||!value||id>=RUBEDO_PARAMS)return false;if(id==0){for(int i=0;i<24;i++)if(rb_streq(text,rubedo_kit_names[i])){*value=i;return true;}}*value=rb_parse(text);return true;}
-static void par_flush(const clap_plugin_t*p,const clap_input_events_t*input,const clap_output_events_t*out){(void)out;if(!input)return;RubedoEngine*e=&context(p)->engine;uint32_t n=input->size(input);for(uint32_t i=0;i<n;i++)rb_event(e,input->get(input,i));}
+static void par_flush(const clap_plugin_t*p,const clap_input_events_t*input,const clap_output_events_t*out){(void)out;if(!input)return;RubedoEngine*e=&context(p)->engine;uint32_t n=input->size(input);for(uint32_t i=0;i<n;i++)rb_event(e,input->get(input,i));
+ const clap_host_t*host=context(p)->host;
+ if(atomic_exchange_explicit(&e->host_mapping_dirty,0,memory_order_acq_rel)
+    &&host&&host->request_callback)host->request_callback(host);
+}
 static const clap_plugin_params_t g_par={par_count,par_info,par_val,par_text,par_parse,par_flush};
 typedef struct RubedoSaved {uint32_t magic,version,kit;double params[RUBEDO_PARAMS];int16_t mappings[RUBEDO_PADS];}RubedoSaved;
 static bool st_save(const clap_plugin_t*p,const clap_ostream_t*stream){
@@ -79,7 +95,7 @@ static bool st_save(const clap_plugin_t*p,const clap_ostream_t*stream){
  RubedoEngine*e=&context(p)->engine;RubedoSaved state={0};RubedoExtraState extra;RubedoExtraStateV3 extra3;
  state.magic=0x42445252u;state.version=3;state.kit=e->kit;
  for(int i=0;i<34;i++)state.params[i]=e->params[i];
- for(int i=0;i<24;i++)state.mappings[i]=e->mappings[i];
+ for(int i=0;i<24;i++)state.mappings[i]=(int16_t)atomic_load_explicit(&e->mappings[i],memory_order_acquire);
  rubedo_export_extra(e,&extra);rubedo_export_extra_v3(e,&extra3);
  if(stream->write(stream,&state,sizeof(state))!=(int64_t)sizeof(state))return false;
  if(stream->write(stream,&extra,sizeof(extra))!=(int64_t)sizeof(extra))return false;
@@ -91,7 +107,8 @@ static bool st_load(const clap_plugin_t*p,const clap_istream_t*stream){
  if(state.magic!=0x42445252u||(state.version!=1&&state.version!=2&&state.version!=3))return false;
  RubedoEngine*e=&context(p)->engine;
  for(int i=0;i<34;i++)rubedo_set_param(e,i,state.params[i]);
- for(int i=0;i<24;i++)if(state.mappings[i]>=0&&state.mappings[i]<=127)e->mappings[i]=state.mappings[i];
+ if(state.kit<RUBEDO_KITS)rubedo_set_param(e,0,(double)state.kit); // serialized kit is authoritative, including v1
+ rubedo_import_mappings(e,state.mappings);
  if(state.version>=2){RubedoExtraState extra;off=0;mem=(uint8_t*)&extra;
   while(off<sizeof(extra)){int64_t n=stream->read(stream,mem+off,sizeof(extra)-off);if(n<=0)return false;off+=n;}
   rubedo_import_extra(e,&extra);
@@ -120,7 +137,12 @@ static bool gui_show(const clap_plugin_t*p){rb_gui_show(&context(p)->gui,1);retu
 static bool gui_hide(const clap_plugin_t*p){rb_gui_show(&context(p)->gui,0);return true;}
 static const clap_plugin_gui_t g_gui={gui_api,gui_pref,gui_create,gui_destroy,gui_scale,gui_size,gui_canresize,gui_hints,gui_adjust,gui_setsize,gui_parent,gui_trans,gui_title,gui_show,gui_hide};
 static const void*cb_ext(const clap_plugin_t*p,const char*id){(void)p;if(rb_streq(id,CLAP_EXT_AUDIO_PORTS))return &g_audio;if(rb_streq(id,CLAP_EXT_NOTE_PORTS))return &g_note;if(rb_streq(id,CLAP_EXT_PARAMS))return &g_par;if(rb_streq(id,CLAP_EXT_STATE))return &g_state;if(rb_streq(id,CLAP_EXT_GUI))return &g_gui;return 0;}
-static void cb_main(const clap_plugin_t*p){(void)p;}
+static void cb_main(const clap_plugin_t*p){
+ const clap_host_t*host=context(p)->host;
+ if(!host||!host->get_extension)return;
+ const rb_clap_host_state_t*st=(const rb_clap_host_state_t*)host->get_extension(host,CLAP_EXT_STATE);
+ if(st&&st->mark_dirty)st->mark_dirty(host);
+}
 static uint32_t factory_count(const clap_plugin_factory_t*f){(void)f;return 1;}
 static const clap_plugin_descriptor_t*factory_desc(const clap_plugin_factory_t*f,uint32_t i){(void)f;return i==0?&g_desc:0;}
 static const clap_plugin_t*factory_create(const clap_plugin_factory_t*f,const clap_host_t*h,const char*id){(void)f;if(!h||!rb_streq(id,g_desc.id))return 0;
