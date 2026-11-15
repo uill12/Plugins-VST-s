@@ -9,6 +9,7 @@ on:
       - 'patches/cp16_part*.txt'
       - 'patches/cp16_native_smoke_fix.py'
       - 'patches/cp17_part*.txt'
+      - 'patches/cp17_rng_reset_fix.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -187,6 +188,13 @@ jobs:
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP17 source and factory compatibility verification failed' }
           Write-Host 'CP17: bounded voice allocation, CLAP/VST3 note IDs, sustain, note-off queue priority, Win64 QA'
+      - name: CP17 deterministic voice-reset regression hotfix
+        shell: pwsh
+        run: |
+          python 'patches/cp17_rng_reset_fix.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP17 deterministic reset hotfix failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP17 deterministic reset source verification failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
