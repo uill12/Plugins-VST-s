@@ -7,6 +7,7 @@ on:
       - 'patches/cp15_apply_part*.txt'
       - 'patches/cp15_hotfix.py'
       - 'patches/cp16_part*.txt'
+      - 'patches/cp16_native_smoke_fix.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -163,6 +164,13 @@ jobs:
           python 'Albedo-Quintessential-Synth/tests/check_cp16_typography.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP16 native typography contract failed' }
           Write-Host 'CP16: initial 1024x728, enlarged dynamic labels, regenerated static typography'
+      - name: RGNES CP16 Windows miniature-viewport click-smoke correction
+        shell: pwsh
+        run: |
+          python 'patches/cp16_native_smoke_fix.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP16 resized dial smoke alignment adjustment failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP16 post-alignment source QA failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
