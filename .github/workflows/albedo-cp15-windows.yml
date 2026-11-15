@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/albedo-cp15-windows.yml'
       - 'patches/cp15_apply_part*.txt'
+      - 'patches/cp15_hotfix.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -129,6 +130,14 @@ jobs:
           python 'Albedo-Quintessential-Synth/tests/check_cp15_resize_contract.py'
           if ($LASTEXITCODE -ne 0) { throw '80-percent original startup/resize geometry test failed' }
           Write-Host 'CP15 source gate: original 1600x1138 -> default 1280x910, CLAP+VST3'
+      - name: RGNES CP15 exact startup and min-size rounding regression repair
+        shell: pwsh
+        run: |
+          python 'patches/cp15_hotfix.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP15 deterministic viewport rounding hotfix failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP15 post-hotfix source SHA gate failed' }
+          Write-Host 'RGNES CP15: exact 1280x910 startup and minimum-size viewport corrected'
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
