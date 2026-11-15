@@ -16,6 +16,7 @@ This directory contains the CP08 native C sources and audit documentation. **It 
 ## Files
 
 - [`source/`](source/) — real CP08 C source and ABI headers (CLAP/VST3), not pseudocode.
+- [`generate_sinc_coeffs.py`](generate_sinc_coeffs.py) — regenerates the omitted 467 KB resampler table with NumPy (`python generate_sinc_coeffs.py`); output was checked byte-for-byte against the CP08 source table.
 - [`docs/CP08_HIFI_QA.md`](docs/CP08_HIFI_QA.md) — offline test data, measurements, limitations.
 - [`qa/CP08_Release_Manifest.json`](qa/CP08_Release_Manifest.json) — original recorded build manifest (some original ZIP checksums are superseded by later repackaging).
 - [`qa/INSTALL_CP08.txt`](qa/INSTALL_CP08.txt) — installation instructions and known limitations.
@@ -25,6 +26,6 @@ This directory contains the CP08 native C sources and audit documentation. **It 
 
 **GUI is not verified to be responsive inside Windows Bitwig.** It inherits the earlier CP05 editor. Offline Linux DSP tests and Windows x64 compilation/export checks do not certify actual Bitwig interoperability, saved state handling, or host timing. No independently confirmed Windows-in-host validation is claimed.
 
-The source depends on the large *embedded* `rubedo_bank`, bitmap resources, and Windows toolchain import libraries. A repository checkout without these binary data components is not a standalone build. See `docs/BUILD_INPUTS.md`.
+The source depends on the large *embedded* `rubedo_bank`, bitmap resources, and Windows toolchain import libraries. A repository checkout without these binary data components is not a standalone build. First run `pip install numpy` and `python generate_sinc_coeffs.py` to generate the native filter table. See `docs/BUILD_INPUTS.md`.
 
 No audio from Max Cooper or other artists is copied: the timbres are original electronic interpretations of percussion behavior.
