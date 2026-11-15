@@ -1,0 +1,30 @@
+RUBEDO ATLAS DRUMKIT - CP08R2 GUI PAINT FIX
+=============================================
+This checkpoint fixes a native Win32 GUI blank screen when the CLAP preset/editor is loaded.
+
+Root cause: CP08R1 declared CREATESTRUCTA in an incorrect memory layout,
+with lpCreateParams at the end rather than offset zero. During WM_NCCREATE and WM_CREATE,
+the native editor stored a garbage pointer in GWLP_USERDATA. WM_PAINT therefore could
+not safely draw the 1512 x 1009 approved artwork, overlay controls, or kit labels.
+
+Changes:
+- Define Win64 CREATESTRUCTA with the correct member ordering.
+- Add compile-time ABI assertions (size 80, lpCreateParams offset 0, style offset 48, dwExStyle offset 72).
+- Guard WM_NCCREATE/WM_CREATE against missing window-creation data.
+- Unique CP08R2 native window class to avoid stale registration in an already-running host.
+- Update CLAP metadata to 0.9.3-cp08r2.
+- Retain original CP08 bank, 24 kits, 2304 voices/articulations and approved GUI RGB data byte-for-byte.
+- Keep CLAP plugin ID com.rubedo.atlas-drumkit and stable parameter mapping.
+
+Windows install:
+1. Download ALL .7z.001, .7z.002, etc. into a single directory.
+2. Open only Rubedo_CP08R2_CLAP_Windows_x64.7z.001 in 7-Zip, select Extract.
+3. Close Bitwig, back up prior Rubedo_Atlas_Drumkit.clap.
+4. Replace the plugin in C:\Program Files\Common Files\CLAP\.
+5. Restart Bitwig and reload the plugin. If blank persists, confirm there are
+   no duplicate Rubedo .clap files and report the Bitwig log and exact behavior.
+
+Plugin SHA-256: 09371a50cdd8e596f656c98a542b08ce4aca542166bf234f04e7c501f27d0772
+
+QA: Win64 compile and PE exports verified; audio and GUI overlays preserved;
+full 7z decode/hash validated offline. Windows Bitwig runtime untested.
