@@ -42,6 +42,19 @@ jobs:
         run: |
           python tools/verify_source_assets.py
           if ($LASTEXITCODE -ne 0) { throw 'Immutable source gate failed' }
+      - name: RGNES CP13 repair - CTest multi-config argument
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          $script='Build_Windows_x64.ps1'
+          $source=Get-Content -LiteralPath $script -Raw
+          $before='& ctest --test-dir $build --config $Configuration --output-on-failure'
+          $after='& ctest --test-dir $build -C $Configuration --output-on-failure'
+          if (!$source.Contains($before)) { throw 'Expected CTest command absent; refusing blind patch' }
+          $patched=$source.Replace($before,$after)
+          Set-Content -LiteralPath $script -Value $patched -NoNewline -Encoding utf8
+          if (!(Select-String -Path $script -SimpleMatch $after -Quiet)) { throw 'CTest CLI repair did not persist' }
+          Write-Host 'RGNES: use supported CTest -C multi-configuration argument'
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
