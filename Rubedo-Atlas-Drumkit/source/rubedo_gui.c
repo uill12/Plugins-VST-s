@@ -106,6 +106,39 @@ static void rb_str(void*dc,RBGui*g,int x,int y,const char*label,uint32_t color,i
  }else TextOutA(dc,rb_scale_x(g,x),rb_scale_y(g,y),label,n);
 }
 static void rb_uint(char*dst,unsigned n){char t[16];int p=0,j=0;do{t[p++]=(char)('0'+n%10);n/=10;}while(n&&p<15);while(p)dst[j++]=t[--p];dst[j]=0;}
+static void rb_pad_card(void *dc,RBGui*g,int x,int y,int pad,int pressed,int active){
+ const uint32_t edge=0x00629cb3,face=0x0039434f,faceDark=0x00353a45;
+ const uint32_t warm=0x00c5d2e9,gold=0x0075b5d5,moss=0x0061715d;
+ int sx=rb_scale_x(g,x),sy=rb_scale_y(g,y),sw=rb_scale_x(g,101),sh=rb_scale_y(g,89);
+ void *outline=CreatePen(0,1,pressed?gold:(active?edge:0x00a1a9b7));
+ void *oldPen=SelectObject(dc,outline);
+ void *brush=CreateSolidBrush(active?(pressed?moss:face):0x00c8d7e5);
+ void *oldBrush=SelectObject(dc,brush);
+ // Slightly inset card mimics original embossed rectangular pad treatment.
+ Rectangle(dc,sx,sy,sx+sw,sy+sh);
+ SelectObject(dc,oldBrush);DeleteObject(brush);SelectObject(dc,oldPen);DeleteObject(outline);
+ if(!active)return;
+ void *line=CreatePen(0,1,faceDark),*pen0=SelectObject(dc,line);
+ MoveToEx(dc,sx+rb_scale_x(g,5),sy+rb_scale_y(g,34),0);
+ LineTo(dc,sx+sw-rb_scale_x(g,6),sy+rb_scale_y(g,34));
+ SelectObject(dc,pen0);DeleteObject(line);
+ char digits[12],label[36],number[24];rb_uint(digits,(unsigned)pad+1);number[0]=digits[1]?0:'0';
+ int j=number[0]?1:0;for(int k=0;digits[k]&&j<12;k++)number[j++]=digits[k];number[j]=0;
+ rb_str(dc,g,x+8,y+10,number,gold,0);
+ static const char *keynames[16]={"1","2","3","4","Q","W","E","R","A","S","D","F","Z","X","C","V"};
+ rb_str(dc,g,x+88,y+9,keynames[pad%16],warm,0);
+ const char *raw=rubedo_pad_names[pad];int k=0;
+ for(;raw[k]&&k<20;k++){char ch=raw[k];label[k]=ch=='-'?' ':ch>='a'&&ch<='z'?ch-32:ch;}
+ label[k]=0;rb_str(dc,g,x+7,y+43,label,warm,0);
+ char midi[24]="MIDI ";rb_uint(digits,(unsigned)atomic_load_explicit(&g->engine->mappings[pad],memory_order_acquire));
+ j=5;for(k=0;digits[k]&&j<23;k++)midi[j++]=digits[k];midi[j]=0;
+ rb_str(dc,g,x+7,y+70,midi,gold,0);
+ if(pressed)rb_outline(dc,g,x+2,y+2,97,85,gold,3);
+}
+static void rb_update_learn_target(RBGui*g){
+ if(g&&g->engine&&g->learn_active&&!g->editor_only)
+  atomic_store_explicit(&g->engine->midi_learn_target,(int)g->selected,memory_order_release);
+}
 static int rb_get_knob_id(int x,int y){
  const int xx[4][4]={{1117,1223,1329,1435},{1117,1223,1329,1435},
                        {1117,1223,1329,1435},{1247,1317,1386,1455}};
@@ -177,26 +210,47 @@ static void rb_show_overlay(void*hdc,RBGui*g){
  const int families[4]={5,11,17,23};int family=0;while(family<3&&g->kit>(unsigned)families[family])family++;
  static const int family_x[4]={606,692,770,858};static const int family_w[4]={77,69,79,109};
  rb_outline(hdc,g,family_x[family],121,family_w[family],27,gold,2);
- // Clearly visible selection ring; highlight follows pad clicks and MIDI note input.
+ // CP10: dynamic cards are the one authoritative pad view. No baked Core names
+ // on the Extended page, and every displayed MIDI number reflects the live note map.
  int bankstart=g->bank?16:0;
- for(int j=0;j<(g->bank?8:16);j++){
+ for(int j=0;j<16;j++){
   int row=j/4,col=j%4,pad=bankstart+j;
   int x=24+col*110,y=256+row*96;
-  if((unsigned)pad==g->selected){rb_outline(hdc,g,x,y,101,90,gold,4);rb_disc(hdc,g,x+90,y+11,4,0x0077f2df,1);}
-  if((int32_t)(g->pad_flash_until[pad]-GetTickCount())>0){
-    rb_outline(hdc,g,x+2,y+2,97,86,green,5);rb_disc(hdc,g,x+90,y+11,6,gold,1);
-  }
+  int active=pad<RUBEDO_PADS;
+  int pressed=active&&((int32_t)(g->pad_flash_until[pad]-GetTickCount())>0);
+  rb_pad_card(hdc,g,x,y,active?pad:0,pressed,active);
+  if(active&&(unsigned)pad==g->selected)rb_outline(hdc,g,x,y,101,90,gold,3);
  }
  // Selected instrument name, MIDI note number and voice number (not a fake static label).
  if(e){
   const char *nm=rubedo_pad_names[g->selected];
-  rb_str(hdc,g,39,724,nm,deep,300);
+  // Erase static first-kit/first-pad text in the selected-voice panel.
+  void *pbr=CreateSolidBrush(0x00bdd6e3),*pnl=CreatePen(0,1,0x00bdd6e3);
+  RECT panel={rb_scale_x(g,35),rb_scale_y(g,700),rb_scale_x(g,345),rb_scale_y(g,742)};
+  void*oldpen=SelectObject(hdc,pnl),*oldbr=SelectObject(hdc,pbr);
+  Rectangle(hdc,panel.left,panel.top,panel.right,panel.bottom);
+  SelectObject(hdc,oldbr);SelectObject(hdc,oldpen);DeleteObject(pbr);DeleteObject(pnl);
+  rb_str(hdc,g,39,707,nm,deep,0);
+  rb_str(hdc,g,39,725,"ACTIVE VOICE / NOTE MAPPING",deep,0);
   char padtxt[18]="VOICE ",numb[16];rb_uint(numb,g->selected+1);int j=6;for(int k=0;numb[k]&&j<17;k++)padtxt[j++]=numb[k];padtxt[j]=0;
   rb_str(hdc,g,375,724,padtxt,deep,68);
   char maptext[24]="MIDI ";rb_uint(numb,(unsigned)e->mappings[g->selected]);j=5;for(int k=0;numb[k]&&j<22;k++)maptext[j++]=numb[k];maptext[j]=0;
   rb_str(hdc,g,366,745,maptext,deep,78);
  }
- if(g->learn_active)rb_str(hdc,g,269,651,g->editor_only?"USE HOST MIDI MAP":"PLAY NOTE TO ASSIGN",0x00262f29,174);
+ if(g->learn_active){
+  char arm[42]="LEARN PAD ",d[12];rb_uint(d,(unsigned)g->selected+1);
+  int j=10;for(int k=0;d[k]&&j<28;k++)arm[j++]=d[k];
+  const char msg[]=" : PLAY NOTE";for(int k=0;msg[k]&&j<40;k++)arm[j++]=msg[k];arm[j]=0;
+  rb_str(hdc,g,264,651,arm,green,185);
+ }
+ else if((int32_t)(g->routing_hint_until-GetTickCount())>0){
+  rb_str(hdc,g,268,651,"MIDI VIA BITWIG",green,178);
+ }
+ else if(g->unmapped_note>=0&&(int32_t)(g->unmapped_notice_until-GetTickCount())>0){
+  char msg[40]="UNMAPPED MIDI ",d[12];rb_uint(d,(unsigned)g->unmapped_note);
+  int j=14;for(int k=0;d[k]&&j<38;k++)msg[j++]=d[k];msg[j]=0;
+  rb_str(hdc,g,269,651,msg,deep,180);
+ }
  else if(g->learn_notice&&(int32_t)(g->learn_notice_until-GetTickCount())>0){
   char label[40]="MIDI ",digits[16];rb_uint(digits,(unsigned)atomic_load(&e->ui_learn_note));
   int i=5;for(int j=0;digits[j]&&i<18;j++)label[i++]=digits[j];
@@ -251,15 +305,17 @@ static void rb_click(RBGui*g,int x,int y){if(!g||!g->engine)return;
  // Family filter chooses first preset of the given family.
  if(y0>119&&y0<153&&x0>=605&&x0<966){int k=x0<690?0:x0<767?6:x0<857?12:18;
   g->kit=k;rubedo_set_param(e,0,k);if(g->kit_changed)g->kit_changed(g->callback_context,(double)k/23.);rb_notify_change(g);return;}
- if(y0>=217&&y0<=252&&x0>=20&&x0<=187){g->bank=x0>=94?1:0;g->selected=g->bank?16:0;rb_notify_change(g);return;}
+ if(y0>=217&&y0<=252&&x0>=20&&x0<=187){g->bank=x0>=94?1:0;g->selected=g->bank?16:0;rb_update_learn_target(g);rb_notify_change(g);return;}
  if(y0>=256&&y0<637&&x0>=24&&x0<452){int c=(x0-24)/110,r=(y0-256)/96;if(c<0||c>3||r<0||r>3)return;
   int pad=r*4+c+g->bank*16;if(pad>23)return;rb_flash_pad(g,pad);
-  rb_audition(g,pad,.88);rb_notify_change(g);return;}
+  if(g->learn_active)rb_update_learn_target(g);else rb_audition(g,pad,.88);
+  rb_notify_change(g);return;}
  if(x0>=38&&x0<170&&y0>=739&&y0<=775){
-  rb_flash_pad(g,(int)((g->selected+1)%24));return;}
+  rb_flash_pad(g,(int)((g->selected+1)%24));rb_update_learn_target(g);return;}
  if(x0>=345&&x0<452&&y0>=218&&y0<=252){
-  g->learn_active=(uint8_t)!g->learn_active;
-  if(!g->editor_only)atomic_store(&e->midi_learn_target,g->learn_active?(int)g->selected:-1);
+  // The artwork says MIDI CONNECT, but CLAP cannot connect hardware directly.
+  // Bitwig owns MIDI routing. Never silently arm a different pad here.
+  g->routing_hint_until=GetTickCount()+2400;
   rb_notify_change(g);return;}
  if(x0>=345&&x0<452&&y0>=639&&y0<=674){g->learn_active=(uint8_t)!g->learn_active;
    if(!g->editor_only)atomic_store(&e->midi_learn_target,g->learn_active?(int)g->selected:-1);
@@ -338,6 +394,11 @@ static LRESULT W32 rb_window_proc(void*hwnd,uint32_t message,WPARAM wp,LPARAM lp
     int pad=atomic_load_explicit(&e->ui_last_pad,memory_order_relaxed);
     if(pad>=0&&pad<RUBEDO_PADS)rb_flash_pad(gui,pad);
    }
+   uint32_t unmapped=atomic_load_explicit(&e->ui_unmapped_seq,memory_order_acquire);
+   if(unmapped!=gui->unmapped_seen_seq){gui->unmapped_seen_seq=unmapped;
+    gui->unmapped_note=atomic_load_explicit(&e->ui_unmapped_note,memory_order_relaxed);
+    gui->unmapped_notice_until=GetTickCount()+2000;InvalidateRect(hwnd,0,0);
+   }
    uint32_t learned=atomic_load_explicit(&e->ui_learn_seq,memory_order_acquire);
    if(learned!=gui->learn_seen_seq){gui->learn_seen_seq=learned;gui->learn_active=0;
     gui->learn_notice=1;gui->learn_notice_until=GetTickCount()+1800;InvalidateRect(hwnd,0,0);
@@ -346,6 +407,8 @@ static LRESULT W32 rb_window_proc(void*hwnd,uint32_t message,WPARAM wp,LPARAM lp
    if(gui->flash_pad>=0&&(int32_t)(now-gui->flash_until)>=0){gui->flash_pad=-1;InvalidateRect(hwnd,0,0);}
    for(int pad=0;pad<RUBEDO_PADS;pad++)if(gui->pad_flash_until[pad]&&(int32_t)(now-gui->pad_flash_until[pad])>=0){gui->pad_flash_until[pad]=0;InvalidateRect(hwnd,0,0);}
    if(gui->learn_notice&&(int32_t)(now-gui->learn_notice_until)>=0){gui->learn_notice=0;InvalidateRect(hwnd,0,0);}
+   if(gui->unmapped_note>=0&&(int32_t)(now-gui->unmapped_notice_until)>=0){gui->unmapped_note=-1;InvalidateRect(hwnd,0,0);}
+   if(gui->routing_hint_until&&(int32_t)(now-gui->routing_hint_until)>=0){gui->routing_hint_until=0;InvalidateRect(hwnd,0,0);}
    if(e->playing)InvalidateRect(hwnd,0,0);
   }return 0;}
  if(message==513){ // WM_LBUTTONDOWN
@@ -363,7 +426,7 @@ static LRESULT W32 rb_window_proc(void*hwnd,uint32_t message,WPARAM wp,LPARAM lp
   const char *keys="1234QWERASDFZXCV";
   for(int j=0;j<16;j++)if((int)wp==(int)keys[j]){
    int pad=j+gui->bank*16;
-   if(pad<24){rb_flash_pad(gui,pad);rb_audition(gui,pad,.88);
+   if(pad<24){rb_flash_pad(gui,pad);if(gui->learn_active)rb_update_learn_target(gui);else rb_audition(gui,pad,.88);
     gui->input_events++;InvalidateRect(hwnd,0,0);}return 0;}
  }
  if(message==512&&gui&&gui->engine){ // WM_MOUSEMOVE
@@ -402,9 +465,10 @@ static LRESULT W32 rb_window_proc(void*hwnd,uint32_t message,WPARAM wp,LPARAM lp
 }
 int rb_gui_attach(RBGui *g,void*parent,RubedoEngine*e,void*ctx,void(*fn)(void*,double)){
  if(!g||!parent)return 0;g->engine=e;g->callback_context=ctx;g->kit_changed=fn;
- g->kit=e?e->kit:g->kit;g->selected=0;g->width=RB_GUI_WIDTH;g->height=RB_GUI_HEIGHT;g->hover_control=-1;g->learn_active=0;g->force=0;g->mode=0;g->routing=0;g->dragging=0;g->input_events=0;g->editor_only=0;g->flash_pad=-1;g->flash_until=0;g->learn_notice=0;for(int i=0;i<24;i++)g->pad_flash_until[i]=0;
+ g->kit=e?e->kit:g->kit;g->selected=0;g->width=RB_GUI_WIDTH;g->height=RB_GUI_HEIGHT;g->hover_control=-1;g->learn_active=0;g->force=0;g->mode=0;g->routing=0;g->dragging=0;g->input_events=0;g->editor_only=0;g->flash_pad=-1;g->flash_until=0;g->learn_notice=0;g->unmapped_note=-1;for(int i=0;i<24;i++)g->pad_flash_until[i]=0;
  g->ui_seen_seq=e?atomic_load_explicit(&e->ui_note_seq,memory_order_acquire):0;
  g->learn_seen_seq=e?atomic_load_explicit(&e->ui_learn_seq,memory_order_acquire):0;
+ g->unmapped_seen_seq=e?atomic_load_explicit(&e->ui_unmapped_seq,memory_order_acquire):0;
  if(!rb_read_picture())return 0;
  WNDCLASSEXA cls={0};cls.cbSize=sizeof(cls);cls.style=3;cls.proc=(void*)rb_window_proc;cls.instance=rubedo_module;cls.className="RubedoAtlasDrumkitInputCP05";cls.background=0;cls.clsExtra=0;cls.wndExtra=0;cls.style=3;
  cls.smallIcon=0;cls.icon=0;cls.cursor=0;cls.menu=0;cls.style=3;
