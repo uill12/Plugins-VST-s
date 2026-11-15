@@ -11,8 +11,8 @@ typedef struct RBGui {
  uint32_t kit;
  uint32_t bank;
  uint32_t selected;
- uint32_t width,height;int dragging,drag_param,drag_y,hover_control;uint32_t changed_tick;uint8_t force,mode,routing;uint32_t last_tap_ms;uint32_t input_events;uint32_t last_input_ms;uint8_t editor_only,audition_serial;uint32_t ui_seen_seq,learn_seen_seq,flash_until,learn_notice_until;
- int flash_pad;uint32_t pad_flash_until[24];uint8_t learn_notice;
+ uint32_t width,height;int dragging,drag_param,drag_y,hover_control;uint32_t changed_tick;uint8_t force,mode,routing;uint32_t last_tap_ms;uint32_t input_events;uint32_t last_input_ms;uint8_t editor_only,audition_serial;uint32_t ui_seen_seq,learn_seen_seq,unmapped_seen_seq,flash_until,learn_notice_until,unmapped_notice_until,routing_hint_until;
+ int flash_pad;uint32_t pad_flash_until[24];uint8_t learn_notice;int unmapped_note;
 } RBGui;
 int rb_gui_attach(RBGui*gui, void*host_parent, RubedoEngine*engine, void*context, void(*kit_changed)(void*,double));
 void rb_gui_detach(RBGui*gui);
