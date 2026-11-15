@@ -25,7 +25,7 @@ jobs:
           $archive='build-sources/Albedo_CP13_CI_Source_NoBank.zip'
           if (!(Test-Path $archive)) { throw 'Missing complete source archive' }
           $hash=(Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($hash -ne 'fc725a3999d962ca0e5c432f98af12e154c995bb4aa1b7daaf17b4465624460f') { throw "Source SHA256 mismatch: $hash" }
+          if ($hash -ne '5d5bceedcb6b0a4c78880dd6339d12250c51c9a543e80826c78189028d71d325') { throw "Source SHA256 mismatch: $hash" }
           Expand-Archive -LiteralPath $archive -DestinationPath . -Force
           if (!(Test-Path 'Albedo-Quintessential-Synth/Build_Windows_x64.ps1')) { throw 'Missing native Windows build entrypoint' }
       - name: Regenerate original 32-material PCM bank
