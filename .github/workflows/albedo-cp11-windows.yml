@@ -23,9 +23,12 @@ jobs:
       - name: Verify full source and embedded resources exist
         shell: pwsh
         run: |
-          foreach ($p in @('CMakeLists.txt', 'Build_Windows_x64.ps1', 'resources/Albedo_Horizontal_Light.bmp', 'resources/Albedo_Horizontal_Nigredo.bmp', 'resources/Albedo_Materia32_PCM24_96k.vtrb', 'include/albedo_factory_patches.hpp', 'tools/verify_pe_exports.py')) {
+          foreach ($p in @('CMakeLists.txt', 'Build_Windows_x64.ps1', 'resources/Albedo_Horizontal_Light.bmp', 'resources/Albedo_Horizontal_Nigredo.bmp', 'resources/Albedo_Materia32_PCM24_96k.vtrb', 'include/albedo_factory_patches.hpp', 'tools/verify_pe_exports.py', 'tools/verify_source_assets.py')) {
             if (!(Test-Path $p)) { throw "Missing build input: $p" }
           }
+      - name: Verify exact approved GUI and DSP resources
+        shell: pwsh
+        run: python tools/verify_source_assets.py
       - name: Compile and test native Win64 plugins
         shell: pwsh
         run: .\Build_Windows_x64.ps1 -Configuration Release
