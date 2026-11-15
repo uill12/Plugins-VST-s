@@ -18,7 +18,7 @@ static void rb_u32txt(char *out,int num){char tmp[20];int i=0,j=0;if(num<0){out[
 static void rb_value_txt(char*out,uint32_t size,double x){if(size<12){if(size)out[0]=0;return;}int neg=x<0;if(neg)x=-x;int p=(int)(x*100.+.5);int whole=p/100,frac=p%100;char b[32];rb_u32txt(b,whole);int i=0;if(neg)out[i++]='-';for(int j=0;b[j]&&i<(int)size-4;j++)out[i++]=b[j];out[i++]='.';out[i++]=(char)('0'+frac/10);out[i++]=(char)('0'+frac%10);out[i]=0;}
 static double rb_parse(const char*s){if(!s)return 0;double x=0,frac=.1;int sign=1;if(*s=='-'){sign=-1;s++;}while(*s>='0'&&*s<='9'){x=x*10+(*s-'0');s++;}if(*s=='.'){s++;while(*s>='0'&&*s<='9'){x+=(*s-'0')*frac;frac*=.1;s++;}}return sign*x;}
 static const char *g_features[]={"instrument","drum",NULL};
-static const clap_plugin_descriptor_t g_desc={{1,2,0},"com.rubedo.atlas-drumkit","Rubedo Atlas Drumkit","Rubedo Atlas","","","","0.9.3-cp08","24 synthesized percussion kits with 24 voices, original 96k PCM24 bank",g_features};
+static const clap_plugin_descriptor_t g_desc={{1,2,0},"com.rubedo.atlas-drumkit","Rubedo Atlas Drumkit","Rubedo Atlas","","","","0.9.3-cp08r2","24 synthesized percussion kits with 24 voices, original 96k PCM24 bank",g_features};
 typedef struct RubedoClap {clap_plugin_t api;const clap_host_t*host;RubedoEngine engine;uint8_t initialized,processing,gui_created;RBGui gui;} RubedoClap;
 static const char *g_params[10]={"KIT / ATLAS","MASTER OUTPUT","TONE","MATERIAL MOTION","DRIVE","WIDTH","ATTACK","DECAY","CELLULAR","SPACE"};
 static RubedoClap*context(const clap_plugin_t*p){return (RubedoClap*)p->plugin_data;}
