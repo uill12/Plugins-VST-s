@@ -1,10 +1,10 @@
-# Rubedo Atlas Drumkit — CP09 Control & MIDI Fix
+# Rubedo Atlas Drumkit — CP10 MIDI MapSync
 
-Windows x64 CLAP developer checkpoint (CP09, 2026-11-15); VST3 source remains at its earlier experimental baseline.
+Windows x64 CLAP developer checkpoint (CP10 `0.9.5-cp10`, 2026-11-15); VST3 source remains at its earlier experimental baseline.
 
 ## Status
 
-This directory contains the current **CP09 CLAP native source** and archived CP08 audit documentation. The **installable CP09 CLAP binary** is stored in the connected Google Drive under `PROJETOS/Rubedo Atlas Drumkit/CP09_Control_MIDI_Fix`, as 13 standard multi-volume 7-Zip files (`.7z.001`–`.013`). All 13 volumes are verified on Drive. The 378 MB bank + approved GUI artwork remain embedded in the Drive-distributed binary, not committed to Git.
+This directory contains the **CP10 CLAP native source** and previous checkpoint documentation. The **CP10 CLAP binary** is stored in Google Drive under `PROJETOS/Rubedo Atlas Drumkit/CP10_MIDI_MapSync`, as 13 native 7-Zip volumes (`.7z.001`–`.013`) with accompanying checksums. The ~378 MB audio bank and the original GUI raster remain embedded in the binary, not committed to Git.
 
 - 24 kits × 24 voices × 4 articulations = 2,304 hits.
 - Families: **Ethereal / Vitriolic / Scientific / Transmutation**.
@@ -25,7 +25,7 @@ This directory contains the current **CP09 CLAP native source** and archived CP0
 
 ## Critical limitations
 
-**CP08R2 GUI PaintFix was reported working in Bitwig by the user. CP09 is newly built but has not yet been validated in Bitwig Windows.** Offline Linux control/DSP tests and Windows x64 compilation/export checks do not certify session restore, MIDI controller routing, automation or live host timing. Back up the working CP08R2 plugin before upgrading.
+**CP08R2 GUI PaintFix was reported working in Bitwig by the user. CP10 is newly built but has not yet been validated in Bitwig Windows.** Offline MIDI and CLAP state tests and Windows x64 compilation checks do not certify session restore, MIDI controller routing, automation or live host timing. Keep CP08R2 and CP09 as rollback checkpoints.
 
 The source depends on the large *embedded* `rubedo_bank`, bitmap resources, and Windows toolchain import libraries. A repository checkout without these binary data components is not a standalone build. First run `pip install numpy` and `python generate_sinc_coeffs.py` to generate the native filter table. See `docs/BUILD_INPUTS.md`.
 
