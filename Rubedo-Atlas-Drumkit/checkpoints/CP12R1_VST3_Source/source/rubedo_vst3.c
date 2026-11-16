@@ -218,7 +218,7 @@ typedef struct VViewRect {int32_t left,top,right,bottom;}VViewRect;
 #define Q_VIEW(id) vr_guid(id,0x5bc32507,0xd06049ea,0xa6151b52,0x2b755b29)
 static int32_t w_query(void*o,const uint8_t*id,void**out){if(!out)return V_FALSE;*out=0;if(Q_VIEW(id)||Q_UNKNOWN(id)){*out=o;((VRubedoView*)o)->refs++;return V_OK;}return V_NOINTERFACE;}
 static uint32_t w_add(void*o){return ++((VRubedoView*)o)->refs;}
-static uint32_t w_rel(void*o){VRubedoView*w=o;if(w->refs<=1){rb_gui_detach(&w->gui);vr_free(w);return 0;}return --w->refs;}
+static uint32_t w_rel(void*o){VRubedoView*w=o;if(w->refs<=1){if(w->owner&&w->owner->active_view==w)w->owner->active_view=0;rb_gui_detach(&w->gui);vr_free(w);return 0;}return --w->refs;}
 static int32_t w_support(void*o,const char*type){(void)o;return vr_streq(type,"HWND")?V_OK:V_FALSE;}
 static void w_set_kit(void*o,double norm){VRubedoController*c=o;if(!c)return;c->params[0]=norm;
  if(c->handler){void**vt=*(void***)c->handler;
@@ -234,6 +234,22 @@ static void w_set_param(void*o,unsigned id,double norm){
   ((int32_t(*)(void*,uint32_t))vt[3])(c->handler,id);
   ((int32_t(*)(void*,uint32_t,double))vt[4])(c->handler,id,norm);
   ((int32_t(*)(void*,uint32_t))vt[5])(c->handler,id);
+ }
+}
+// Editor receives host automation changes; only local GUI state is mutated.
+static void vr_controller_param_changed(VRubedoController*c,uint32_t id,double norm){
+ VRubedoView*w=(VRubedoView*)c->active_view;
+ if(!w||!w->gui.engine||id==135)return;
+ apply_rubedo_bridge(w->gui.engine,id,norm);
+ if(id==0)w->gui.kit=w->gui.engine->kit;
+}
+static void w_map_changed(void*context){
+ VRubedoController*c=(VRubedoController*)context;
+ VRubedoView*w=(VRubedoView*)c->active_view;
+ if(!w||!w->gui.engine)return;
+ for(int i=0;i<24;i++){
+  int note=atomic_load_explicit(&w->gui.engine->mappings[i],memory_order_acquire);
+  w_set_param(c,RUBEDO_VST3_MAP_BEGIN+(unsigned)i,(double)note/127.);
  }
 }
 static int32_t w_attached(void*o,void*parent,const char*type){VRubedoView*w=o;if(!vr_streq(type,"HWND"))return V_FALSE;
@@ -254,12 +270,15 @@ static int32_t w_attached(void*o,void*parent,const char*type){VRubedoView*w=o;if
  engine->swing=(float)w->owner->params[132];
  engine->scatter=(float)w->owner->params[133];
  engine->chance=(float)w->owner->params[134];
+ int16_t notes[24];for(int i=0;i<24;i++)notes[i]=(int16_t)(w->owner->params[RUBEDO_VST3_MAP_BEGIN+i]*127.+.5);
+ rubedo_import_mappings(engine,notes);
  w->gui.kit=engine->kit;
  int ok=rb_gui_attach(&w->gui,parent,engine,w->owner,w_set_kit);
  w->gui.param_changed=w_set_param;
  w->gui.editor_only=1;
+ if(ok){w->owner->active_view=w;w->gui.map_changed=w_map_changed;}
  return ok?V_OK:V_FALSE;}
-static int32_t w_removed(void*o){rb_gui_detach(&((VRubedoView*)o)->gui);return V_OK;}
+static int32_t w_removed(void*o){VRubedoView*w=o;if(w->owner&&w->owner->active_view==w)w->owner->active_view=0;rb_gui_detach(&w->gui);return V_OK;}
 static int32_t w_wheel(void*o,float wheel){(void)o;(void)wheel;return V_FALSE;}
 static int32_t w_key(void*o,Char16 a,int16_t b,int16_t c){(void)o;(void)a;(void)b;(void)c;return V_FALSE;}
 static int32_t w_size(void*o,VViewRect*rect){(void)o;if(!rect)return V_FALSE;rect->left=rect->top=0;rect->right=RB_GUI_WIDTH;rect->bottom=RB_GUI_HEIGHT;return V_OK;}
@@ -294,6 +313,7 @@ static int32_t f_instance(void*o,const uint8_t*cid,const uint8_t*id,void**result
   c->params[34]=0x1111/65535.;c->params[36]=0x1010/65535.;
   c->params[38]=0x5555/65535.;c->params[39]=0xaaaa/65535.;
   c->params[59]=(126.-40.)/210.;c->params[132]=.14;c->params[133]=.18;c->params[134]=1.;
+   for(int i=0;i<24;i++)c->params[RUBEDO_VST3_MAP_BEGIN+i]=(36.+i)/127.;
   if(Q_CONTROLLER(id)||Q_UNKNOWN(id)||Q_PLUGINBASE(id))*result=c;else {vr_free(c);return V_NOINTERFACE;}return V_OK;
  }return V_NOINTERFACE;
 }
