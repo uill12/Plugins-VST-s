@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="theme-color" content="#e9d5ad"/><meta name="description" content="Nigredo Opus Septem — an interactive manuscript-inspired GUI study for seven-stage audio and MIDI effects."/><title>Nigredo — Opus Septem · CP07 Landscape GUI</title><style>
+/* NIGREDO / OPUS SEPTEM · CP04 — Manuscript Cosmology */
+:root{--paper:#f1dfb5;--paper-light:#f8ebcf;--paper-edge:#dac28f;--ink:#382c2d;--muted:#826b58;--muted-light:#9d896b;--crimson:#ae4735;--vermilion:#d45a40;--ochre:#b78b3d;--gold:#c79845;--moss:#506d4c;--lapis:#34365c;--violet:#5b3d55;--line:#ae865b65;--line-dark:#a17c57;--accent:#c69838;--accent-rgb:198,152,56;--selected:#b24c37}
+*{box-sizing:border-box}html{background:#d9bd8c}body{margin:0;min-width:320px;font:13px/1.45 'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--ink);background:radial-gradient(ellipse at 50% -15%,#fff6dc 0,#f5e6c2 38%,transparent 76%),radial-gradient(circle at 5% 32%,#ceaf7d44,transparent 30%),radial-gradient(circle at 100% 68%,#c4897d3b,transparent 31%),#e8d1a7}
+body:before{position:fixed;content:'';inset:0;pointer-events:none;z-index:30;opacity:.14;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.52' numOctaves='3' type='fractalNoise' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)' opacity='.44'/%3E%3C/svg%3E")}
+button,select{font:inherit}button{cursor:pointer;color:inherit}button:focus-visible,select:focus-visible,.knob:focus-visible{outline:3px solid #6d5c89;outline-offset:3px}button:disabled{opacity:.27;cursor:not-allowed}button:hover:not(:disabled){filter:brightness(1.055)}
+#app{max-width:1700px;margin:auto;padding:14px clamp(13px,2.4vw,40px) 19px}.topbar{position:relative;display:flex;justify-content:space-between;align-items:center;gap:24px;min-height:87px;border-top:2px solid #ac6848;border-bottom:1px solid #ab7455;padding:9px 8px 11px}.topbar:before,.topbar:after{content:'✦';position:absolute;top:-10px;background:#e9d5ad;padding:0 7px;color:#a7523e;font-size:13px}.topbar:before{left:4%}.topbar:after{right:4%}.brand{display:flex;align-items:center;gap:14px}.brand-mark{width:55px;height:55px;flex-shrink:0;color:#ab4b35}.brand-mark svg{width:100%;height:100%}.brand-name{font-family:'Palatino Linotype',Palatino,Georgia,serif;font-size:23px;font-weight:700;letter-spacing:.18em;color:#842f2a;white-space:nowrap}.brand-name span{color:#916b3b;font-weight:400;letter-spacing:.085em}.brand-sub{font-size:9px;letter-spacing:.25em;color:#81654b;text-transform:uppercase;margin-top:3px}.header-tools{display:flex;align-items:center;gap:18px}.build-status{font-size:9px;letter-spacing:.14em;font-weight:650;color:#8c5c48;white-space:nowrap;text-align:right}.build-status .status-dot{display:inline-block;background:#71865b;width:7px;height:7px;border-radius:50%;margin-right:7px}.build-version{margin-left:8px;border-left:1px solid #bc9c70;padding-left:8px}.mode-switch{display:flex;gap:3px;border:1px solid #a77655;padding:4px;background:#ead5ad;border-radius:22px;box-shadow:inset 0 1px 4px #86542c1b}.mode-button{padding:10px 15px;font-weight:700;font-size:11px;letter-spacing:.05em;border:0;border-radius:18px;background:transparent;color:#785b43;white-space:nowrap}.mode-button.active{background:#933d35;color:#fff1ce;box-shadow:0 2px 5px #75372f55,inset 0 1px #f3ad8680}.mode-graphic{margin-right:5px}.main-power{width:41px;height:41px;border-radius:50%;border:1px solid #6c7657;display:grid;place-items:center;color:#e2edbd;background:linear-gradient(150deg,#7a8b5e,#3e644e);box-shadow:inset 0 1px #e5e8b860,0 2px 5px #6839224d}.main-power.off{background:linear-gradient(#8a6963,#684746);color:#e4c6bb;border-color:#91645c}.main-power svg{width:19px;height:19px}
+.intro{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:13px 0 15px}.intro-lead{display:flex;align-items:center;gap:16px}.intro-ornament{font-family:Georgia,serif;font-size:35px;color:#c04e33}.eyebrow{color:#96633f;letter-spacing:.22em;font-weight:800;font-size:9px;text-transform:uppercase}.intro h1{font-size:clamp(21px,2vw,31px);font-family:Palatino,Georgia,serif;font-weight:400;color:#6d332e;margin:2px 0}.intro h1 em{font-style:italic;color:#aa6042}.intro p{margin:0;font-size:11px;color:#846a53}.intro-right{text-align:right;display:flex;gap:16px;align-items:center}.intro-right b{display:block;font-size:12px;letter-spacing:.11em;color:#813d37}.intro-right small{font-size:9px;letter-spacing:.14em;color:#8e7155}.counter{border-left:1px solid #be9870;padding-left:14px;font:32px Georgia,serif;color:#a34e39}
+.trinity{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.trinity-tile{display:flex;align-items:center;gap:10px;justify-content:center;min-height:41px;border:1px solid #b88c5f76;background:linear-gradient(180deg,#fff3d3c9,#e6c99973);position:relative}.trinity-tile:before,.trinity-tile:after{content:'◆';font-size:8px;color:#ba8747;position:absolute;top:50%;transform:translateY(-50%)}.trinity-tile:before{left:12px}.trinity-tile:after{right:12px}.trinity-tile b{font:14px Georgia,serif;letter-spacing:.14em;color:#7c3d36}.trinity-tile small{font-size:9px;color:#866a51;letter-spacing:.12em}.trinity-tile:nth-child(2){background:linear-gradient(180deg,#f6e9c9,#dec2aa);border-color:#ac777077}.trinity-tile:nth-child(2) b{color:#785040}.trinity-tile:nth-child(3){background:linear-gradient(180deg,#e4d8b5,#d0c49b);border-color:#8b896477}.trinity-tile:nth-child(3) b{color:#526446}
+.workbench{display:grid;grid-template-columns:minmax(204px,236px) minmax(470px,1fr) minmax(350px,396px);gap:13px;align-items:stretch}.illuminated{position:relative;min-width:0;border:1px solid #ab7858;border-radius:3px;box-shadow:0 6px 12px #85613b24,0 18px 30px #886f4c18,inset 0 0 0 4px #faebc8,inset 0 0 0 5px #ad8b5c59;background:radial-gradient(ellipse at 50% 0,#fff3d5d9,#f3dfb6 70%,#ead1a3)}.illuminated:before,.illuminated:after{position:absolute;pointer-events:none;content:'❦';font:16px Georgia,serif;color:#b08051;top:8px}.illuminated:before{left:9px}.illuminated:after{right:9px;transform:scaleX(-1)}.panel-heading{min-height:51px;display:flex;justify-content:space-between;align-items:center;gap:7px;padding:15px 22px 12px;font-size:10px;font-weight:780;letter-spacing:.13em;border-bottom:1px solid #b58d5f80;color:#76372e;white-space:nowrap}.panel-heading span:last-child{color:#9b7150;font-weight:550;font-size:9px}.section-no{color:#bd8350;margin-right:5px}.micro-label{font-size:9px;letter-spacing:.16em;color:#8c684f;font-weight:650}
+.stages-panel{display:flex;flex-direction:column;min-height:780px}.ledger-caption{padding:15px 18px 12px;font:italic 13px Georgia,serif;color:#876a4b;text-align:center}.stages-list{display:flex;flex-direction:column;gap:3px;padding:4px 11px 16px}.stage-item{--stage:#a76142;position:relative;display:flex;align-items:center;min-height:66px;border:1px solid transparent;border-radius:4px;color:#72594d}.stage-item:not(.selected){background:linear-gradient(90deg,#f2ddba80,transparent)}.stage-item.selected{border-color:#b0804e;background:linear-gradient(100deg,#f8eed7,#e8cd9a);box-shadow:inset 2px 0 var(--stage),0 2px 4px #ab805033}.stage-item.muted .stage-select{opacity:.43}.stage-select{display:flex;align-items:center;gap:7px;text-align:left;flex:1;min-width:0;border:0;background:transparent;padding:9px 4px 9px 7px}.stage-item .number{width:22px;text-align:center;color:#b37047;font:17px Georgia,serif}.stage-glyph{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:#f6e7c8;border:1px solid var(--stage);display:grid;place-items:center;color:var(--stage);font:19px Georgia,serif;box-shadow:inset 0 0 0 3px #ead0a67d}.stage-copy{display:block;min-width:0}.stage-copy b{display:block;color:#54372e;font:14px Georgia,serif;font-weight:600;white-space:nowrap}.stage-copy small{font-size:8px;letter-spacing:.08em;color:#a07b5b}.stage-toggle{border:0;position:relative;background:transparent;width:27px;height:37px;flex-shrink:0;margin-right:3px;padding:0}.stage-toggle:after{content:'◆';font-size:12px;color:#69815e;text-shadow:0 1px #fff1d5}.stage-toggle.off:after{content:'◇';color:#ad947c}.stages-footer{margin:auto 17px 16px;padding:16px 0 0;border-top:1px solid #b88d608a;text-align:center}.stages-footer-mark{display:block;font:24px Georgia,serif;color:#bb7140}.stages-footer div span{display:block;font:italic 13px Georgia,serif;color:#7f4a3a;margin:5px 0}.stages-footer small{font-size:10px;color:#8b7660;line-height:1.6;display:block}
+.field-panel{display:flex;flex-direction:column;align-items:center;overflow:hidden}.field-panel .panel-heading{width:100%}.field-top{width:100%;display:flex;justify-content:space-between;gap:7px;padding:14px 18px 8px;align-items:center}.field-stage{display:flex;align-items:center;gap:9px}.stage-id{font:30px Georgia,serif;color:#ae6245;width:43px;height:45px;text-align:center;border:1px solid #ae805e;border-radius:50%}.field-precursor{font:9px 'Segoe UI',sans-serif;letter-spacing:.13em;color:#926b54}.field-stage h2{margin:0;font:25px/1.05 Georgia,serif;color:#733d34;font-weight:500}.field-metadata{font:10px/1.65 Georgia,serif;color:#87674b;text-align:right}.field-meta-split{color:#b85739;margin:0 4px}
+.cosmogram-shell{width:100%;flex:1;min-height:475px;display:flex;align-items:center;justify-content:center;padding:0 14px}.cosmogram{width:min(100%,545px);aspect-ratio:1;position:relative;isolation:isolate;--ring-gold:#c99d4a;filter:drop-shadow(0 4px 3px #70502930)}.cosmogram svg{display:block;width:100%;height:100%;overflow:visible}.ringback .manuscript-script{font:italic 12px Georgia,serif;letter-spacing:1.35px;fill:#fae6b9}.ringback .sigil-letter{font:14px Georgia,serif;fill:#fbe5b1}.tree-fruit{transition:.25s;stroke:#e8c582;stroke-width:2;fill:#f7df9d}.tree-fruit .fruit-mini{stroke:#8f4a34;stroke-width:1.3;fill:none}.tree-fruit .fruit-symbol{fill:#8b503e;font:18px Georgia,serif;text-anchor:middle;dominant-baseline:middle}.cosmogram:not(.unlit) .tree-fruit.highlight{fill:#fff4cb;stroke:#a74835;filter:url(#goldGlow)}.cosmogram .tree-fruit.highlight{stroke-width:3}.cosmogram.unlit .living-tendril{opacity:.15}.living-tendril{stroke:var(--accent);stroke-width:2;stroke-linecap:round;opacity:.7;fill:none;stroke-dasharray:5 10;animation:energyFlow 7s linear infinite}.path-node{--stage:#b78752;position:absolute;z-index:4;width:68px;height:68px;transform:translate(-50%,-50%);border-radius:50%;border:1px solid #ad825c;color:#6e493c;background:radial-gradient(circle at 38% 26%,#fff9df,#edcf96 75%);box-shadow:0 0 0 3px #f5dfba,0 0 0 4px #b88b5a,0 5px 7px #69492b38;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0;transition:transform .18s ease,background .18s ease}.path-node:hover{transform:translate(-50%,-50%) scale(1.085)}.path-node.selected{background:radial-gradient(circle at 33% 24%,#fff9da,#f4d39b);border:2px solid var(--stage);box-shadow:0 0 0 3px #ffe2a6,0 0 0 5px var(--stage),0 0 22px #ce8f5e55}.path-node.off{opacity:.47}.node-symbol{font:22px/1 Georgia,serif;color:var(--stage)}.path-node b{font:11px Georgia,serif;color:#8b4c3d}.path-node small{position:absolute;top:calc(100% + 6px);font-size:8px;font-weight:700;letter-spacing:.1em;color:#7f5442;text-shadow:0 1px 3px #f5dfbb}.path-node:nth-child(1){left:50%;top:7.5%}.path-node:nth-child(2){left:83.25%;top:19%}.path-node:nth-child(3){left:91.5%;top:56%}.path-node:nth-child(4){left:68.5%;top:88.5%}.path-node:nth-child(5){left:31.5%;top:88.5%}.path-node:nth-child(6){left:8.5%;top:56%}.path-node:nth-child(7){left:16.75%;top:19%}.wheel-center-seal{position:absolute;left:50%;top:51%;transform:translate(-50%,-50%);font:italic 12px Georgia,serif;color:#f2e3bd;letter-spacing:.15em;text-shadow:0 1px #4a2e44;pointer-events:none;opacity:.9}.wheel-caption{font:italic 14px Georgia,serif;color:#795b43;text-align:center;margin:2px 0 13px;letter-spacing:.03em}.wheel-caption span{color:#ae6849}.hermetic-scroll{width:calc(100% - 38px);margin:8px 19px 12px;border-top:1px solid #bb8c57;border-bottom:1px solid #bb8c57;padding:7px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:#79533e;font:italic 12px Georgia,serif;background:linear-gradient(90deg,transparent,#e4c29480,transparent)}.hermetic-scroll b{font-style:normal;color:#a34d39;letter-spacing:.12em;font:9px 'Segoe UI',sans-serif}
+.scope-block{width:calc(100% - 32px);margin:0 16px 16px;border:1px solid #ad795b;background:#292b48;box-shadow:0 0 0 4px #e7c99c,inset 0 0 0 1px #deaa69;position:relative;border-radius:40% 40% 3px 3px/13% 13% 3px 3px;overflow:hidden;min-height:123px}.scope-wrap{position:relative;min-height:123px}.scope-wrap canvas{height:123px;width:100%;display:block}.scope-labels{position:absolute;z-index:2;top:9px;left:18px;right:18px;display:flex;justify-content:space-between;color:#ead49f;font:9px 'Segoe UI',sans-serif;letter-spacing:.15em}.scope-bottom{position:absolute;bottom:9px;left:18px;right:18px;display:flex;justify-content:space-between;font:9px 'Segoe UI',sans-serif;letter-spacing:.12em;color:#ae9fbb}.scope-bottom b{font-weight:500;color:#ead69e}
+.editor-panel{display:flex;flex-direction:column;overflow:hidden}.stage-editor-header{padding:13px 18px 12px;border-bottom:1px solid #a97d548c}.editor-title-row{display:flex;align-items:center;gap:9px}.editor-glyph{width:45px;height:45px;display:grid;place-items:center;border:1px solid #b78357;border-radius:50%;font:28px Georgia,serif;color:#bd533a;background:#f9e4bf;box-shadow:inset 0 0 0 3px #e9cba0}.editor-names{flex:1;min-width:0}.editor-names h2{font:26px/1.05 Georgia,serif;color:#773a32;margin:0}.editor-names div{font-size:9px;letter-spacing:.16em;color:#94745b;margin-top:4px}.stage-power{padding:8px 10px;border:1px solid #7b955b;border-radius:3px;color:#52653f;font-size:10px;font-weight:800;letter-spacing:.08em;background:#e3e3bd}.stage-power.off{color:#986b56;background:#e7d1c2;border-color:#b4826f}.editor-desc{font:italic 12px/1.65 Georgia,serif;color:#775c48;margin:11px 0 0;min-height:57px}.parameters{padding:3px 18px 0;flex:1;display:flex;flex-direction:column}.param-group{border-bottom:1px solid #b792666b;padding:12px 0 9px}.param-heading{display:flex;justify-content:space-between;color:#9f5037;font-size:9px;font-weight:800;letter-spacing:.14em}.param-heading i{font-weight:500;font-style:normal;color:#937c60}.knob-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:8px}.param{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}.knob{width:64px;height:64px;position:relative;border:0;border-radius:50%;touch-action:none;background:radial-gradient(circle at 36% 28%,#ffeec7,#c19c60 62%,#95623f 90%);box-shadow:inset 0 2px 3px #fff8d89c,inset 0 -2px 4px #703e31a3,0 2px 4px #76503755;display:block;flex-shrink:0}.knob:before{content:'';position:absolute;inset:6px;border:1px solid #946340;border-radius:50%;background:conic-gradient(from 225deg,var(--accent) var(--angle),#bba27b var(--angle) 270deg,transparent 270deg 360deg);box-shadow:inset 0 0 0 6px #e5cb9e, inset 0 0 6px #9a643f73}.knob:after{content:'';position:absolute;inset:13px;border:1px solid #9f7654;border-radius:50%;background:radial-gradient(circle at 32% 26%,#fff1cb,#caa66e 80%);box-shadow:0 1px 2px #a36b43;transform:rotate(var(--angle-turn));background-image:linear-gradient(to bottom,#89503a 0 23%,transparent 23% 100%),radial-gradient(circle at 32% 26%,#fff1cb,#caa66e 80%);background-position:center 3px,center;background-size:2px 14px,100% 100%;background-repeat:no-repeat}.param-name{font-size:9px;letter-spacing:.045em;color:#795b44;text-align:center;min-height:26px;line-height:1.2;margin-top:3px;display:flex;align-items:center;justify-content:center;max-width:109px}.param-val{color:#a54c36;font:700 11px Georgia,serif;white-space:nowrap}.parameter-footer{margin:10px 16px 13px;padding-top:10px;border-top:1px solid #b4875a78;display:flex;gap:5px;justify-content:space-between;align-items:center}.parameter-footer button{border:1px solid #b48a5e;background:#f3ddb5;border-radius:3px;padding:6px 9px;color:#7b4d3b;font-size:10px}.parameter-footer .move{font-size:17px;padding:3px 9px}.intent-scroll{border-top:1px solid #b7885b8c;padding:13px 20px 16px;background:linear-gradient(#ead0a5,#f5e3c0)}.intent-scroll .section-small{font-size:8px;color:#a5553d;font-weight:800;letter-spacing:.15em}.intent-quote{font:italic 17px Georgia,serif;color:#773d33;margin:4px 0 10px}.intent-scroll p{font:11px/1.55 Georgia,serif;color:#806148;margin:5px 0 0}.lineage{display:flex;flex-wrap:wrap;gap:9px;font-size:8px;letter-spacing:.12em;color:#90684b;margin-top:8px}.square{display:inline-block;width:4px;height:4px;background:#be834b;transform:rotate(45deg);margin-right:4px}
+.bottom-altar{display:grid;grid-template-columns:minmax(230px,.75fr) 1fr minmax(300px,.85fr);gap:13px;margin-top:13px}.altar-panel{min-width:0;min-height:155px;border:1px solid #a87855;background:linear-gradient(145deg,#f8e8c7,#e9d09e);padding:13px 18px;position:relative}.altar-panel:before,.altar-panel:after{position:absolute;content:'❧';font:18px Georgia,serif;color:#b57551;top:6px}.altar-panel:before{left:8px}.altar-panel:after{right:8px;transform:scaleX(-1)}.altar-title{font:11px Georgia,serif;letter-spacing:.17em;color:#8e3b35;text-align:center;border-bottom:1px solid #bb9466;padding:0 0 8px;margin-bottom:10px}.altar-panel p{margin:0;color:#80654d;font:italic 13px/1.6 Georgia,serif}.master-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.master-controls .knob{width:53px;height:53px}.master-controls .knob:after{inset:11px}.master-controls .param-name{min-height:16px;margin-top:2px}.master-controls .param-val{font-size:11px}.preset-space{display:flex;flex-direction:column;gap:8px}select{width:100%;font-size:13px;color:#593e33;border:1px solid #a87e56;border-radius:2px;background:#f9edcb;padding:10px 11px;outline-offset:2px;min-height:40px}.preset-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.preset-actions button{padding:8px 4px;background:#eee0bc;border:1px solid #ae8057;color:#835240;border-radius:2px;font-size:10px;letter-spacing:.06em}.preset-actions #applyPreset{background:#a34c39;color:#fff0d0;border-color:#a34c39}.master-footer{display:flex;justify-content:space-between;gap:12px;border-top:1px solid #bd996e;margin-top:12px;padding-top:7px;color:#96735b;font-size:8px;letter-spacing:.1em}.master-footer .safety-led{background:#67855d;border-radius:50%;width:6px;height:6px;display:inline-block;margin-right:6px}.site-footer{margin-top:12px;display:flex;justify-content:space-between;align-items:center;color:#815b4b;font-size:9px;letter-spacing:.1em;gap:10px;border-top:1px solid #b88d62;padding:12px 4px 0}.site-footer span{padding:0 4px;color:#b25337}.toast{position:fixed;z-index:50;bottom:25px;left:50%;transform:translateX(-50%) translateY(20px);background:#482f41;color:#f5e5c1;padding:11px 19px;box-shadow:0 8px 30px #4c262855;opacity:0;pointer-events:none;transition:.2s;border:1px solid #bb8b4c;font-size:12px}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@keyframes energyFlow{to{stroke-dashoffset:-100}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+@media(max-width:1330px){.workbench{grid-template-columns:190px minmax(390px,1fr) 355px;gap:9px}.stages-panel{min-height:730px}.stage-select{gap:4px}.stage-glyph{width:27px;height:27px}.stage-copy b{font-size:13px}.field-stage h2{font-size:23px}.cosmogram-shell{min-height:420px}.path-node{height:61px;width:61px}.path-node small{font-size:7px}.knob{width:58px;height:58px}.parameters{padding-left:13px;padding-right:13px}.panel-heading{padding-left:18px;padding-right:18px}}
+@media(max-width:1120px){.build-status{display:none}.workbench{grid-template-columns:minmax(370px,1fr) minmax(330px,.78fr)}.stages-panel{grid-column:1/-1;min-height:unset}.stages-list{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));padding:8px 9px 14px}.stage-item{min-height:92px;flex-direction:column}.stage-select{flex-direction:column;text-align:center;gap:3px;padding:6px 1px}.stage-item .number{font-size:12px}.stage-glyph{width:30px;height:30px}.stage-copy small{display:none}.stage-copy b{font-size:11px;white-space:normal}.stage-toggle{position:absolute;top:4px;right:3px;height:19px;width:16px}.stage-toggle:after{font-size:9px}.ledger-caption{display:none}.stages-footer{display:none}.cosmogram-shell{min-height:430px}.bottom-altar{grid-template-columns:1fr 1fr}.bottom-altar .altar-panel:first-child{display:none}}
+@media(max-width:760px){#app{padding:9px 10px 18px}.topbar{flex-wrap:wrap;padding:12px 4px;gap:8px;justify-content:center}.brand{width:100%;justify-content:center}.brand-name{font-size:19px}.brand-mark{width:45px;height:45px}.header-tools{justify-content:center}.intro{margin:10px 0}.intro-right{display:none}.intro h1{font-size:23px}.trinity-tile small{display:none}.trinity-tile{min-height:32px}.trinity-tile b{font-size:11px}.workbench{display:flex;flex-direction:column;gap:11px}.stages-list{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}.field-panel{order:2}.stages-panel{order:1}.editor-panel{order:3}.cosmogram-shell{min-height:0;padding:0 8px}.cosmogram{width:min(100%,555px)}.field-top{padding:12px 15px}.field-stage h2{font-size:23px}.field-metadata{font-size:9px}.path-node{width:clamp(45px,12vw,65px);height:clamp(45px,12vw,65px)}.node-symbol{font-size:18px}.path-node small{font-size:6px;top:calc(100% + 5px)}.wheel-caption{margin-top:0}.editor-panel{min-height:unset}.editor-desc{min-height:0}.knob{width:65px;height:65px}.bottom-altar{grid-template-columns:1fr}.bottom-altar .altar-panel:first-child{display:block}.site-footer{font-size:8px;flex-wrap:wrap;justify-content:center;text-align:center}}
+@media(max-width:430px){.brand-name{font-size:16px;letter-spacing:.1em}.brand-sub{font-size:8px;letter-spacing:.13em}.mode-button{font-size:10px;padding:8px 11px}.intro h1{font-size:20px}.panel-heading{font-size:9px}.stages-list{grid-template-columns:repeat(4,minmax(0,1fr))}.stage-item{min-height:79px}.stage-copy b{font-size:10px}.stage-glyph{width:27px;height:27px;font-size:16px}.path-node{width:40px;height:40px;box-shadow:0 0 0 2px #f5dfba,0 0 0 3px #b88b5a}.path-node small{display:none}.node-symbol{font-size:16px}.path-node b{font-size:9px}.cosmogram-shell{padding:0 3px}.wheel-caption{font-size:11px}.field-stage h2{font-size:18px}.stage-id{width:34px;height:34px;font-size:24px}.field-metadata{font-size:8px}.knob{width:62px;height:62px}.master-controls{gap:3px}.altar-panel{padding:12px}.preset-actions button{font-size:9px}.site-footer>div:nth-child(2){display:none}}
+.cosmogram[data-stage="0"] .tree-fruit.fruit-0 > circle:first-child{fill:#fff6cb;stroke:#f0b969;stroke-width:3;filter:url(#goldGlow)}.cosmogram[data-stage="1"] .tree-fruit.fruit-1 > circle:first-child{fill:#fff6cb;stroke:#f0b969;stroke-width:3;filter:url(#goldGlow)}.cosmogram[data-stage="2"] .tree-fruit.fruit-2 > circle:first-child{fill:#fff6cb;stroke:#f0b969;stroke-width:3;filter:url(#goldGlow)}.cosmogram[data-stage="3"] .tree-fruit.fruit-3 > circle:first-child{fill:#fff6cb;stroke:#f0b969;stroke-width:3;filter:url(#goldGlow)}.cosmogram[data-stage="4"] .tree-fruit.fruit-4 > circle:first-child{fill:#fff6cb;stroke:#f0b969;stroke-width:3;filter:url(#goldGlow)}.cosmogram[data-stage="5"] .tree-fruit.fruit-5 > circle:first-child{fill:#fff6cb;stroke:#f0b969;stroke-width:3;filter:url(#goldGlow)}.cosmogram[data-stage="6"] .tree-fruit.fruit-6 > circle:first-child{fill:#fff6cb;stroke:#f0b969;stroke-width:3;filter:url(#goldGlow)}
+
+/* CP07: illuminated material controls, not every parameter is a dial. */
+.param-fader{width:90%;margin:5px 5%;height:15px;accent-color:#ad5f3d;cursor:ew-resize;background:transparent;appearance:none;position:relative;z-index:2}
+.param-fader::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,#99634f 0,var(--accent) var(--ratio),#b9a083 var(--ratio),#baa585 100%);border:1px solid #80593980;box-shadow:inset 0 1px 4px #5944285b}
+.param-fader::-webkit-slider-thumb{appearance:none;width:15px;height:24px;border:1px solid #99522f;border-radius:3px;box-shadow:0 2px 4px #59391e80,inset 0 2px #f5d79f;background:linear-gradient(110deg,#ddbd74,#ab6b3a 48%,#ddbb72);margin-top:-10px}
+.fader-track{position:relative;width:100%;height:58px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#e4ca9f33,transparent)}
+.fader-runes{position:absolute;bottom:2px;font:10px Georgia,serif;letter-spacing:2px;color:#aa8459;pointer-events:none;white-space:nowrap}
+.param-choice{background:radial-gradient(ellipse at 50% 0,#f8efd4,#ead09d);border:1px solid #98724e;color:#74442c;box-shadow:inset 0 0 0 2px #fff4d58a,0 2px 4px #77572b3e;width:82%;max-width:130px;margin:11px auto;height:38px;border-radius:3px;font:17px Georgia,serif;text-align:center;cursor:pointer}
+.param-switch{width:72px;height:48px;margin:5px auto 3px;border-radius:8px;background:linear-gradient(#ddd0ad,#c3a57c);box-shadow:inset 0 2px 6px #74503066,0 2px 2px #fff2d7;display:flex;justify-content:center;align-items:center;flex-direction:column;border:1px solid #947c50;color:#9e7850;transition:.15s}
+.param-switch.armed{background:linear-gradient(#eec77e,#dfb468);color:#884a33;box-shadow:inset 0 0 0 2px #f8e6ab,0 0 8px #ce965c60}
+.param-switch .switch-gem{font:24px Georgia,serif;line-height:1}.param-switch small{font:7px Georgia,serif;letter-spacing:.09em}.param-fader:focus-visible,.param-switch:focus-visible,.param-choice:focus-visible{outline:2px solid #805784;outline-offset:3px}
+.knob .dial-inscription{display:grid;place-items:center;position:absolute;inset:0;color:#8c6545;opacity:.43;font:13px Georgia,serif;pointer-events:none}
+.cosmogram svg .filigree{stroke:#f5d09b;stroke-width:1.1;fill:none;opacity:.8}.cosmogram svg .vessel-filigree{fill:none;stroke:#e3c080;stroke-width:1.1}.cosmogram svg .portrait{fill:#ddac69;stroke:#804838;stroke-width:1.3}.cosmogram svg .portrait-ink{stroke:#844635;fill:none;stroke-width:1.1}.cosmogram svg .ribbon-letter{font:italic 9px Georgia,serif;fill:#813e36;letter-spacing:1.1px}.cosmogram svg .gold-sparks{fill:#f5ce75;stroke:#e4bb65;stroke-width:.5}
+#hostNotice{font-size:9px;letter-spacing:.1em;color:#7d6750;text-align:center;padding:5px}
+
+.native-plugin .mode-button:disabled{opacity:.45;filter:grayscale(.25);cursor:default}
+
+
+/* CP07 — 16:10 landscape: geometric reflow, not a stretched square. */
+@media (min-width:1121px) {
+ #app {max-width:none;padding:8px 15px 9px;}
+ .topbar {min-height:62px;padding:3px 8px 5px;}
+ .brand-mark {width:42px;height:42px}
+ .brand-name {font-size:21px}
+ .brand-sub {font-size:8px;margin-top:0}
+ .mode-button {padding:7px 12px}
+ .main-power {width:34px;height:34px}
+ .intro {margin:7px 0 8px;min-height:51px}
+ .intro-ornament {font-size:25px}
+ .intro h1 {font-size:24px;margin:0}
+ .intro p {font-size:10px}
+ .eyebrow {font-size:8px}
+ .counter {font-size:24px}
+ .trinity {gap:7px;margin-bottom:7px}
+ .trinity-tile {min-height:29px}
+ .trinity-tile b {font-size:12px}
+ .trinity-tile small {font-size:8px}
+ .workbench {grid-template-columns:214px minmax(540px,1fr) 416px;gap:10px;align-items:stretch;}
+ .panel-heading {min-height:32px;padding:8px 13px;font-size:10px}
+ .stages-panel {min-height:0}
+ .ledger-caption {padding:7px 8px 5px;font-size:12px}
+ .stages-list {padding:4px 7px 3px;gap:1px}
+ .stage-item {min-height:54px}
+ .stage-select {padding:6px 2px 6px 4px;gap:5px}
+ .stage-item .number {font-size:15px;width:19px}
+ .stage-glyph {height:26px;width:26px;font-size:17px}
+ .stage-copy b {font-size:13px}
+ .stage-copy small {font-size:7px}
+ .stage-toggle {height:26px;width:22px}
+ .stages-footer {margin:auto 10px 8px;padding:6px 0 0}
+ .stages-footer-mark {font-size:17px}
+ .stages-footer div span {font-size:11px;margin:2px 0}
+ .stages-footer small {font-size:8px;line-height:1.25}
+ .field-top {padding:8px 16px 0}
+ .field-stage h2 {font-size:23px}
+ .stage-id {font-size:24px;height:38px;width:38px}
+ .field-metadata {font-size:9px}
+ .cosmogram-shell {min-height:0;flex:0 0 auto;padding:4px 11px 0}
+ .cosmogram {width:clamp(310px,25vw,395px);}
+ .path-node {width:48px;height:48px}
+ .node-symbol {font-size:17px}
+ .path-node b {font-size:9px}
+ .path-node small {font-size:6px;top:calc(100% + 4px)}
+ .wheel-caption {font-size:12px;margin:0 0 5px}
+ .hermetic-scroll {margin:3px 15px 6px;width:calc(100% - 30px);padding:4px 8px;font-size:11px}
+ .scope-block {min-height:84px;margin-bottom:8px}.scope-wrap {height:84px !important;min-height:84px}.scope-wrap canvas {height:84px}
+ .scope-title {font-size:8px}
+ .stage-editor-header {padding:6px 13px 5px}
+ .editor-glyph {height:34px;width:34px;font-size:23px}
+ .editor-names h2 {font-size:22px}
+ .editor-names div {font-size:8px}
+ .stage-power {padding:5px 7px}
+ .editor-desc {font-size:10px;line-height:1.3;margin:5px 0 0;min-height:29px}
+ .parameters {padding:0 11px}
+ .param-group {padding:6px 0 3px}
+ .param-heading {font-size:8px}
+ .knob-row {margin-top:3px;gap:3px}
+ .knob {width:46px;height:46px}
+ .knob:before {inset:4px}
+ .knob:after {inset:10px}
+ .param-name {font-size:8px;min-height:20px;margin-top:0}
+ .param-val {font-size:9px}
+ .fader-track {height:46px}
+ .param-choice {height:30px;margin:7px auto;font-size:14px}
+ .param-switch {width:62px;height:40px;margin:4px auto 2px}
+ .param-switch .switch-gem {font-size:19px}
+ .parameter-footer {margin:5px 11px 5px;padding-top:5px}
+ .parameter-footer button {font-size:9px;padding:4px 6px}
+ .intent-scroll {padding:5px 12px 7px}
+ .intent-quote {font-size:13px;margin:2px 0 3px}
+ .intent-scroll p {font-size:9px;line-height:1.3;margin:2px 0 0}
+ .intent-scroll .section-small {font-size:7px}
+ .lineage {font-size:7px;gap:6px;margin-top:4px}
+ .bottom-altar {gap:9px;margin-top:8px;grid-template-columns:.8fr 1.1fr 1fr}
+ .altar-panel {min-height:0;padding:6px 12px}
+ .altar-title {font-size:9px;padding:0 0 4px;margin-bottom:4px}
+ .altar-panel p {font-size:10px;line-height:1.35}
+ .master-controls .knob {width:36px;height:36px}
+ .master-controls .knob:after {inset:9px}
+ .master-controls .param-name {min-height:12px}
+ .master-controls .param-val {font-size:8px}
+ .master-controls {gap:2px}
+ .preset-space {gap:3px}
+ select {min-height:26px;padding:4px 7px;font-size:11px}
+ .preset-actions button {padding:4px 3px;font-size:9px}
+ .master-footer {margin-top:3px;padding-top:3px;font-size:7px}
+ .site-footer {margin-top:5px;padding:5px 4px 0;font-size:8px}
+}
+</style></head>
+<body><div id="app">
+<header class="topbar">
+ <div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="24" stroke="currentColor" stroke-width="1.7"/><circle cx="30" cy="30" r="18" stroke="currentColor" stroke-width="1"/><path d="M30 2v56M2 30h56M13 13l34 34M47 13 13 47" stroke="currentColor" stroke-width=".7"/><path d="M30 14l14 16-14 16-14-16z" stroke="currentColor" stroke-width="1.7"/><circle cx="30" cy="30" r="4" fill="#ad4b37"/><path d="M30 5l3 6-3-2-3 2zM30 55l3-6-3 2-3-2z" fill="currentColor"/></svg></div><div><div class="brand-name">NIGREDO <span>· OPUS SEPTEM</span></div><div class="brand-sub">ARS MAGNA SONORA · ELEMENTAL NOTE &amp; AUDIO EFFECTS</div></div></div>
+ <div class="header-tools"><div class="build-status"><span class="status-dot"></span>NATIVE MANUSCRIPT EDITOR <span class="build-version">CP07</span></div><div class="mode-switch" role="group" aria-label="Effect module"><button type="button" id="audioMode" class="mode-button active" aria-pressed="true"><span class="mode-graphic">◉</span> Audio FX</button><button type="button" id="midiMode" class="mode-button" aria-pressed="false"><span class="mode-graphic">♬</span> MIDI Note FX</button></div><button id="powerBtn" type="button" class="main-power" aria-label="Toggle complete effects chain" aria-pressed="true" title="Toggle complete effects chain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v11"/><path d="M6.3 5.5a9 9 0 1 0 11.4 0"/></svg></button></div>
+</header>
+<div class="intro"><div class="intro-lead"><span class="intro-ornament" aria-hidden="true">❧</span><div><div class="eyebrow">SEPTEM GRADVS · A LIVING MANUSCRIPT OF TRANSFORMATION</div><h1>One matter, <em>seven metamorphoses.</em></h1><p>Choose an operation, shape its parameters, and trace its place in the chain.</p></div></div><div class="intro-right"><div><b id="pathHeader">STEREO IN → STEREO OUT</b><small id="pathSubtitle">HOST AUDIO · NO OSCILLATOR</small></div><div class="counter">VII</div></div></div>
+<div class="trinity" aria-hidden="true"><div class="trinity-tile"><b>SPIRITVS</b><small>INTENTION / FORM</small></div><div class="trinity-tile"><b>ANIMA</b><small>CHANGE / MOTION</small></div><div class="trinity-tile"><b>CORPVS</b><small>MATERIAL / RESULT</small></div></div>
+<main class="workbench">
+ <section class="illuminated stages-panel" aria-label="Seven stages"><div class="panel-heading"><span><span class="section-no">01</span> THE OPERATIONS</span><span>ORDO · VII</span></div><div class="ledger-caption">Select, enable, and reorder the processes.</div><div class="stages-list" id="stagesList"></div><div class="stages-footer"><span class="stages-footer-mark">✥</span><div><span>As above, so below</span><small>All seven operations may be enabled, muted, and placed in a different processing order.</small></div></div></section>
+ <section class="illuminated field-panel" aria-label="Alchemical transformation cosmogram"><div class="panel-heading"><span><span class="section-no">02</span> TABVLA TRANSMVTATIONIS</span><span id="fieldIdentity">AUDIO / SIGNAL STUDY</span></div>
+  <div class="field-top"><div class="field-stage"><div class="stage-id" id="fieldRoman">IV</div><div><div class="field-precursor">THE CURRENT OPERATION</div><h2 id="fieldName">Conjunction</h2></div></div><div class="field-metadata"><div><span id="fieldLatin">CONIUNCTIO</span><span class="field-meta-split">✧</span><span id="fieldMotto">UNIO</span></div><span id="chainTypeLabel">AUDIO · SEVEN STAGES</span></div></div>
+  <div class="cosmogram-shell"><div class="cosmogram" id="cosmogram" data-stage="3"><svg viewBox="0 0 600 600" role="img" aria-label="Cosmogram with illuminated concentric rings, seven alchemical fruit seals, a branching tree, and a vessel">
+<defs>
+  <radialGradient id="nightSky" cx="50%" cy="49%" r="60%"><stop offset="0" stop-color="#514364"/><stop offset=".63" stop-color="#373c60"/><stop offset="1" stop-color="#232a48"/></radialGradient>
+  <radialGradient id="paperGold"><stop stop-color="#fff4c5"/><stop offset=".66" stop-color="#ead09d"/><stop offset="1" stop-color="#bb8446"/></radialGradient>
+  <radialGradient id="solarGold"><stop stop-color="#fffacb"/><stop offset=".65" stop-color="#f2c66c"/><stop offset="1" stop-color="#c88643"/></radialGradient>
+  <filter id="goldGlow" x="-60%" width="220%" y="-60%" height="220%"><feGaussianBlur stdDeviation="2" result="soft"/><feMerge><feMergeNode in="soft"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <path id="upperArc" d="M 72 302 A 228 228 0 0 1 528 302"/>
+  <path id="lowerArc" d="M 520 318 A 221 221 0 0 1 80 318"/>
+  <pattern id="stars" patternUnits="userSpaceOnUse" width="39" height="49"><circle cx="18" cy="12" r="1" fill="#f7dcb7" opacity=".35"/><path d="M30 39h5m-2.5-2.5v5" stroke="#e3b962" stroke-width=".7" opacity=".23"/></pattern>
+</defs>
+<g class="ringback">
+  <circle cx="300" cy="300" r="267" fill="#e4c28f" stroke="#9c5b3e" stroke-width="2.5"/>
+  <circle cx="300" cy="300" r="257" fill="#f9eccd" stroke="#caaf72" stroke-width="2.2"/>
+  <circle cx="300" cy="300" r="245" fill="none" stroke="#ac3f36" stroke-width="18"/>
+  <circle cx="300" cy="300" r="232" fill="none" stroke="#e9ae62" stroke-width="6"/>
+  <circle cx="300" cy="300" r="220" fill="none" stroke="#527044" stroke-width="16"/>
+  <circle cx="300" cy="300" r="204" fill="none" stroke="#a37d36" stroke-width="4"/>
+  <circle cx="300" cy="300" r="196" fill="none" stroke="#503956" stroke-width="14"/>
+  <circle cx="300" cy="300" r="179" fill="none" stroke="#da973f" stroke-width="8"/>
+  <circle cx="300" cy="300" r="170" fill="url(#nightSky)" stroke="#dcb465" stroke-width="5"/>
+  <circle cx="300" cy="300" r="164" fill="url(#stars)" opacity=".8"/>
+  <circle cx="300" cy="300" r="250" fill="none" stroke="#f8e3b2" stroke-dasharray="1 9" stroke-width="1.5" opacity=".85"/>
+  <circle cx="300" cy="300" r="232" fill="none" stroke="#eacc9e" stroke-dasharray="2 12" stroke-width="1" opacity=".72"/>
+  <circle cx="300" cy="300" r="204" fill="none" stroke="#ffdf9a" stroke-dasharray="1 8" stroke-width="1.5"/>
+  <text class="manuscript-script"><textPath href="#upperArc" startOffset="50%" text-anchor="middle">✧ IN IGNE FORMAM  ·  IN AQVA MOTVM  ·  IN SPIRITV VITAM ✧</textPath></text>
+  <text class="manuscript-script"><textPath href="#lowerArc" startOffset="50%" text-anchor="middle">✧ SOLVE ET COAGVLA  ·  SEPTEM OPERATIONES  ·  OPVS VNV M ✧</textPath></text>
+  <path d="M300 50v14m0 472v14M50 300h14m472 0h14" stroke="#f8eac1" stroke-width="2"/>
+</g>
+<!-- Celestial emblems: solar and lunar duality. -->
+<g opacity=".86"><circle cx="236" cy="199" r="16" fill="url(#solarGold)"/><path d="M236 176v-5m0 55v-6m-35-21h6m58 0h7m-58-22l6 6m36 37l7 6m-7-49l-7 7m-34 35l-6 6" stroke="#e8c981" stroke-width="1.6"/><path d="M359 183a15 15 0 1 0 7 29 18 18 0 1 1-7-29" fill="#f3e4b7" stroke="#d1b478" stroke-width="1.4"/></g>
+<!-- Branching alchemical tree rising from the vessel. -->
+<g class="world-tree" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M292 457 Q291 407 302 370 Q312 334 299 303 Q292 274 304 238" stroke="#965332" stroke-width="26" fill="none"/>
+  <path d="M294 450 Q294 402 301 363 Q312 323 302 283 L305 243" stroke="#dca465" stroke-width="11" fill="none"/>
+  <path d="M306 342 C264 340 249 330 225 289 Q209 262 192 247" stroke="#925433" stroke-width="12" fill="none"/>
+  <path d="M310 323 C343 320 365 295 393 254 L418 244" stroke="#925433" stroke-width="12" fill="none"/>
+  <path d="M300 305 C273 283 263 260 264 228 L251 216" stroke="#bd7040" stroke-width="7" fill="none"/>
+  <path d="M305 282 C331 268 343 239 352 214" stroke="#bd7040" stroke-width="8" fill="none"/>
+  <path d="M297 387 Q261 382 236 360 C214 339 207 321 195 312" stroke="#ad5c34" stroke-width="9" fill="none"/>
+  <path d="M307 378 Q355 377 373 354 C383 338 395 324 405 315" stroke="#ad5c34" stroke-width="9" fill="none"/>
+  <path d="M301 368 C267 349 260 332 245 312 M303 361 C340 345 352 323 368 301" stroke="#dcb477" stroke-width="3" fill="none"/>
+  <path d="M302 240 C296 218 287 216 278 203 M304 249 C314 231 322 220 326 207" stroke="#efbf76" stroke-width="3" fill="none"/>
+  <g fill="#c68149" stroke="#a85e3a" stroke-width="1.4"><path d="M220 290q-35-22-22-37 15 1 22 37"/><path d="M393 270q35-28 40-17-11 20-40 17"/><path d="M256 333q-20-30-30-20-1 16 30 20"/><path d="M350 347q32-26 39-14-8 18-39 14"/><path d="M287 278q-24-28-31-21 3 17 31 21"/></g>
+  <path class="living-tendril" d="M297 430Q308 374 302 320Q262 292 226 280M302 320Q363 304 394 262"/>
+</g>
+<!-- Seven fruit/planet medals on branches; highlights respond to stage selection. -->
+<g class="fruit-medals">
+  <g class="tree-fruit fruit-0"><circle cx="300" cy="231" r="16"/><circle class="fruit-mini" cx="300" cy="231" r="12"/><text class="fruit-symbol" x="300" y="231">✺</text></g>
+  <g class="tree-fruit fruit-1"><circle cx="245" cy="249" r="16"/><circle class="fruit-mini" cx="245" cy="249" r="12"/><text class="fruit-symbol" x="245" y="249">☽</text></g>
+  <g class="tree-fruit fruit-2"><circle cx="357" cy="256" r="16"/><circle class="fruit-mini" cx="357" cy="256" r="12"/><text class="fruit-symbol" x="357" y="256">⫽</text></g>
+  <g class="tree-fruit fruit-3"><circle cx="212" cy="309" r="16"/><circle class="fruit-mini" cx="212" cy="309" r="12"/><text class="fruit-symbol" x="212" y="309">⋈</text></g>
+  <g class="tree-fruit fruit-4"><circle cx="390" cy="309" r="16"/><circle class="fruit-mini" cx="390" cy="309" r="12"/><text class="fruit-symbol" x="390" y="309">✣</text></g>
+  <g class="tree-fruit fruit-5"><circle cx="249" cy="358" r="16"/><circle class="fruit-mini" cx="249" cy="358" r="12"/><text class="fruit-symbol" x="249" y="358">☿</text></g>
+  <g class="tree-fruit fruit-6"><circle cx="350" cy="358" r="16"/><circle class="fruit-mini" cx="350" cy="358" r="12"/><text class="fruit-symbol" x="350" y="358">⬡</text></g>
+</g>
+<!-- Illuminated vessel; material enters here and is transformed. -->
+<g class="vessel"><path d="M238 433Q300 455 362 433L350 473Q300 497 250 473Z" fill="#a33e38" stroke="#e1af64" stroke-width="4"/><ellipse cx="300" cy="434" rx="64" ry="12" fill="#eac37b" stroke="#9e593f" stroke-width="3"/><ellipse cx="300" cy="433" rx="50" ry="6" fill="#6f4d53" opacity=".8"/><path d="M242 446q-30 20-35-13 21-9 32 7m119 6q30 20 35-13-21-9-32 7" fill="none" stroke="#ba8c5e" stroke-width="5"/><path d="M252 474Q300 490 348 474L361 492H239Z" fill="#e5bd76" stroke="#915b45" stroke-width="2"/><path d="M255 459q18-10 32 6m57-6q-18-10-32 6" fill="none" stroke="#dcb47c" stroke-width="2"/><circle cx="300" cy="465" r="7" fill="url(#paperGold)"/></g>
+<g fill="#efd3a4" opacity=".8"><path d="M184 384l6-15 6 15-6 15z"/><path d="M410 389l5-13 5 13-5 13z"/></g>
+
+<!-- CP07 illuminated details: botanical filigree, scroll seals, etched faces and curls. -->
+<g class="illuminated-miniatures" aria-hidden="true">
+ <g class="filigree"><path d="M90 265c-25-37-10-72 9-85 12-9 25 3 15 14-8 9-22-1-12-12m410 83c25-37 10-72-9-85-12-9-25 3-15 14 8 9 22-1 12-12"/>
+ <path d="M90 337c-25 37-10 72 9 85 12 9 25-3 15-14-8-9-22 1-12 12m410-83c25 37 10 72-9 85-12 9-25-3-15-14 8-9 22 1 12 12"/>
+ <path d="M300 131c17-25 42-24 45-13 3 14-19 18-19 3m-26 10c-17-25-42-24-45-13-3 14 19 18 19 3"/>
+ <path d="M300 471c19 31 37 29 41 18 5-15-14-19-16-5m-25-13c-19 31-37 29-41 18-5-15 14-19 16-5"/>
+ </g>
+ <g transform="translate(301 169)"><path d="M-27 7Q-34-15-20-20Q-9-29 0-17Q9-29 20-20Q34-15 27 7Q17 22 0 27Q-17 22-27 7Z" class="portrait"/>
+ <path d="M-13-2q6-4 11 0m4 0q6-4 12 0m-22 11q8 5 16 0m-21-25q14-15 27 0m-15 13v7" class="portrait-ink"/><circle cx="-8" cy="-1" r="1.7" fill="#6f4135"/><circle cx="8" cy="-1" r="1.7" fill="#6f4135"/>
+ <path d="M-13 27v10m26-10v10m-26 0q13 8 26 0" class="filigree"/></g>
+ <g class="portrait-ink" opacity=".65"><path d="M270 216q30-14 60 0M225 271q-19-18-31 0m16 10q-17-2-26 8M376 272q16-18 28-2m-14 13q21-4 26 9"/></g>
+ <g class="vessel-filigree"><path d="M263 453q10-7 20 2t18 2t18 0t18-4M270 474q30 15 60 0M246 482l-4 7 8-2 9 5 7-5 9 6 7-6 8 8 10-8 8 8 9-8 9 6 7-7 9 4 6-6"/>
+ <path d="M249 443c-12-22-27-21-30-9 1 7 9 10 14 2m130 7c12-22 27-21 30-9-1 7-9 10-14 2"/></g>
+ <g><path d="M166 389q-39-7-26-33 12-14 23 5-23-12-15 6 7 9 18 3" class="filigree"/>
+ <path d="M434 389q39-7 26-33-12-14-23 5 23-12 15 6-7 9-18 3" class="filigree"/></g>
+ <g><path d="M154 284Q140 271 154 262Q165 256 173 273M446 284Q460 271 446 262Q435 256 427 273" class="filigree"/></g>
+ <path d="M155 345q-20 25-12 40m11-43q7 25 23 36m270-33q20 25 12 40m-11-43q-7 25-23 36" class="filigree"/>
+ <path d="M280 419q5-12 11-16m-18 18q14 0 18-6m16-7q15 5 19 16m-5-21q-7 17-14 17" stroke="#e6b77c" fill="none" stroke-width="2"/>
+ <g><path d="M178 427Q300 476 422 427L416 439Q300 483 184 440Z" fill="#efdcab" stroke="#ac764c" stroke-width="1.3"/>
+  <text class="ribbon-letter" x="300" y="458" text-anchor="middle">SOLVE · COAGVLA · RENASCERE</text>
+ </g>
+ <g class="gold-sparks"><path d="M195 187l3-6 3 6-3 6zM415 185l3-6 3 6-3 6zM277 136l3-6 3 6-3 6zM320 130l3-6 3 6-3 6zM181 358l4-7 4 7-4 7zM415 355l4-7 4 7-4 7z"/></g>
+</g>
+</svg><div class="stage-path" id="stagePath" aria-label="Choose a stage from the alchemical wheel"></div></div></div>
+  <div class="wheel-caption">✧ &nbsp; <span>Seven orders of change</span> · one continuous material &nbsp; ✧</div>
+  <div class="hermetic-scroll"><span><b>INPUT</b> &nbsp; <span id="inputName">AUDIO IN</span> <span>·</span> <small id="inputSpec">STEREO L/R</small></span><span>✧ &nbsp; SOLVE ET COAGVLA &nbsp; ✧</span><span><b>OUTPUT</b> &nbsp; <span id="outputName">AUDIO OUT</span> <span>·</span> <small id="outputSpec">STEREO L/R</small></span></div>
+  <div class="scope-block"><div id="scopeWrap" class="scope-wrap"><canvas id="scope" aria-label="Decorative animated audio or MIDI event visualization"></canvas><div class="scope-labels"><span id="scopeLabel">HARMONIC FIELD</span><span>OPERATION <b id="scopeFlow">04</b> / 07</span></div><div class="scope-bottom"><span>✦ &nbsp; SYMBOLIC VISUALIZATION · NOT LIVE HOST DATA</span><span id="safetyLabel">HOST AUDIO · VISUAL ROUTING</span></div></div></div>
+ </section>
+ <section class="illuminated editor-panel" aria-label="Selected stage parameter editor"><div class="panel-heading"><span><span class="section-no">03</span> THE PARAMETER SCROLL</span><span id="editorIndex">IV / VII</span></div>
+  <div class="stage-editor-header"><div class="editor-title-row"><div class="editor-glyph" id="editorGlyph">⋈</div><div class="editor-names"><h2 id="editorTitle">Conjunction</h2><div id="editorLatin">CONIUNCTIO</div></div><button type="button" id="stagePower" class="stage-power on" aria-pressed="true">ON</button></div><p class="editor-desc" id="editorDesc"></p></div>
+  <div class="parameters" id="parameters"></div>
+  <div class="parameter-footer"><button type="button" id="resetStage" title="Reset parameters to factory stage defaults">↺ Reset stage</button><span class="micro-label">PROCESSION / ORDER</span><span><button class="move" type="button" id="moveEarlier" aria-label="Move selected stage earlier">←</button> <button class="move" type="button" id="moveLater" aria-label="Move selected stage later">→</button></span></div>
+  <div class="intent-scroll"><div class="section-small">OPERATIONAL AXIOM</div><div class="intent-quote" id="stagePhrase"></div><div class="section-small">PROCESS DESIGN</div><p id="stageMethod"></p><div class="lineage"><span><i class="square"></i>NEREIDA · TONAL ARCHITECTURE</span><span><i class="square"></i>RUBEDO · PERCUSSIVE ATLAS</span></div></div>
+ </section>
+</main>
+<div class="bottom-altar">
+ <section class="altar-panel"><div class="altar-title">✧ &nbsp; MATERIA PRIMA &nbsp; ✧</div><p>Spiritus sets the intention. Anima governs change. Corpus gives the work its final form. The seven stages remain editable and independent.</p></section>
+ <section class="altar-panel"><div class="altar-title">✧ &nbsp; VAS HERMETICVM · GLOBAL CONTROLS &nbsp; ✧</div><div class="master-controls" id="masterControls"></div></section>
+ <section class="altar-panel"><div class="altar-title">✧ &nbsp; FORMVLAE · PRESERVED STATES &nbsp; ✧</div><div class="preset-space"><select id="presetSelect" aria-label="Choose a formula preset"></select><div class="preset-actions"><button type="button" id="applyPreset">APPLY</button><button type="button" id="savePreset">EXPORT JSON</button><button type="button" id="loadPreset">IMPORT JSON</button><input id="presetFile" type="file" accept=".json,application/json" hidden/></div></div><div id="hostNotice">STANDALONE HTML DESIGN STUDY · HOST LINK READY</div><div class="master-footer"><span><i class="safety-led"></i>HTML DESIGN REFERENCE</span><span>NO DSP / MIDI ENGINE IN THIS HTML STUDY</span></div></section>
+</div>
+<footer class="site-footer"><div>NIGREDO · ELEMENTAL NOTE &amp; AUDIO EFFECTS · 2026</div><div>✧ &nbsp; EX MATERIA · IN FORMAM &nbsp; ✧</div><div>GUI CP07 · CLAP / VST3 ENGINE</div></footer>
+</div><div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+
+const P = (label,def=50,min=0,max=100,unit='%',step=1,short='') => ({label,def,min,max,unit,step,short});
+const operations = [
+ {name:'Calcination',latin:'CALCINATIO',symbol:'♄',color:'#45413e',tone:'#b6a99b',motto:'IGNIS · FIRE',
+  audio:{desc:'Excitation by fire. A harmonic forge for confident, saturated material without needless aliasing.',method:'DESIGN TARGET · oversampled, band-limited nonlinear drive with level compensation.',
+   macro:[P('HEAT',40),P('DRIVE',27),P('MIX',55)],character:[P('HARMONICS',40),P('BIAS',50),P('BODY',60)],refine:[P('PRE-FILTER',65),P('TRANSIENT',42),P('TRIM',0,-12,12,' dB',.5)]},
+  midi:{desc:'Transform note energy and articulation. Dynamics and gate behavior, never an audio tone generator.',method:'DESIGN TARGET · incoming note velocity and note-on/off transformation.',
+   macro:[P('ACCENT',34),P('VELOCITY',70),P('GATE',78)],character:[P('CURVE',48),P('MIN VEL',12,1,127,'',1),P('EXPRESSION',65)],refine:[P('VELOCITY LIMIT',120,1,127,'',1),P('GATE BIAS',50),P('SAFE NOTES',100)]}},
+ {name:'Dissolution',latin:'SOLUTIO',symbol:'☽',color:'#8c5b88',tone:'#d6b1d0',motto:'AQUA · WATER',
+  audio:{desc:'Loosen the source into flowing space. Diffusion, trails, and soft temporal displacement.',method:'DESIGN TARGET · decorrelated stereo diffusion, carefully damped delay lines.',
+   macro:[P('DIFFUSION',44),P('DECAY',35),P('MIX',25)],character:[P('PREDELAY',26,0,160,' ms'),P('SPREAD',60),P('DAMPING',55)],refine:[P('EARLY',48),P('MOD RATE',.25,.01,2,' Hz',.01),P('TAIL FILTER',66)]},
+  midi:{desc:'Dissolve rhythmic rigidity without producing new sound. Natural timing and overlap of incoming notes.',method:'DESIGN TARGET · bounded timestamp variation and note-length reshaping.',
+   macro:[P('HUMANIZE',24),P('TIME SPREAD',12,0,75,' ms'),P('LEGATO',22)],character:[P('SWING',0,-50,50,'%'),P('DURATION',60),P('CLUSTER',20)],refine:[P('SEED',42,0,999,'',1),P('LATE BIAS',50),P('SAFETY',100)]}},
+ {name:'Separation',latin:'SEPARATIO',symbol:'♂',color:'#b65a54',tone:'#e8a097',motto:'DISCRIMEN · DIVIDE',
+  audio:{desc:'Reveal structure within a complex signal. Separate bands, stereo placement, and transients.',method:'DESIGN TARGET · phase-aware crossover and complementary reconstruction.',
+   macro:[P('CROSSOVER',1200,100,8000,' Hz',10),P('FOCUS',55),P('BALANCE',50)],character:[P('MID/SIDE',50),P('TRANSIENT',45),P('LOW BODY',52)],refine:[P('SLOPE',24,6,48,' dB',6),P('PHASE',50),P('LINK',80)]},
+  midi:{desc:'Divide incoming notes by range, velocity, or musical role while preserving note identity.',method:'DESIGN TARGET · MIDI channel/register masks, reliable note-off mapping.',
+   macro:[P('SPLIT NOTE',60,24,96,'',1),P('LOW ROUTE',50),P('HIGH ROUTE',50)],character:[P('VEL SPLIT',64,1,127,'',1),P('OCTAVE RANGE',3,1,6,' oct',1),P('DENSITY',80)],refine:[P('HYSTERESIS',0,0,12,' st',1),P('MPE SAFE',100),P('NOTE TRACK',100)]}},
+ {name:'Conjunction',latin:'CONIUNCTIO',symbol:'☉',color:'#dbb447',tone:'#f3d988',motto:'UNIO · UNITE',
+  audio:{desc:'Unite separated materials. Enhance harmony, depth, and cohesion through controlled recombination.',method:'DESIGN TARGET · phase-stable parallel harmonics and level-matched blends.',
+   macro:[P('UNISON',45),P('HARMONIC',39),P('BLEND',46)],character:[P('WIDTH',55),P('COHERENCE',65),P('FUNDAMENTAL',53)],refine:[P('DE-TUNE',4,0,40,' ct'),P('CROSSFEED',15),P('CEILING',-1,-12,0,' dB',.1)]},
+  midi:{desc:'Unite incoming notes into chords, intervals, and meaningful relationships.',method:'DESIGN TARGET · scale-aware voice generation with bounded voice counts.',
+   macro:[P('INTERVAL',7,-12,12,' st',1),P('VOICES',2,1,6,'',1),P('BLEND',65)],character:[P('INVERSION',0,-3,3,'',1),P('SPREAD',40),P('CHORD CHANCE',70)],refine:[P('VOICE LEADING',80),P('DUPLICATE GUARD',100),P('CHANNEL',1,1,16,'',1)]}},
+ {name:'Fermentation',latin:'FERMENTATIO',symbol:'♀',color:'#3e987d',tone:'#97c2a4',motto:'VITA · BECOME',
+  audio:{desc:'Allow matter to evolve slowly. Living movement, spectral drift, and controlled feedback.',method:'DESIGN TARGET · smoothed modulation, stable bounded feedback, no zipper noise.',
+   macro:[P('MOVEMENT',58),P('GROWTH',36),P('TEXTURE',54)],character:[P('RATE',.18,.01,5,' Hz',.01),P('FEEDBACK',22),P('STEREO DRIFT',61)],refine:[P('SEED',33,0,999,'',1),P('DAMPING',70),P('CHAOS LIMIT',35)]},
+  midi:{desc:'Evolve a phrase organically. Conditional note mutations respond to the notes actually received.',method:'DESIGN TARGET · deterministic-seed stochastic edits; repeatable session recall.',
+   macro:[P('MUTATION',22),P('PROBABILITY',38),P('EVOLUTION',64)],character:[P('PITCH RANGE',3,0,12,' st',1),P('RHYTHM VAR',35),P('REPEAT',42)],refine:[P('SEED',110,0,999,'',1),P('CHANGE CAP',18),P('REST CHANCE',8)]}},
+ {name:'Distillation',latin:'DISTILLATIO',symbol:'☿',color:'#c98b42',tone:'#edbe77',motto:'SUBTILITAS · PURIFY',
+  audio:{desc:'Clarify the essence. Selective spectral cleaning and transparent contour refinement.',method:'DESIGN TARGET · low-noise EQ with smooth gain updates and stable filter topology.',
+   macro:[P('PURITY',56),P('AIR',48),P('WEIGHT',45)],character:[P('CENTER',2600,200,12000,' Hz',10),P('RESONANCE',25),P('DYNAMIC EQ',35)],refine:[P('Q',.8,.2,8,'',.1),P('TILT',0,-12,12,' dB',.1),P('SOFTNESS',72)]},
+  midi:{desc:'Retain the essential musical information. Filter notes by scale, density, and role.',method:'DESIGN TARGET · scale masks, note thinning and stable note-on/off bookkeeping.',
+   macro:[P('SCALE ROOT',0,0,11,' st',1),P('SCALE STRENGTH',75),P('DENSITY',74)],character:[P('REGISTER',60,24,96,'',1),P('SIMPLICITY',38),P('DEDUPE',100)],refine:[P('NEAR NOTE',65),P('FORCED ROOT',0),P('NOTE PRIORITY',60)]}},
+ {name:'Coagulation',latin:'COAGULATIO',symbol:'☾',color:'#c9baa0',tone:'#f0e5cc',motto:'CORPUS · FIX',
+  audio:{desc:'Give the result durable form. Transient definition, dynamics control, and finished output.',method:'DESIGN TARGET · transparent linked dynamics, look-ahead option, true-peak ceiling.',
+   macro:[P('GLUE',45),P('IMPACT',43),P('OUTPUT',-1,-18,6,' dB',.5)],character:[P('ATTACK',18,0,120,' ms',1),P('RELEASE',120,10,800,' ms',10),P('RATIO',2,1,12,':1',.5)],refine:[P('SOFT KNEE',45),P('LOOKAHEAD',2,0,10,' ms',.5),P('CEILING',-1,-12,0,' dB',.1)]},
+  midi:{desc:'Fix musical ideas into a deliberate grid and articulation. Make expressive notes performance-ready.',method:'DESIGN TARGET · transport-aware quantization and safe gate termination.',
+   macro:[P('QUANTIZE',72),P('DURATION',62),P('STRENGTH',83)],character:[P('GRID',16,1,32,'th',1),P('GATE',72),P('RETRIGGER',40)],refine:[P('OFFSET',0,-50,50,' ms',1),P('HOLD',5,0,100,'%'),P('STUCK NOTE SAFE',100)]}}
+];
+/* NIGREDO — OPUS SEPTEM, GUI CP04. All visual fields are synthetic browser previews. */
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const roman = ['I','II','III','IV','V','VI','VII'];
+const glyphs = ['✺','☽','⫽','⋈','✣','☿','⬡'];
+const hues = ['#bd513b','#548595','#9a5b74','#c69838','#56845a','#6473a0','#a77e50'];
+const phrases = [
+ 'Intensity reveals hidden structure.', 'Let boundaries become fluid.',
+ 'Difference makes detail visible.', 'Unite unlike materials into one coherent whole.',
+ 'Allow small changes to become living form.', 'Keep only what serves the material.',
+ 'Give movement a stable final shape.'
+];
+const scopes = ['HARMONIC HEAT','DIFFUSION / FLOW','SPECTRAL DIVISION','HARMONIC FUSION','EVOLVING MATERIAL','SELECTIVE CLARITY','DYNAMIC STRUCTURE'];
+const presets = {
+ audio: [
+  {id:'prima',name:'Prima Materia',mods:[1,1,1,1,1,1,1]},
+  {id:'vitriol',name:'Vitriolic Etch',mods:[1.55,.65,1.3,1.08,1.36,1.1,1.2]},
+  {id:'mercurial',name:'Mercurial Bloom',mods:[.55,1.6,.7,1.2,1.6,1.1,.75]},
+  {id:'lapis',name:'Lapis / Polished',mods:[.68,.72,1.25,1,.8,1.4,1.3]},
+  {id:'tabula',name:'Tabula Rasa',mods:[0,0,0,0,0,0,0]}
+ ],
+ midi: [
+  {id:'prima',name:'Prima Nota',mods:[1,1,1,1,1,1,1]},
+  {id:'canon',name:'Hermetic Canon',mods:[.76,.45,1.12,1.48,.5,1.2,1.3]},
+  {id:'chance',name:'Chance & Order',mods:[1.12,1.2,.85,1.15,1.73,1.08,1.28]},
+  {id:'ritual',name:'Ritual Measure',mods:[1.33,.8,1.05,1.33,1.22,.92,1.5]},
+  {id:'tabula',name:'Tabula Rasa',mods:[0,0,0,0,0,0,0]}
+ ]
+};
+const masterDefs = {
+ audio: [
+  {key:'mix', ...P('DRY / WET',100,0,100,'%',1)},
+  {key:'output', ...P('OUTPUT',0,-18,12,' dB',.5)},
+  {key:'quality', ...P('QUALITY',4,1,8,'×',1)}
+ ],
+ midi: [
+  {key:'strength', ...P('FX AMOUNT',100,0,100,'%',1)},
+  {key:'transpose', ...P('TRANSPOSE',0,-24,24,' st',1)},
+  {key:'voicecap', ...P('VOICE CAP',16,1,32,'',1)}
+ ]
+};
+const makeState = kind => ({selected:3,order:[0,1,2,3,4,5,6],enabled:[true,true,true,true,true,true,true],bypass:false,values:{},master:Object.fromEntries(masterDefs[kind].map(v=>[v.key,v.def])),preset:'prima'});
+const states = {audio:makeState('audio'),midi:makeState('midi')};
+let mode='audio', drag=null, toastTimeout=null;
+const isReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const state = () => states[mode];
+const paramKey = (i,layer,j)=>`${i}:${layer}:${j}`;
+const specFor = (i,layer,j) => operations[i][mode][layer][j];
+const valueFor = (i,layer,j) => state().values[paramKey(i,layer,j)] ?? specFor(i,layer,j).def;
+const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
+const roundToStep = (value,spec) => {
+ const n=clamp(value,spec.min,spec.max);
+ const snapped = spec.min+Math.round((n-spec.min)/spec.step)*spec.step;
+ return clamp(Number(snapped.toFixed(5)),spec.min,spec.max);
+};
+const format = (value,spec) => {
+ const dec = spec.step < .1 ? 2 : spec.step < 1 ? 1 : 0;
+ return `${Number(value).toFixed(dec)}${spec.unit||''}`;
+};
+const colorToRgb = hex => [1,3,5].map(n=>parseInt(hex.slice(n,n+2),16)).join(',');
+function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),2700);}
+function setAccent(){const c=hues[state().selected];document.documentElement.style.setProperty('--accent',c);document.documentElement.style.setProperty('--accent-rgb',colorToRgb(c));}
+function renderModes(){
+ $('audioMode').classList.toggle('active',mode==='audio');$('midiMode').classList.toggle('active',mode==='midi');
+ $('audioMode').setAttribute('aria-pressed',String(mode==='audio'));$('midiMode').setAttribute('aria-pressed',String(mode==='midi'));
+ $('powerBtn').setAttribute('aria-pressed',String(!state().bypass));$('powerBtn').classList.toggle('off',state().bypass);$('cosmogram').classList.toggle('unlit',state().bypass||!state().enabled[state().selected]);
+ const audio=mode==='audio';
+ $('pathHeader').textContent=audio?'STEREO IN → STEREO OUT':'MIDI IN → MIDI OUT';
+ $('pathSubtitle').textContent=audio?'HOST AUDIO · NO OSCILLATOR':'HOST NOTE EVENTS · NO KEYBOARD';
+ $('fieldIdentity').textContent=audio?'AUDIO / SIGNAL STUDY':'MIDI / NOTE STUDY';
+ $('chainTypeLabel').textContent=audio?'AUDIO · SEVEN STAGES':'NOTE EVENTS · SEVEN STAGES';
+ $('inputName').textContent=audio?'AUDIO IN':'MIDI IN';$('inputSpec').textContent=audio?'STEREO · L / R':'HOST NOTE EVENTS';
+ $('outputName').textContent=audio?'AUDIO OUT':'MIDI OUT';$('outputSpec').textContent=audio?'STEREO · L / R':'MODIFIED NOTE EVENTS';
+ $('safetyLabel').textContent=audio?'HOST AUDIO · VISUAL ROUTING':'MIDI NOTES · VISUAL ROUTING';
+}
+function renderStages(){
+ const s=state();
+ $('stagesList').innerHTML=s.order.map((i,position)=>{
+  const op=operations[i],selected=s.selected===i,enabled=s.enabled[i];
+  return `<div class="stage-item ${selected?'selected':''} ${!enabled?'muted':''}" style="--stage:${hues[i]}" data-stage="${i}">
+     <button type="button" class="stage-select" data-select="${i}" aria-pressed="${selected}" aria-label="Select ${op.name}">
+      <span class="number">${roman[i]}</span><span class="stage-glyph">${glyphs[i]}</span>
+      <span class="stage-copy"><b>${op.name}</b><small>${op.latin}</small></span></button>
+     <button type="button" class="stage-toggle ${enabled?'':'off'}" data-toggle="${i}" aria-label="${enabled?'Disable':'Enable'} ${op.name}" title="${enabled?'Disable':'Enable'} ${op.name}" aria-pressed="${enabled}"></button>
+    </div>`;
+ }).join('');
+ $('stagePath').innerHTML=s.order.map(i=>`<button type="button" class="path-node ${s.selected===i?'selected':''} ${s.enabled[i]?'':'off'}" style="--stage:${hues[i]}" data-path="${i}" title="${operations[i].name}" aria-label="Select ${operations[i].name}"><span class="node-symbol">${glyphs[i]}</span><b>${roman[i]}</b><small>${operations[i].latin}</small></button>`).join('');
+}
+function kindOf(spec,context){
+ const name=spec.label.toUpperCase();
+ if(/SAFE NOTES|MPE SAFE|NOTE TRACK|DUPLICATE GUARD|DEDUPE|FORCED ROOT|STUCK NOTE SAFE/.test(name))return 'switch';
+ if(/GRID|SLOPE|CHANNEL|QUALITY|SCALE ROOT|VOICES|OCTAVE RANGE/.test(name))return 'choice';
+ if(/MIX|BLEND|DRY \/ WET|OUTPUT|TRIM|CEILING|CROSSOVER|CENTER|RATIO|SPLIT NOTE|TIME SPREAD|ATTACK|RELEASE|PREDELAY|LOOKAHEAD/.test(name))return 'fader';
+ return 'knob';
+}
+function knobMarkup(spec,value,context,attrs={}){
+ const kind=kindOf(spec,context),details=Object.entries(attrs).map(([k,v])=>`data-${k}="${v}"`).join(' '),base=`data-context="${context}" ${details}`;
+ const progress=(value-spec.min)/(spec.max-spec.min||1),angle=clamp(progress,0,1)*270;
+ let ctl='';
+ if(kind==='switch')ctl=`<button type="button" class="param-switch ${value>=50?'armed':''}" aria-pressed="${value>=50}" ${base} aria-label="Toggle ${spec.label}"><i class="switch-gem">✥</i><small>${value>=50?'ENGAGED':'RELEASED'}</small></button>`;
+ else if(kind==='choice'){
+  const opts=spec.label==='QUALITY'?[1,2,4,8]:spec.label==='GRID'?[1,2,4,8,16,32]:spec.label==='SLOPE'?[6,12,18,24,30,36,42,48]:Array.from({length:Math.floor((spec.max-spec.min)/spec.step)+1},(_,i)=>Number((spec.min+i*spec.step).toFixed(3)));
+  const pitch=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+  ctl=`<select class="param-choice" ${base} aria-label="${spec.label}">${opts.map(n=>`<option value="${n}" ${n===value?'selected':''}>${spec.label==='SCALE ROOT'?pitch[n]:format(n,spec)}</option>`).join('')}</select>`;
+ }else if(kind==='fader')ctl=`<div class="fader-track"><input type="range" class="param-fader" ${base} aria-label="${spec.label}" min="${spec.min}" max="${spec.max}" step="${spec.step}" value="${value}" style="--ratio:${progress*100}%"><span class="fader-runes">◁ ┈ ┈ ┈ ✧ ┈ ┈ ┈ ▷</span></div>`;
+ else ctl=`<button type="button" class="knob" role="slider" tabindex="0" ${base} aria-label="${spec.label}" aria-valuemin="${spec.min}" aria-valuemax="${spec.max}" aria-valuenow="${value}" aria-valuetext="${format(value,spec)}" style="--angle:${angle}deg;--angle-turn:${angle-135}deg" title="Drag / mouse wheel / arrow keys · Double-click to reset"><span class="dial-inscription">☼</span></button>`;
+ return `<div class="param param-${kind}">${ctl}<span class="param-name">${spec.label}</span><span class="param-val">${format(value,spec)}</span></div>`;
+}
+function renderInspector(){
+ const i=state().selected,op=operations[i],p=op[mode],s=state();
+ $('editorIndex').textContent=`${roman[i]} / VII`;
+ $('fieldRoman').textContent=roman[i];$('fieldName').textContent=op.name;
+ $('fieldLatin').textContent=op.latin;$('fieldMotto').textContent=op.motto;
+ $('scopeLabel').textContent=`${window.NigredoHost?.active?'HOST ':'SIMULATED '}${mode==='audio'?'SIGNAL':'NOTE FIELD'} / ${scopes[i]}`;$('scopeFlow').textContent=String(s.order.indexOf(i)+1).padStart(2,'0');
+ $('editorTitle').textContent=op.name;$('editorLatin').textContent=op.latin;
+ $('editorGlyph').textContent=glyphs[i];$('editorDesc').textContent=p.desc;
+ $('stagePower').textContent=s.enabled[i]?'ON':'OFF';$('stagePower').classList.toggle('off',!s.enabled[i]);$('stagePower').classList.toggle('on',s.enabled[i]);$('stagePower').setAttribute('aria-pressed',String(s.enabled[i]));
+ $('stagePhrase').textContent=`“${phrases[i]}”`;
+ $('stageMethod').textContent=p.method.replace(/^DESIGN TARGET\s*·\s*/,'');
+ $('cosmogram').dataset.stage=String(i);$('cosmogram').classList.toggle('unlit',s.bypass||!s.enabled[i]);
+ $('parameters').innerHTML=['macro','character','refine'].map((layer,n)=>{
+  const arr=p[layer];return `<div class="param-group"><div class="param-heading"><span>0${n+1} / ${layer.toUpperCase()}</span><i>${['SHAPE','MOVEMENT','FINISH'][n]}</i></div><div class="knob-row">${arr.map((spec,j)=>knobMarkup(spec,valueFor(i,layer,j),'param',{stage:i,layer,slot:j})).join('')}</div></div>`;
+ }).join('');
+ const index=s.order.indexOf(i);$('moveEarlier').disabled=index===0;$('moveLater').disabled=index===6;
+}
+function renderMaster(){
+ $('masterControls').innerHTML=masterDefs[mode].map(s=>knobMarkup(s,state().master[s.key],'master',{master:s.key})).join('');
+ const options=presets[mode];
+ $('presetSelect').innerHTML=(state().preset==='custom'?'<option value="custom" selected>Custom / Unsaved</option>':'')+options.map(p=>`<option value="${p.id}" ${p.id===state().preset?'selected':''}>${p.name}</option>`).join('');
+}
+function render(){setAccent();renderModes();renderStages();renderInspector();renderMaster();}
+function updateStage(){setAccent();renderStages();renderInspector();}
+function switchMode(next){if(mode===next)return;mode=next;render();}
+function selectStage(i){state().selected=i;updateStage();if(window.chrome?.webview?.postMessage)window.chrome.webview.postMessage(`P|81|${i}`);}
+function toggleStage(i){state().enabled[i]=!state().enabled[i];if(window.chrome?.webview?.postMessage)window.chrome.webview.postMessage(`P|${63+i}|${state().enabled[i]?1:0}`);renderStages();if(state().selected===i)renderInspector();}
+function moveStage(delta){const s=state(),p=s.order.indexOf(s.selected),t=p+delta;if(t<0||t>6)return;[s.order[p],s.order[t]]=[s.order[t],s.order[p]];renderStages();renderInspector();sendAllState();toast(`${operations[s.selected].name} → stage position ${t+1}`);}
+function applyPreset(presetId){
+ const selected=presets[mode].find(x=>x.id===presetId);if(!selected)return;
+ const s=state();s.values={};s.order=[0,1,2,3,4,5,6];
+ s.enabled=selected.mods.map(n=>n!==0);
+ for(let i=0;i<7;i++) for(const layer of ['macro','character','refine']) operations[i][mode][layer].forEach((sp,j)=>{
+   const m=selected.mods[i];
+   if(m===1)return;
+   if(m===0){s.values[paramKey(i,layer,j)]=sp.def;return;}
+   if(/SAFE|LIMIT|CAP|CEILING|DEDUPE|NOTE TRACK|MPE/.test(sp.label))return;
+   const scaled=sp.min+(sp.def-sp.min)*m;
+   s.values[paramKey(i,layer,j)]=roundToStep(scaled,sp);
+ });
+ s.preset=presetId;render();sendAllState();toast(`Formula applied · ${selected.name}`);
+}
+function exportPreset(){
+ const data={format:'nigredo-opus-septem-gui',version:4,created:new Date().toISOString(),kind:mode,...structuredClone(state())};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=`Opus_Septem_${mode}_${state().preset}_${Date.now()}.json`;
+ a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('GUI settings exported as JSON');
+}
+function importPreset(file){
+ if(!file)return;const reader=new FileReader();
+ reader.onload=()=>{try{
+  const parsed=JSON.parse(reader.result);
+  if(parsed.format!=='nigredo-opus-septem-gui'||!['audio','midi'].includes(parsed.kind))throw Error('Unsupported preset format');
+  const kind=parsed.kind,s=states[kind];
+  const order=parsed.order,enabled=parsed.enabled;
+  if(!Array.isArray(order)||order.length!==7||new Set(order).size!==7||!order.every(i=>Number.isInteger(i)&&i>=0&&i<7)||!Array.isArray(enabled)||enabled.length!==7||!enabled.every(x=>typeof x==='boolean'))throw Error('Invalid stage configuration');
+  s.order=[...order];s.enabled=[...enabled];s.selected=clamp(Number(parsed.selected)||0,0,6);s.bypass=Boolean(parsed.bypass);s.values={};
+  for(let i=0;i<7;i++)for(let layer of ['macro','character','refine'])for(let j=0;j<3;j++){
+   const key=paramKey(i,layer,j),n=parsed.values?.[key],spec=operations[i][kind][layer][j];
+   if(typeof n==='number'&&Number.isFinite(n))s.values[key]=roundToStep(n,spec);
+  }
+  for(const spec of masterDefs[kind]){
+   const n=parsed.master?.[spec.key];if(typeof n==='number'&&Number.isFinite(n))s.master[spec.key]=roundToStep(n,spec);
+  }
+  s.preset=presets[kind].some(x=>x.id===parsed.preset)?parsed.preset:'prima';
+  mode=kind;render();sendAllState();toast('GUI settings loaded · '+(kind==='audio'?'Audio FX':'MIDI Note FX'));
+ }catch(e){toast(`Import failed: ${e.message}`);} $('presetFile').value='';};
+ reader.readAsText(file);
+}
+function descriptor(el){
+ if(el.dataset.context==='master'){
+  const spec=masterDefs[mode].find(x=>x.key===el.dataset.master);
+  return {spec,current:()=>state().master[spec.key],set:n=>{state().master[spec.key]=roundToStep(n,spec);}};
+ }
+ const i=Number(el.dataset.stage),layer=el.dataset.layer,j=Number(el.dataset.slot),spec=specFor(i,layer,j);
+ return {spec,current:()=>valueFor(i,layer,j),set:n=>{state().values[paramKey(i,layer,j)]=roundToStep(n,spec);}};
+}
+function hostValueChanged(el,val){
+ if(!window.chrome?.webview?.postMessage||window.__nigHostLoading)return;
+ let id;
+ if(el.dataset.context==='master'){id=77+masterDefs[mode].findIndex(s=>s.key===el.dataset.master);}
+ else id=Number(el.dataset.stage)*9+['macro','character','refine'].indexOf(el.dataset.layer)*3+Number(el.dataset.slot);
+ if(id>=0)window.chrome.webview.postMessage(`P|${id}|${val}`);
+}
+function sendAllState(){
+ if(!window.chrome?.webview?.postMessage||window.__nigHostLoading)return;
+ for(let i=0;i<7;i++)for(let layer of ['macro','character','refine'])for(let j=0;j<3;j++){
+  const idx=i*9+['macro','character','refine'].indexOf(layer)*3+j;
+  window.chrome.webview.postMessage(`P|${idx}|${valueFor(i,layer,j)}`);
+ }
+ const s=state();for(let i=0;i<7;i++){
+  window.chrome.webview.postMessage(`P|${63+i}|${s.enabled[i]?1:0}`);
+  window.chrome.webview.postMessage(`P|${70+i}|${s.order.indexOf(i)}`);
+ }
+ masterDefs[mode].forEach((sp,i)=>window.chrome.webview.postMessage(`P|${77+i}|${s.master[sp.key]}`));
+ window.chrome.webview.postMessage(`P|80|${s.bypass?1:0}`);
+ window.chrome.webview.postMessage(`P|81|${s.selected}`);
+}
+function updateKnob(el,value,fromHost=false){
+ const d=descriptor(el);d.set(value);const v=d.current(),angle=270*(v-d.spec.min)/(d.spec.max-d.spec.min||1);
+ el.style.setProperty('--angle',`${angle}deg`);el.style.setProperty('--angle-turn',`${angle-135}deg`);
+ el.style.setProperty('--ratio',`${100*(v-d.spec.min)/(d.spec.max-d.spec.min||1)}%`);
+ el.setAttribute('aria-valuenow',String(v));el.setAttribute('aria-valuetext',format(v,d.spec));
+ const display=el.closest('.param');if(display){display.querySelector('.param-val').textContent=format(v,d.spec);
+ if(el.classList.contains('param-switch')){el.classList.toggle('armed',v>=50);el.setAttribute('aria-pressed',String(v>=50));el.querySelector('small').textContent=v>=50?'ENGAGED':'RELEASED';}
+ }
+ if(!fromHost){hostValueChanged(el,v);state().preset='custom';
+ if($('presetSelect').querySelector('option[value="custom"]')===null){const opt=document.createElement('option');opt.value='custom';opt.textContent='Custom / Unsaved';$('presetSelect').prepend(opt);}
+ $('presetSelect').value='custom';}
+}
+window.NigredoHost={
+ active:false,
+ apply:(payload)=>{ // Host-synchronized state. CP07 browser rendering and embedded WebView2 use the SAME UI code.
+   const msg=typeof payload==='string'?JSON.parse(payload):payload;if(!msg||msg.t!=='state'||!Array.isArray(msg.p))return;
+   const next=msg.kind==='midi'?'midi':'audio';window.__nigHostLoading=true;
+   if(mode!==next){mode=next;}
+   $('audioMode').disabled=next!=='audio';$('midiMode').disabled=next!=='midi';
+   $('audioMode').title=next==='audio'?'Audio FX plugin':'This native plugin is MIDI FX only';
+   $('midiMode').title=next==='midi'?'MIDI FX plugin':'This native plugin is Audio FX only';
+   const s=state();
+   for(let id=0;id<63;id++)if(typeof msg.p[id]==='number'&&Number.isFinite(msg.p[id])){
+     const i=Math.floor(id/9),j=id%9,layer=['macro','character','refine'][Math.floor(j/3)];
+     const sp=specFor(i,layer,j%3);s.values[paramKey(i,layer,j%3)]=roundToStep(msg.p[id],sp);
+   }
+   for(let i=0;i<7;i++)s.enabled[i]=msg.p[63+i]>=.5;
+   const order=[0,1,2,3,4,5,6];order.sort((a,b)=>(msg.p[70+a]??a)-(msg.p[70+b]??b));s.order=order;
+   masterDefs[mode].forEach((sp,i)=>{if(typeof msg.p[77+i]==='number')s.master[sp.key]=roundToStep(msg.p[77+i],sp);});
+   s.bypass=msg.p[80]>=.5;s.selected=clamp(Math.round(msg.p[81]??s.selected),0,6);render();
+   window.__nigHostLoading=false;window.NigredoHost.active=true;
+   document.body.classList.add('native-plugin');$('audioMode').disabled=next==='midi';$('midiMode').disabled=next==='audio';
+   $('scopeLabel').textContent=(mode==='audio'?'HOST AUDIO / ':'HOST MIDI / ')+scopes[s.selected];
+   $('hostNotice').textContent='NATIVE PLUGIN CONNECTED · AUTOMATABLE PARAMETERS';
+   document.querySelector('.master-footer').lastElementChild.textContent='DSP / MIDI ENGINE LINKED · SCOPE IS SYMBOLIC';
+ }
+};
+if(window.chrome?.webview?.addEventListener){
+  window.chrome.webview.addEventListener('message',e=>{try{window.NigredoHost.apply(e.data);}catch(error){console.warn('Host sync:',error);}});
+  window.chrome.webview.postMessage('R');
+}
+$('audioMode').addEventListener('click',()=>{if(!window.chrome?.webview?.postMessage)switchMode('audio');});
+$('midiMode').addEventListener('click',()=>{if(!window.chrome?.webview?.postMessage)switchMode('midi');});
+$('powerBtn').addEventListener('click',()=>{state().bypass=!state().bypass;renderModes();if(window.chrome?.webview?.postMessage)window.chrome.webview.postMessage(`P|80|${state().bypass?1:0}`);toast(state().bypass?'Chain bypassed · visual preview':'Chain engaged · visual preview');});
+$('stagePower').addEventListener('click',()=>toggleStage(state().selected));
+$('stagesList').addEventListener('click',e=>{const toggle=e.target.closest('[data-toggle]');if(toggle){toggleStage(Number(toggle.dataset.toggle));return;}const select=e.target.closest('[data-select]');if(select)selectStage(Number(select.dataset.select));});
+$('stagePath').addEventListener('click',e=>{const node=e.target.closest('[data-path]');if(node)selectStage(Number(node.dataset.path));});
+$('resetStage').addEventListener('click',()=>{const i=state().selected;for(let layer of ['macro','character','refine'])for(let j=0;j<3;j++)delete state().values[paramKey(i,layer,j)];renderInspector();sendAllState();toast(`Reset ${operations[i].name} controls`);});
+$('moveEarlier').addEventListener('click',()=>moveStage(-1));$('moveLater').addEventListener('click',()=>moveStage(1));
+$('applyPreset').addEventListener('click',()=>applyPreset($('presetSelect').value));
+$('savePreset').addEventListener('click',exportPreset);
+$('loadPreset').addEventListener('click',()=>$('presetFile').click());
+$('presetFile').addEventListener('change',e=>importPreset(e.target.files?.[0]));
+window.addEventListener('change',e=>{
+ const ctl=e.target.closest('.param-choice');if(ctl)updateKnob(ctl,Number(ctl.value));
+});
+window.addEventListener('input',e=>{
+ const ctl=e.target.closest('.param-fader');if(ctl)updateKnob(ctl,Number(ctl.value));
+});
+window.addEventListener('click',e=>{
+ const ctl=e.target.closest('.param-switch');if(ctl){const sp=descriptor(ctl).spec;updateKnob(ctl,descriptor(ctl).current()>=50?sp.min:sp.max);}
+});
+window.addEventListener('pointerdown',e=>{const el=e.target.closest('.knob');if(!el||e.button!==0)return;
+ const d=descriptor(el);drag={el,id:e.pointerId,initial:d.current(),x:e.clientX,y:e.clientY,spec:d.spec};el.setPointerCapture?.(e.pointerId);e.preventDefault();});
+window.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;
+ const dy=drag.y-e.clientY,dx=e.clientX-drag.x;
+ const range=drag.spec.max-drag.spec.min;
+ updateKnob(drag.el,drag.initial+(dy+dx*.35)*range/220);
+});
+window.addEventListener('pointerup',e=>{if(drag&&e.pointerId===drag.id)drag=null;});
+window.addEventListener('pointercancel',()=>drag=null);
+window.addEventListener('wheel',e=>{const el=e.target.closest('.knob');if(!el)return;e.preventDefault();const d=descriptor(el),step=Math.max(d.spec.step,(d.spec.max-d.spec.min)/200);
+ updateKnob(el,d.current()+(e.deltaY<0?1:-1)*step*(e.shiftKey?5:1));},{passive:false});
+window.addEventListener('keydown',e=>{const el=e.target.closest?.('.knob');if(!el)return;const d=descriptor(el),n=d.current();let next=n;const step=d.spec.step;
+ switch(e.key){case'ArrowUp':case'ArrowRight':next+=step;break;case'ArrowDown':case'ArrowLeft':next-=step;break;case'PageUp':next+=step*10;break;case'PageDown':next-=step*10;break;case'Home':next=d.spec.min;break;case'End':next=d.spec.max;break;default:return;}e.preventDefault();updateKnob(el,next);});
+window.addEventListener('dblclick',e=>{const el=e.target.closest('.knob');if(!el)return;updateKnob(el,descriptor(el).spec.def);});
+const canvas=$('scope'),ctx=canvas.getContext('2d',{alpha:true});let cw=600,ch=300,dpr=1,time=0,lastTime=0;
+function measure(){const b=canvas.getBoundingClientRect();if(!b.width||!b.height)return;dpr=Math.min(window.devicePixelRatio||1,2);cw=b.width;ch=b.height;canvas.width=Math.max(1,Math.floor(cw*dpr));canvas.height=Math.max(1,Math.floor(ch*dpr));ctx.setTransform(dpr,0,0,dpr,0,0);}
+function line(x1,y1,x2,y2,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+function drawGrid(){
+ ctx.clearRect(0,0,cw,ch);
+ const xs=14,ys=8;
+ for(let n=0;n<=xs;n++)line(0+(cw/xs)*n,0,(cw/xs)*n,ch,'rgba(139,181,169,.07)');
+ for(let n=0;n<=ys;n++)line(0,(ch/ys)*n,cw,(ch/ys)*n,'rgba(139,181,169,.055)');
+ line(0,ch*.5,cw,ch*.5,'rgba(162,194,175,.19)');
+ for(let i=0;i<7;i++){const x=cw*(i+.5)/7;line(x,0,x,ch,'rgba(205,183,129,.08)');ctx.fillStyle='rgba(190,191,162,.2)';ctx.fillRect(x-1,ch*.5-1,2,2);}
+}
+function drawAudio(ts){
+ const s=state(),base=hues[s.selected],i=s.selected;
+ let movement=state().enabled[i]&&!state().bypass?1:.12;
+ let complexity=operations[i].audio.macro.map((p,j)=>{
+  const v=valueFor(i,'macro',j);return (v-p.min)/(p.max-p.min||1);
+ });
+ const amt=movement*(.28+.36*complexity[0]);
+ const center=ch*.51;
+ const width=cw, height=ch;
+ for(let k=0;k<17;k++){
+  const opacity=(k===8?.85:.06+Math.max(0,.26-Math.abs(k-8)*.025))*movement;
+  const yBase=center+(k-8)*5.2;
+  const [r,g,b]=base.match(/[a-f\d]{2}/gi).map(v=>parseInt(v,16));
+  ctx.strokeStyle=`rgba(${r},${g},${b},${opacity})`;
+  ctx.lineWidth=k===8?2.1:.8;ctx.beginPath();
+  for(let x=0;x<=width;x+=3){
+   const u=x/width;
+   const envelope=.27+.73*Math.pow(Math.sin(Math.PI*u),1.5);
+   const wave=Math.sin(u*20+(ts*.0004)*(1+i*.12)+k*.35)*.5+Math.sin(u*(51+i*6)-ts*.00026+k*.41)*.27+Math.sin(u*97+ts*.0002+k*.83)*.15;
+   const spread=(k-8)*1.2;
+   const y=yBase+wave*height*.18*amt*envelope+spread*Math.sin(u*9+ts*.00023)*amt;
+   x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+ }
+ ctx.strokeStyle=`rgba(230,217,173,${movement*.15})`;ctx.beginPath();
+ for(let x=0;x<=width;x+=3){const u=x/width;const y=center+Math.sin(u*19+ts*.00055)*height*.045*amt+Math.sin(u*71-ts*.0006)*height*.012*amt;x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.stroke();
+ const px=(ts*.018)%width;const grad=ctx.createLinearGradient(px-34,0,px+20,0);grad.addColorStop(0,'rgba(220,215,172,0)');grad.addColorStop(.7,'rgba(226,220,179,.08)');grad.addColorStop(1,'rgba(223,224,195,0)');ctx.fillStyle=grad;ctx.fillRect(px-34,0,54,height);
+}
+function drawMidi(ts){
+ const s=state(),base=hues[s.selected];const [r,g,b]=base.match(/[a-f\d]{2}/gi).map(v=>parseInt(v,16));
+ const rows=10,cols=24,left=cw*.08,top=ch*.20,gridW=cw*.85,gridH=ch*.62;
+ const stepX=gridW/cols,stepY=gridH/rows,seed=s.selected+2;
+ for(let n=0;n<=cols;n++)line(left+n*stepX,top,left+n*stepX,top+gridH,n%4===0?'rgba(204,191,157,.16)':'rgba(123,145,140,.06)');
+ for(let n=0;n<=rows;n++)line(left,top+n*stepY,left+gridW,top+n*stepY,'rgba(137,158,151,.07)');
+ let on=state().enabled[s.selected]&&!state().bypass;
+ for(let n=0;n<28;n++){
+  const beat=((n*11+seed*7)%cols),pitch=((n*7+seed*3+Math.floor(n/5))%rows);
+  const w=(n%3===0?3:1.65)*stepX-3;
+  const x=left+beat*stepX+1.5,y=top+(rows-pitch-1)*stepY+4;
+  ctx.fillStyle=`rgba(${r},${g},${b},${on?(.26+(n%5)*.11):.10})`;
+  ctx.fillRect(x,y,w,Math.max(3,stepY-9));
+  if(n%5===0){ctx.fillStyle=`rgba(231,222,189,${on?.7:.14})`;ctx.fillRect(x,y,3,Math.max(3,stepY-9));}
+ }
+ const x=left+(ts*.03%gridW);ctx.fillStyle=`rgba(215,203,169,${on?.75:.20})`;ctx.fillRect(x,top,1,gridH);
+}
+function frame(ts){if(ts-lastTime<32){requestAnimationFrame(frame);return;}lastTime=ts;time=ts;drawGrid();if(mode==='audio')drawAudio(isReducedMotion?1000:ts);else drawMidi(isReducedMotion?1000:ts);requestAnimationFrame(frame);}
+window.addEventListener('resize',measure);if(typeof ResizeObserver!=='undefined')new ResizeObserver(measure).observe($('scopeWrap'));
+render();measure();requestAnimationFrame(frame);
+})();
+
+
+</script></body></html>

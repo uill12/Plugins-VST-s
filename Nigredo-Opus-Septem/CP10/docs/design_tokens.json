@@ -1,0 +1,43 @@
+{
+  "name": "Nigredo manuscript cosmology",
+  "standard": "RGNES 1.0",
+  "canvas": [
+    1600,
+    1000
+  ],
+  "palette": {
+    "parchment": "#f8e8c7",
+    "old_gold": "#c89b59",
+    "oxide_red": "#a94739",
+    "aged_ink": "#673a35",
+    "moss_green": "#56845a",
+    "indigo": "#29304c"
+  },
+  "font_families": [
+    "Georgia",
+    "serif"
+  ],
+  "control_shapes": [
+    "fader",
+    "rotary_knob",
+    "choice",
+    "switch",
+    "global_chain_toggle",
+    "stage_toggle"
+  ],
+  "minimum_native": [
+    960,
+    600
+  ],
+  "live_not_baked": [
+    "power ON/OFF",
+    "stage switches ON/OFF",
+    "parameter numeric values",
+    "knob pointers",
+    "fader positions",
+    "stage order indices",
+    "preset name"
+  ],
+  "checkpoint": "CP10",
+  "dynamic_masking": "baked mutable parameter values, power, preset and stage power text suppressed"
+}

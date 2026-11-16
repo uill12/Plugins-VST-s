@@ -1,0 +1,79 @@
+{
+  "original_images": [
+    "/mnt/data/1794699558648.jpg",
+    "/mnt/data/image.png"
+  ],
+  "scenes": [
+    {
+      "path": "assets/scenes/audio_0.png",
+      "bytes": 1572044,
+      "sha256": "b0d3632999f51e6ff1e0f5a4dcf54ab41efbd5440aad9026a19bf3ba3cda1f8b"
+    },
+    {
+      "path": "assets/scenes/audio_1.png",
+      "bytes": 1573860,
+      "sha256": "ffdcf8836daddcc6b234802aaaf0cf44769c9aa8fdc4b3eec23290cbfbcf56e9"
+    },
+    {
+      "path": "assets/scenes/audio_2.png",
+      "bytes": 1570550,
+      "sha256": "d14e0253e0790636b2ad3744c5c70dd407b66d5a4c4664c42c498b8b3264ebcf"
+    },
+    {
+      "path": "assets/scenes/audio_3.png",
+      "bytes": 1576548,
+      "sha256": "6c603d77edc8e59bc3612483c2ca67896b93c99386c27a472e3162397bc0f2e0"
+    },
+    {
+      "path": "assets/scenes/audio_4.png",
+      "bytes": 1578743,
+      "sha256": "565479a600a2a76bcab99d1b7555f513d46d14cb0bf37540eec9aeed23c55b71"
+    },
+    {
+      "path": "assets/scenes/audio_5.png",
+      "bytes": 1578319,
+      "sha256": "daf9e9a6f0fabb737ba016cd402c70eb9f80dd49d036fc47e88cd49138c92f27"
+    },
+    {
+      "path": "assets/scenes/audio_6.png",
+      "bytes": 1566054,
+      "sha256": "18e81d55b3b9a9c3f976ca90888554b3c5cd5348c0e536a633beb7be00e634f3"
+    },
+    {
+      "path": "assets/scenes/midi_0.png",
+      "bytes": 1565581,
+      "sha256": "9184c4ba942105ccd119b21a322a176e134446a9914e6fd1a0480e914a11ed3d"
+    },
+    {
+      "path": "assets/scenes/midi_1.png",
+      "bytes": 1564325,
+      "sha256": "c0652ac1e7938da7956319addb33a8a98171964705631430cd4172662f290012"
+    },
+    {
+      "path": "assets/scenes/midi_2.png",
+      "bytes": 1561668,
+      "sha256": "9198a07351bcf348fe641a525c7aed215e0279162b01a4486522894c06c2cbbb"
+    },
+    {
+      "path": "assets/scenes/midi_3.png",
+      "bytes": 1561916,
+      "sha256": "e44f81a82fd6197d44484128656a86594e4713ada0f61f51b5abb68f008d73a0"
+    },
+    {
+      "path": "assets/scenes/midi_4.png",
+      "bytes": 1567549,
+      "sha256": "16978ad3bde0063abb10d84e9bf803600d743b7da7cca6f22a458ee8a7f6ef16"
+    },
+    {
+      "path": "assets/scenes/midi_5.png",
+      "bytes": 1567918,
+      "sha256": "8990ef02fffd0be0bd0e1137f814a99035e6ca3f9a3e2c698ed9c159153e0193"
+    },
+    {
+      "path": "assets/scenes/midi_6.png",
+      "bytes": 1563926,
+      "sha256": "fb6ef07335dae101cd89df46faaa4da3af56730c07d042b5b993f1df32b7b5e6"
+    }
+  ],
+  "checkpoint": "CP10"
+}

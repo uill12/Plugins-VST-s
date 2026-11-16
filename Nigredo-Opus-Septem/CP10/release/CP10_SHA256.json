@@ -1,0 +1,35 @@
+{
+  "checkpoint": "CP10",
+  "date": "2026-11-15",
+  "evidence": "compiled + offline-test only; no Windows host GUI tests",
+  "binaries": [
+    {
+      "file": "Nigredo_Opus_Septem_Audio_FX_Windows_x64.clap",
+      "sha256": "c93a9c87991a673daa2ff29bdb9268f7620b6276313516fa2946e9225b0e6b1f",
+      "bytes": 14835758,
+      "scenes": 7,
+      "status": "compiled + static-verified; Windows Bitwig not tested"
+    },
+    {
+      "file": "Nigredo_Opus_Septem_Audio_FX_Windows_x64.vst3",
+      "sha256": "09cc1f6388b4ac886f60ea0bcbf0ee7de83fb0261956154e2b28cb6defbef173",
+      "bytes": 14845998,
+      "scenes": 7,
+      "status": "compiled + static-verified; Windows Bitwig not tested"
+    },
+    {
+      "file": "Nigredo_Opus_Septem_MIDI_FX_Windows_x64.clap",
+      "sha256": "d7a4e8e2adceb0e2cc09eb0a62bb9a5fd6d191f089ff95706a74b5b3a6fde4c8",
+      "bytes": 14773547,
+      "scenes": 7,
+      "status": "compiled + static-verified; Windows Bitwig not tested"
+    },
+    {
+      "file": "Nigredo_Opus_Septem_MIDI_FX_Windows_x64.vst3",
+      "sha256": "4309ed2ebf10b5db98b3eb1f1219d501f31b0461eab1e811fe59c053d39796df",
+      "bytes": 14785323,
+      "scenes": 7,
+      "status": "compiled + static-verified; Windows Bitwig not tested"
+    }
+  ]
+}

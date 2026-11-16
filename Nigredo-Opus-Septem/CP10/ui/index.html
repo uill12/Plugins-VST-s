@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="theme-color" content="#e9d5ad"/><meta name="description" content="Nigredo Opus Septem — an interactive manuscript-inspired GUI study for seven-stage audio and MIDI effects."/><title>Nigredo — Opus Septem · CP09 RGNES Horizontal GUI</title><link rel="stylesheet" href="styles.css"/></head>
+<body><div id="app">
+<header class="topbar">
+ <div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="24" stroke="currentColor" stroke-width="1.7"/><circle cx="30" cy="30" r="18" stroke="currentColor" stroke-width="1"/><path d="M30 2v56M2 30h56M13 13l34 34M47 13 13 47" stroke="currentColor" stroke-width=".7"/><path d="M30 14l14 16-14 16-14-16z" stroke="currentColor" stroke-width="1.7"/><circle cx="30" cy="30" r="4" fill="#ad4b37"/><path d="M30 5l3 6-3-2-3 2zM30 55l3-6-3 2-3-2z" fill="currentColor"/></svg></div><div><div class="brand-name">NIGREDO <span>· OPUS SEPTEM</span></div><div class="brand-sub">ARS MAGNA SONORA · ELEMENTAL NOTE &amp; AUDIO EFFECTS</div></div></div>
+ <div class="header-tools"><div class="build-status"><span class="status-dot"></span>RGNES · MANUSCRIPT EDITOR <span class="build-version">CP09</span></div><div class="mode-switch" role="group" aria-label="Effect module"><button type="button" id="audioMode" class="mode-button active" aria-pressed="true"><span class="mode-graphic">◉</span> Audio FX</button><button type="button" id="midiMode" class="mode-button" aria-pressed="false"><span class="mode-graphic">♬</span> MIDI Note FX</button></div><button id="powerBtn" type="button" class="main-power" aria-label="Turn effects chain off" aria-pressed="true" title="Toggle all seven effects stages"><span class="power-caption">FX CHAIN</span><span class="power-status" aria-live="polite">ON</span><span class="power-track" aria-hidden="true"><i class="power-thumb"></i></span></button></div>
+</header>
+<div class="intro"><div class="intro-lead"><span class="intro-ornament" aria-hidden="true">❧</span><div><div class="eyebrow">SEPTEM GRADVS · A LIVING MANUSCRIPT OF TRANSFORMATION</div><h1>One matter, <em>seven metamorphoses.</em></h1><p>Choose an operation, shape its parameters, and trace its place in the chain.</p></div></div><div class="intro-right"><div><b id="pathHeader">STEREO IN → STEREO OUT</b><small id="pathSubtitle">HOST AUDIO · NO OSCILLATOR</small></div><div class="counter">VII</div></div></div>
+<div class="trinity" aria-hidden="true"><div class="trinity-tile"><b>SPIRITVS</b><small>INTENTION / FORM</small></div><div class="trinity-tile"><b>ANIMA</b><small>CHANGE / MOTION</small></div><div class="trinity-tile"><b>CORPVS</b><small>MATERIAL / RESULT</small></div></div>
+<main class="workbench">
+ <section class="illuminated stages-panel" aria-label="Seven stages"><div class="panel-heading"><span><span class="section-no">01</span> PROCESSING CHAIN · VII OPERATIONS</span><span id="chainStatusLabel">AUDIO · 7 MODULES</span></div><div class="ledger-caption">Audio and MIDI processors · select, switch or reorder each effect.</div><div class="stages-list" id="stagesList"></div><div class="stages-footer"><span class="stages-footer-mark">✥</span><div><span>As above, so below</span><small>All seven operations may be enabled, muted, and placed in a different processing order.</small></div></div></section>
+ <section class="illuminated field-panel" aria-label="Alchemical transformation cosmogram"><div class="panel-heading"><span><span class="section-no">02</span> TABVLA TRANSMVTATIONIS</span><span id="fieldIdentity">AUDIO / SIGNAL STUDY</span></div>
+  <div class="field-top"><div class="field-stage"><div class="stage-id" id="fieldRoman">IV</div><div><div class="field-precursor">THE CURRENT OPERATION</div><h2 id="fieldName">Conjunction</h2></div></div><div class="field-metadata"><div><span id="fieldLatin">CONIUNCTIO</span><span class="field-meta-split">✧</span><span id="fieldMotto">UNIO</span></div><span id="chainTypeLabel">AUDIO · SEVEN STAGES</span></div></div>
+  <div class="cosmogram-shell"><div class="cosmogram" id="cosmogram" data-stage="3"><svg viewBox="0 0 600 600" role="img" aria-label="Cosmogram with illuminated concentric rings, seven alchemical fruit seals, a branching tree, and a vessel">
+<defs>
+  <radialGradient id="nightSky" cx="50%" cy="49%" r="60%"><stop offset="0" stop-color="#514364"/><stop offset=".63" stop-color="#373c60"/><stop offset="1" stop-color="#232a48"/></radialGradient>
+  <radialGradient id="paperGold"><stop stop-color="#fff4c5"/><stop offset=".66" stop-color="#ead09d"/><stop offset="1" stop-color="#bb8446"/></radialGradient>
+  <radialGradient id="solarGold"><stop stop-color="#fffacb"/><stop offset=".65" stop-color="#f2c66c"/><stop offset="1" stop-color="#c88643"/></radialGradient>
+  <filter id="goldGlow" x="-60%" width="220%" y="-60%" height="220%"><feGaussianBlur stdDeviation="2" result="soft"/><feMerge><feMergeNode in="soft"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <path id="upperArc" d="M 72 302 A 228 228 0 0 1 528 302"/>
+  <path id="lowerArc" d="M 520 318 A 221 221 0 0 1 80 318"/>
+  <pattern id="stars" patternUnits="userSpaceOnUse" width="39" height="49"><circle cx="18" cy="12" r="1" fill="#f7dcb7" opacity=".35"/><path d="M30 39h5m-2.5-2.5v5" stroke="#e3b962" stroke-width=".7" opacity=".23"/></pattern>
+</defs>
+<g class="ringback">
+  <circle cx="300" cy="300" r="267" fill="#e4c28f" stroke="#9c5b3e" stroke-width="2.5"/>
+  <circle cx="300" cy="300" r="257" fill="#f9eccd" stroke="#caaf72" stroke-width="2.2"/>
+  <circle cx="300" cy="300" r="245" fill="none" stroke="#ac3f36" stroke-width="18"/>
+  <circle cx="300" cy="300" r="232" fill="none" stroke="#e9ae62" stroke-width="6"/>
+  <circle cx="300" cy="300" r="220" fill="none" stroke="#527044" stroke-width="16"/>
+  <circle cx="300" cy="300" r="204" fill="none" stroke="#a37d36" stroke-width="4"/>
+  <circle cx="300" cy="300" r="196" fill="none" stroke="#503956" stroke-width="14"/>
+  <circle cx="300" cy="300" r="179" fill="none" stroke="#da973f" stroke-width="8"/>
+  <circle cx="300" cy="300" r="170" fill="url(#nightSky)" stroke="#dcb465" stroke-width="5"/>
+  <circle cx="300" cy="300" r="164" fill="url(#stars)" opacity=".8"/>
+  <circle cx="300" cy="300" r="250" fill="none" stroke="#f8e3b2" stroke-dasharray="1 9" stroke-width="1.5" opacity=".85"/>
+  <circle cx="300" cy="300" r="232" fill="none" stroke="#eacc9e" stroke-dasharray="2 12" stroke-width="1" opacity=".72"/>
+  <circle cx="300" cy="300" r="204" fill="none" stroke="#ffdf9a" stroke-dasharray="1 8" stroke-width="1.5"/>
+  <text class="manuscript-script"><textPath href="#upperArc" startOffset="50%" text-anchor="middle">✧ IN IGNE FORMAM  ·  IN AQVA MOTVM  ·  IN SPIRITV VITAM ✧</textPath></text>
+  <text class="manuscript-script"><textPath href="#lowerArc" startOffset="50%" text-anchor="middle">✧ SOLVE ET COAGVLA  ·  SEPTEM OPERATIONES  ·  OPVS VNV M ✧</textPath></text>
+  <path d="M300 50v14m0 472v14M50 300h14m472 0h14" stroke="#f8eac1" stroke-width="2"/>
+</g>
+<!-- Celestial emblems: solar and lunar duality. -->
+<g opacity=".86"><circle cx="236" cy="199" r="16" fill="url(#solarGold)"/><path d="M236 176v-5m0 55v-6m-35-21h6m58 0h7m-58-22l6 6m36 37l7 6m-7-49l-7 7m-34 35l-6 6" stroke="#e8c981" stroke-width="1.6"/><path d="M359 183a15 15 0 1 0 7 29 18 18 0 1 1-7-29" fill="#f3e4b7" stroke="#d1b478" stroke-width="1.4"/></g>
+<!-- Branching alchemical tree rising from the vessel. -->
+<g class="world-tree" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M292 457 Q291 407 302 370 Q312 334 299 303 Q292 274 304 238" stroke="#965332" stroke-width="26" fill="none"/>
+  <path d="M294 450 Q294 402 301 363 Q312 323 302 283 L305 243" stroke="#dca465" stroke-width="11" fill="none"/>
+  <path d="M306 342 C264 340 249 330 225 289 Q209 262 192 247" stroke="#925433" stroke-width="12" fill="none"/>
+  <path d="M310 323 C343 320 365 295 393 254 L418 244" stroke="#925433" stroke-width="12" fill="none"/>
+  <path d="M300 305 C273 283 263 260 264 228 L251 216" stroke="#bd7040" stroke-width="7" fill="none"/>
+  <path d="M305 282 C331 268 343 239 352 214" stroke="#bd7040" stroke-width="8" fill="none"/>
+  <path d="M297 387 Q261 382 236 360 C214 339 207 321 195 312" stroke="#ad5c34" stroke-width="9" fill="none"/>
+  <path d="M307 378 Q355 377 373 354 C383 338 395 324 405 315" stroke="#ad5c34" stroke-width="9" fill="none"/>
+  <path d="M301 368 C267 349 260 332 245 312 M303 361 C340 345 352 323 368 301" stroke="#dcb477" stroke-width="3" fill="none"/>
+  <path d="M302 240 C296 218 287 216 278 203 M304 249 C314 231 322 220 326 207" stroke="#efbf76" stroke-width="3" fill="none"/>
+  <g fill="#c68149" stroke="#a85e3a" stroke-width="1.4"><path d="M220 290q-35-22-22-37 15 1 22 37"/><path d="M393 270q35-28 40-17-11 20-40 17"/><path d="M256 333q-20-30-30-20-1 16 30 20"/><path d="M350 347q32-26 39-14-8 18-39 14"/><path d="M287 278q-24-28-31-21 3 17 31 21"/></g>
+  <path class="living-tendril" d="M297 430Q308 374 302 320Q262 292 226 280M302 320Q363 304 394 262"/>
+</g>
+<!-- Seven fruit/planet medals on branches; highlights respond to stage selection. -->
+<g class="fruit-medals">
+  <g class="tree-fruit fruit-0"><circle cx="300" cy="231" r="16"/><circle class="fruit-mini" cx="300" cy="231" r="12"/><text class="fruit-symbol" x="300" y="231">✺</text></g>
+  <g class="tree-fruit fruit-1"><circle cx="245" cy="249" r="16"/><circle class="fruit-mini" cx="245" cy="249" r="12"/><text class="fruit-symbol" x="245" y="249">☽</text></g>
+  <g class="tree-fruit fruit-2"><circle cx="357" cy="256" r="16"/><circle class="fruit-mini" cx="357" cy="256" r="12"/><text class="fruit-symbol" x="357" y="256">⫽</text></g>
+  <g class="tree-fruit fruit-3"><circle cx="212" cy="309" r="16"/><circle class="fruit-mini" cx="212" cy="309" r="12"/><text class="fruit-symbol" x="212" y="309">⋈</text></g>
+  <g class="tree-fruit fruit-4"><circle cx="390" cy="309" r="16"/><circle class="fruit-mini" cx="390" cy="309" r="12"/><text class="fruit-symbol" x="390" y="309">✣</text></g>
+  <g class="tree-fruit fruit-5"><circle cx="249" cy="358" r="16"/><circle class="fruit-mini" cx="249" cy="358" r="12"/><text class="fruit-symbol" x="249" y="358">☿</text></g>
+  <g class="tree-fruit fruit-6"><circle cx="350" cy="358" r="16"/><circle class="fruit-mini" cx="350" cy="358" r="12"/><text class="fruit-symbol" x="350" y="358">⬡</text></g>
+</g>
+<!-- Illuminated vessel; material enters here and is transformed. -->
+<g class="vessel"><path d="M238 433Q300 455 362 433L350 473Q300 497 250 473Z" fill="#a33e38" stroke="#e1af64" stroke-width="4"/><ellipse cx="300" cy="434" rx="64" ry="12" fill="#eac37b" stroke="#9e593f" stroke-width="3"/><ellipse cx="300" cy="433" rx="50" ry="6" fill="#6f4d53" opacity=".8"/><path d="M242 446q-30 20-35-13 21-9 32 7m119 6q30 20 35-13-21-9-32 7" fill="none" stroke="#ba8c5e" stroke-width="5"/><path d="M252 474Q300 490 348 474L361 492H239Z" fill="#e5bd76" stroke="#915b45" stroke-width="2"/><path d="M255 459q18-10 32 6m57-6q-18-10-32 6" fill="none" stroke="#dcb47c" stroke-width="2"/><circle cx="300" cy="465" r="7" fill="url(#paperGold)"/></g>
+<g fill="#efd3a4" opacity=".8"><path d="M184 384l6-15 6 15-6 15z"/><path d="M410 389l5-13 5 13-5 13z"/></g>
+
+<!-- CP07 illuminated details: botanical filigree, scroll seals, etched faces and curls. -->
+<g class="illuminated-miniatures" aria-hidden="true">
+ <g class="filigree"><path d="M90 265c-25-37-10-72 9-85 12-9 25 3 15 14-8 9-22-1-12-12m410 83c25-37 10-72-9-85-12-9-25 3-15 14 8 9 22-1 12-12"/>
+ <path d="M90 337c-25 37-10 72 9 85 12 9 25-3 15-14-8-9-22 1-12 12m410-83c25 37 10 72-9 85-12 9-25-3-15-14 8-9 22 1 12 12"/>
+ <path d="M300 131c17-25 42-24 45-13 3 14-19 18-19 3m-26 10c-17-25-42-24-45-13-3 14 19 18 19 3"/>
+ <path d="M300 471c19 31 37 29 41 18 5-15-14-19-16-5m-25-13c-19 31-37 29-41 18-5-15 14-19 16-5"/>
+ </g>
+ <g transform="translate(301 169)"><path d="M-27 7Q-34-15-20-20Q-9-29 0-17Q9-29 20-20Q34-15 27 7Q17 22 0 27Q-17 22-27 7Z" class="portrait"/>
+ <path d="M-13-2q6-4 11 0m4 0q6-4 12 0m-22 11q8 5 16 0m-21-25q14-15 27 0m-15 13v7" class="portrait-ink"/><circle cx="-8" cy="-1" r="1.7" fill="#6f4135"/><circle cx="8" cy="-1" r="1.7" fill="#6f4135"/>
+ <path d="M-13 27v10m26-10v10m-26 0q13 8 26 0" class="filigree"/></g>
+ <g class="portrait-ink" opacity=".65"><path d="M270 216q30-14 60 0M225 271q-19-18-31 0m16 10q-17-2-26 8M376 272q16-18 28-2m-14 13q21-4 26 9"/></g>
+ <g class="vessel-filigree"><path d="M263 453q10-7 20 2t18 2t18 0t18-4M270 474q30 15 60 0M246 482l-4 7 8-2 9 5 7-5 9 6 7-6 8 8 10-8 8 8 9-8 9 6 7-7 9 4 6-6"/>
+ <path d="M249 443c-12-22-27-21-30-9 1 7 9 10 14 2m130 7c12-22 27-21 30-9-1 7-9 10-14 2"/></g>
+ <g><path d="M166 389q-39-7-26-33 12-14 23 5-23-12-15 6 7 9 18 3" class="filigree"/>
+ <path d="M434 389q39-7 26-33-12-14-23 5 23-12 15 6-7 9-18 3" class="filigree"/></g>
+ <g><path d="M154 284Q140 271 154 262Q165 256 173 273M446 284Q460 271 446 262Q435 256 427 273" class="filigree"/></g>
+ <path d="M155 345q-20 25-12 40m11-43q7 25 23 36m270-33q20 25 12 40m-11-43q-7 25-23 36" class="filigree"/>
+ <path d="M280 419q5-12 11-16m-18 18q14 0 18-6m16-7q15 5 19 16m-5-21q-7 17-14 17" stroke="#e6b77c" fill="none" stroke-width="2"/>
+ <g><path d="M178 427Q300 476 422 427L416 439Q300 483 184 440Z" fill="#efdcab" stroke="#ac764c" stroke-width="1.3"/>
+  <text class="ribbon-letter" x="300" y="458" text-anchor="middle">SOLVE · COAGVLA · RENASCERE</text>
+ </g>
+ <g class="gold-sparks"><path d="M195 187l3-6 3 6-3 6zM415 185l3-6 3 6-3 6zM277 136l3-6 3 6-3 6zM320 130l3-6 3 6-3 6zM181 358l4-7 4 7-4 7zM415 355l4-7 4 7-4 7z"/></g>
+</g>
+</svg><div class="stage-path" id="stagePath" aria-label="Choose a stage from the alchemical wheel"></div></div></div>
+  <div class="wheel-caption">✧ &nbsp; <span>Seven orders of change</span> · one continuous material &nbsp; ✧</div>
+  <div class="hermetic-scroll"><span><b>INPUT</b> &nbsp; <span id="inputName">AUDIO IN</span> <span>·</span> <small id="inputSpec">STEREO L/R</small></span><span>✧ &nbsp; SOLVE ET COAGVLA &nbsp; ✧</span><span><b>OUTPUT</b> &nbsp; <span id="outputName">AUDIO OUT</span> <span>·</span> <small id="outputSpec">STEREO L/R</small></span></div>
+  <div class="scope-block"><div id="scopeWrap" class="scope-wrap"><canvas id="scope" aria-label="Decorative animated audio or MIDI event visualization"></canvas><div class="scope-labels"><span id="scopeLabel">HARMONIC FIELD</span><span>OPERATION <b id="scopeFlow">04</b> / 07</span></div><div class="scope-bottom"><span>✦ &nbsp; SYMBOLIC VISUALIZATION · NOT LIVE HOST DATA</span><span id="safetyLabel">HOST AUDIO · VISUAL ROUTING</span></div></div></div>
+ </section>
+ <section class="illuminated editor-panel" aria-label="Selected stage parameter editor"><div class="panel-heading"><span><span class="section-no">03</span> THE PARAMETER SCROLL</span><span id="editorIndex">IV / VII</span></div>
+  <div class="stage-editor-header"><div class="editor-title-row"><div class="editor-glyph" id="editorGlyph">⋈</div><div class="editor-names"><h2 id="editorTitle">Conjunction</h2><div id="editorLatin">CONIUNCTIO</div></div><button type="button" id="stagePower" class="stage-power on" aria-pressed="true">ON</button></div><p class="editor-desc" id="editorDesc"></p></div>
+  <div class="parameters" id="parameters"></div>
+  <div class="parameter-footer"><button type="button" id="resetStage" title="Reset parameters to factory stage defaults">↺ Reset stage</button><span class="micro-label">PROCESSION / ORDER</span><span><button class="move" type="button" id="moveEarlier" aria-label="Move selected stage earlier">←</button> <button class="move" type="button" id="moveLater" aria-label="Move selected stage later">→</button></span></div>
+  <div class="intent-scroll"><div class="section-small">OPERATIONAL AXIOM</div><div class="intent-quote" id="stagePhrase"></div><div class="section-small">PROCESS DESIGN</div><p id="stageMethod"></p><div class="lineage"><span><i class="square"></i>NEREIDA · TONAL ARCHITECTURE</span><span><i class="square"></i>RUBEDO · PERCUSSIVE ATLAS</span></div></div>
+ </section>
+</main>
+<div class="bottom-altar">
+ <section class="altar-panel"><div class="altar-title">✧ &nbsp; MATERIA PRIMA &nbsp; ✧</div><p>Spiritus sets the intention. Anima governs change. Corpus gives the work its final form. The seven stages remain editable and independent.</p></section>
+ <section class="altar-panel"><div class="altar-title">✧ &nbsp; VAS HERMETICVM · GLOBAL CONTROLS &nbsp; ✧</div><div class="master-controls" id="masterControls"></div></section>
+ <section class="altar-panel"><div class="altar-title">✧ &nbsp; FORMVLAE · PRESERVED STATES &nbsp; ✧</div><div class="preset-space"><select id="presetSelect" aria-label="Choose a formula preset"></select><div class="preset-actions"><button type="button" id="applyPreset">APPLY</button><button type="button" id="savePreset">EXPORT JSON</button><button type="button" id="loadPreset">IMPORT JSON</button><input id="presetFile" type="file" accept=".json,application/json" hidden/></div></div><div id="hostNotice">STANDALONE HTML DESIGN STUDY · HOST LINK READY</div><div class="master-footer"><span><i class="safety-led"></i>GUI PREVIEW</span><span>NO DSP / MIDI ENGINE IN THIS HTML STUDY</span></div></section>
+</div>
+<footer class="site-footer"><div>NIGREDO · ELEMENTAL NOTE &amp; AUDIO EFFECTS · 2026</div><div>✧ &nbsp; EX MATERIA · IN FORMAM &nbsp; ✧</div><div>GUI CP09 · RGNES NATIVE EDITOR</div></footer>
+</div><div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js"></script></body></html>
