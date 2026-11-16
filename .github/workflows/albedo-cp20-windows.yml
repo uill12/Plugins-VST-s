@@ -421,6 +421,11 @@ jobs:
           # parameter or preset signatures may be changed.
           python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); old='1a39b1c2a84a82a9dd5950d9f4dbb73bc7fc5d866fb38e3d595d0e45c36f589d'; new='15531abff019a101a8bbaf43cac00d34033735907da282dc2312f2d0545a0dda'; matches=[p for p in r.rglob('*.json') if old in p.read_text(encoding='utf-8')]; print('CP20 layout-only manifest targets:',[str(p) for p in matches]); assert matches,'No original GUI layout manifest SHA found'; [(p.write_text(p.read_text(encoding='utf-8').replace(old,new),encoding='utf-8')) for p in matches]; assert all(old not in p.read_text(encoding='utf-8') for p in matches); print('CP20 manifest strict header checksum migrated')"
           if ($LASTEXITCODE -ne 0) { throw 'CP20 layout-only source manifest migration failed' }
+          # CP12 viewport regression statically encodes the old 900x640
+          # launch defaults. Update that test expectation to CP20's approved
+          # 1265x900 target, retaining the resize hitbox/geometry assertions.
+          python -c "from pathlib import Path; import re; p=Path('Albedo-Quintessential-Synth/tests/native_viewport_parity.cpp'); s=p.read_text(encoding='utf-8'); a,n1=re.subn(r'(kDefaultEditorWidth\\s*==\\s*)900',r'\\g<1>1265',s); b,n2=re.subn(r'(kDefaultEditorHeight\\s*==\\s*)640',r'\\g<1>900',a); assert n1>=1 and n2>=1,('CP20 viewport source contract',n1,n2); p.write_text(b,encoding='utf-8',newline='\\n'); print('CP20 native viewport startup assertions updated')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 native viewport test migration failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP20 immutable DSP/artwork/64 presets check failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
