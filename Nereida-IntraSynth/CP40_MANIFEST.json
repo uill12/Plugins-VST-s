@@ -1,0 +1,39 @@
+{
+  "project": "Nereida IntraSynth",
+  "product": "Nereida - Tonal Architecture",
+  "version": "0.40.1-dev",
+  "checkpoint": "CP-40",
+  "platform": "Windows x64",
+  "formats": [
+    "CLAP",
+    "VST3"
+  ],
+  "source": "previously compiled and locally archive-verified CP-40 binaries",
+  "reported_date": "2026-11-16",
+  "delivery": {
+    "google_drive_folder": "PROJETOS / Nereida IntraSynth",
+    "google_drive_uploaded_and_listed": true,
+    "github_binary_assets_uploaded": false,
+    "github_status": "manifest only; no GitHub release/upload action available through connected GitHub tool"
+  },
+  "artifacts": [
+    {
+      "format": "CLAP",
+      "filename": "Nereida_v0.40.1_CP40_CLAP_Windows_x64.zip",
+      "bytes": 14487162,
+      "sha256": "f4e598223b4f391d617f77570700083bce5042e2c89f7fd05addc1fbae2ff3ff",
+      "entry": "Nereida_v0.40.1_Network.clap"
+    },
+    {
+      "format": "VST3",
+      "filename": "Nereida_v0.40.1_CP40_VST3_Windows_x64.zip",
+      "bytes": 14480855,
+      "sha256": "ce0513c225c27977d6e31a6d3c7f12e90dfa6cc2b9cf8fd194b42c6d9890304d",
+      "entry": "Nereida_v0.40.1_Network.vst3/Contents/x86_64-win/Nereida_v0.40.1_Network.vst3"
+    }
+  ],
+  "notes": [
+    "All existing plugin IDs and preset states are intended to remain compatible per CP-40 QA; Bitwig in-host verification remains outstanding.",
+    "Old binary versions were not overwritten in Drive."
+  ]
+}
