@@ -24,6 +24,7 @@ on:
       - 'patches/cp19r5_source_patch.b64'
       - 'patches/cp19r5_win_cursor_fix.py'
       - 'patches/cp19r5_r2_msvc_redraw.b64'
+      - 'patches/cp19r5_r3_visible_host_qa.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -380,6 +381,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 source integrity gate failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 source/art visual parity gate failed' }
+      - name: CP19R5-R3 visible host HWND repaint regression setup
+        shell: pwsh
+        run: |
+          python 'patches/cp19r5_r3_visible_host_qa.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R3 Win32 test fixture correction failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R3 Win32 test source hash verification failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
