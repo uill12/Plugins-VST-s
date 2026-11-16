@@ -41,6 +41,8 @@ jobs:
             "$p/checkpoints/CP12R1_Pad_Maps/source/rubedo_engine.h" = 'rubedo_engine.h'
             "$p/checkpoints/CP12R1_Pad_Maps/source/rubedo_gui.h" = 'rubedo_gui.h'
             "$p/checkpoints/CP11_SkinSync/rubedo_blank_card.inc" = 'rubedo_blank_card.inc'
+            "$p/checkpoints/CP12R1_VST3_Source/source/rubedo_vst3_feedback.h" = 'rubedo_vst3_feedback.h'
+            "$p/checkpoints/CP12R1_VST3_Source/qa/test_midi_feedback.c" = 'test_midi_feedback.c'
             "$p/source/win_imports.h" = 'win_imports.h'
             "$p/source/vst3_min_abi.h" = 'vst3_min_abi.h'
             "$p/source/rubedo_names.inc" = 'rubedo_names.inc'
@@ -60,6 +62,17 @@ jobs:
             'int _fltused = 0;'
             'void *memset(void *p, int value, size_t count) { volatile unsigned char *q = (volatile unsigned char *)p; for(size_t i=0;i<count;i++)q[i]=(unsigned char)value; return p; }'
           ) | Set-Content build-rubedo-vst3/fltused.c -Encoding ascii
+      - name: Run Windows x64 MIDI Learn and live-pad feedback wire regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Push-Location build-rubedo-vst3
+          try {
+            & clang -target x86_64-pc-windows-msvc -std=c11 -O2 -Wall -Wextra test_midi_feedback.c -o test_midi_feedback.exe
+            if($LASTEXITCODE -ne 0){throw 'VST3 feedback codec test compilation failed'}
+            & .\\test_midi_feedback.exe 2>&1 | Tee-Object feedback-test-output.txt
+            if($LASTEXITCODE -ne 0){throw 'VST3 feedback codec regression failed'}
+          } finally {Pop-Location}
       - name: Compile PE32+ x64 VST3 core (NO EMBEDDED PCM / NOT INSTALLABLE)
         shell: pwsh
         run: |
@@ -91,4 +104,5 @@ jobs:
             build-rubedo-vst3/exports.txt
             build-rubedo-vst3/SOURCE_ONLY_README.txt
             build-rubedo-vst3/SHA256.txt
+            build-rubedo-vst3/feedback-test-output.txt
           if-no-files-found: error
