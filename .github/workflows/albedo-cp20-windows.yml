@@ -410,6 +410,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP20 patch incompatible with CP19R5-R3' }
           git apply 'CP20_GUI_READABILITY.patch'
           if ($LASTEXITCODE -ne 0) { throw 'CP20 GUI patch application failed' }
+          # Git for Windows may keep CRLF after applying the POSIX-format delta.
+          # Normalize only audited CP20 text files before comparing exact SHA256.
+          python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); names=('src/editor_native_win.cpp','src/albedo_preset_browser_win.cpp','include/vitriol_native_layout.hpp','CP19_SOURCE_MANIFEST.json'); [(r/n).write_bytes((r/n).read_bytes().replace(bytes([13,10]),bytes([10]))) for n in names]; print('CP20 Win32 LF source normalized')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 Win32 source normalization failed' }
           python -c "import pathlib,hashlib,json; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP19_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); names=('src/editor_native_win.cpp','src/albedo_preset_browser_win.cpp'); assert all(hashlib.sha256((r/n).read_bytes()).hexdigest()==m['changed_source_sha256'][n] for n in names), 'CP20 native source checksum'; t=(r/'include/vitriol_native_layout.hpp').read_text(encoding='utf-8'); assert 'kDefaultEditorWidth=1265, kDefaultEditorHeight=900' in t, 'CP20 startup dimensions'; assert 'TextCaptureScope capture(liveText)' in (r/'src/editor_native_win.cpp').read_text(encoding='utf-8'); print('CP20 FHD GUI source integrity and canvas text checks passed')"
           if ($LASTEXITCODE -ne 0) { throw 'CP20 source contract failure' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
