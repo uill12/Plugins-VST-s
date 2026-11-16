@@ -332,11 +332,49 @@ static void w_set_param(void*o,unsigned id,double norm){
  }
 }
 // Editor receives host automation changes; only local GUI state is mutated.
+#ifdef _WIN32
+__declspec(dllimport) int __attribute__((ms_abi)) InvalidateRect(void*,const void*,int);
+#endif
+static void vr_gui_redraw(VRubedoView*w){
+#ifdef _WIN32
+ if(w&&w->gui.hwnd)InvalidateRect(w->gui.hwnd,0,0);
+#else
+ (void)w;
+#endif
+}
 static void vr_controller_param_changed(VRubedoController*c,uint32_t id,double norm){
  VRubedoView*w=(VRubedoView*)c->active_view;
  if(!w||!w->gui.engine||id==135)return;
- apply_rubedo_bridge(w->gui.engine,id,norm);
- if(id==0)w->gui.kit=w->gui.engine->kit;
+ RubedoEngine*e=w->gui.engine;
+ if(id==RB_V3_LEARN_TARGET){w->gui.learn_active=(uint8_t)(rb_v3_learn_target(norm)>=0);vr_gui_redraw(w);return;}
+ if(id==RB_V3_ACTIVITY_MASK){
+  uint32_t mask=rb_v3_mask_decode(norm);
+  if(mask){
+   int last=-1;for(int i=0;i<24;i++)if(mask&(1u<<i))last=i;
+   if(last>=0)atomic_store_explicit(&e->ui_last_pad,last,memory_order_release);
+   atomic_fetch_or_explicit(&e->ui_pending_mask,mask,memory_order_release);
+   atomic_fetch_add_explicit(&e->ui_note_seq,1,memory_order_release);
+  }
+  return;
+ }
+ if(id==RB_V3_UNMAPPED_NOTE){
+  int note=rb_v3_unmapped_decode(norm);
+  if(note>=0){atomic_store_explicit(&e->ui_unmapped_note,note,memory_order_release);
+   atomic_fetch_add_explicit(&e->ui_unmapped_seq,1,memory_order_release);}
+  return;
+ }
+ if(id==RB_V3_LEARN_RESULT){
+  int pad=-1,note=-1;
+  if(rb_v3_learn_decode(norm,&pad,&note)){
+   w->gui.learn_active=0;
+   atomic_store_explicit(&e->ui_learn_note,note,memory_order_release);
+   atomic_fetch_add_explicit(&e->ui_learn_seq,1,memory_order_release);
+  }
+  return;
+ }
+ apply_rubedo_bridge(e,id,norm);
+ if(id==0)w->gui.kit=e->kit;
+ if(id>=RUBEDO_VST3_MAP_BEGIN&&id<RUBEDO_VST3_MAP_END)vr_gui_redraw(w);
 }
 static void w_map_changed(void*context){
  VRubedoController*c=(VRubedoController*)context;
