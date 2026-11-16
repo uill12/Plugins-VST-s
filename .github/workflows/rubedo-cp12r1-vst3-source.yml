@@ -152,7 +152,7 @@ jobs:
         with:
           name: Rubedo_CP12R1_VST3_Synthetic_Diagnostic_NotRelease
           path: |
-            build-rubedo-vst3/Rubedo_CP12R1_VST3_SYNTHETIC_DIAGNOSTIC.vst3/
+            build-rubedo-vst3/Rubedo_CP12R1_DIAGNOSTIC_ONLY/
             build-rubedo-vst3/DIAGNOSTIC_ONLY.txt
             build-rubedo-vst3/synthetic-init-smoke-test-output.txt
           if-no-files-found: error
@@ -199,7 +199,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $validator = Get-ChildItem -Path steinberg-build -Recurse -File -Filter validator.exe | Select-Object -First 1
           if(!$validator){throw 'Official vstvalidator executable not found'}
-          $bundle = (Resolve-Path 'diagnostic/Rubedo_CP12R1_VST3_SYNTHETIC_DIAGNOSTIC.vst3').Path
+          $bundle = (Resolve-Path 'diagnostic/Rubedo_CP12R1_DIAGNOSTIC_ONLY/Rubedo Atlas Drumkit.vst3').Path
           & $validator.FullName $bundle *>&1 | Tee-Object -FilePath vst3-validator-report.txt
           if($LASTEXITCODE -ne 0){throw "Official Steinberg VST3 validator reported failures: $LASTEXITCODE"}
       - name: Store Steinberg validator QA report
