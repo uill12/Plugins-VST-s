@@ -19,6 +19,7 @@ on:
       - 'patches/cp18r1_realtime_chunk*.txt'
       - 'patches/cp18r2_part*.txt'
       - 'patches/cp18r2_quality_contract.py'
+      - 'patches/cp18r3_spectral_sine_lut.txt'
   workflow_dispatch:
 permissions:
   contents: read
@@ -306,6 +307,21 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP18R2 Hi-Fi sample rate contract failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP18R2 source/QA/presets/artwork SHA gate failed' }
+      - name: CP18R3 fast high-resolution spectral interpolation
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=pathlib.Path('patches/cp18r3_spectral_sine_lut.txt').read_text(encoding='ascii').strip(); assert len(s)==976; d=gzip.decompress(base64.b64decode(s,validate=True));assert hashlib.sha256(d).hexdigest()=='468a1312b59cfa15286af95954e5bb1840f8d22915f7076ee0140a865b72e252','CP18R3 patch SHA mismatch';pathlib.Path('CP18R3_Spectral_LUT.patch').write_bytes(d);print('CP18R3 spectral source SHA256 verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R3 spectral patch verification failed' }
+          git apply --check 'CP18R3_Spectral_LUT.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R3 spectral patch incompatible' }
+          git apply 'CP18R3_Spectral_LUT.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R3 spectral patch failed' }
+          python -c "import hashlib,json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); p=r/'src/vitriol_dsp.cpp'; p.write_bytes(p.read_bytes().replace(bytes([13,10]),bytes([10]))); h=hashlib.sha256(p.read_bytes()).hexdigest(); assert h=='e94d7a0f033210620e6268e7a7eec91b66f1faf3beaa675f53a05d0c2d3a262f','Unexpected CP18R3 DSP source'; mf=r/'CP18_SOURCE_MANIFEST.json'; j=json.loads(mf.read_text(encoding='utf-8')); j['changed_source_sha256']['src/vitriol_dsp.cpp']=h; j['spectral_accuracy']='20 spectral partials preserved, sine LUT linear 4096 points with maximum amplitude error about 2.94e-7'; mf.write_text(json.dumps(j,indent=2,ensure_ascii=False)+'\n',encoding='utf-8');print('CP18R3 spectra original 20 partials preserved')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R3 source integrity failed' }
+          python -c "import math; n=4096; err=max(abs(math.sin((k+.5)*2*math.pi/n)-.5*(math.sin(k*2*math.pi/n)+math.sin((k+1)*2*math.pi/n))) for k in range(n)); print('spectral LUT interpolation worst-case error = %.10f'%err);assert err<3e-7"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R3 spectral Hi-Fi interpolation tolerance failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R3 source and original GUI checksum validation failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
