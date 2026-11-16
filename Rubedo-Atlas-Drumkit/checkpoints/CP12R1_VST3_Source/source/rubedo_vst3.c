@@ -285,16 +285,18 @@ static int32_t c_paraminfo(void*o,int32_t idx,VParameterInfo*inf){
 static int32_t c_string(void*o,uint32_t id,double norm,Char16*str){
  (void)o;if(!str||id>=RUBEDO_VST3_PARAMS)return V_FALSE;
  if(id==0){int idx=(int)(norm*23.+.5);if(idx>23)idx=23;if(idx<0)idx=0;vr_wstr(str,rubedo_kit_names[idx],128);return V_OK;}
+ if(id==RB_V3_LEARN_TARGET){vr_wstr(str,rb_v3_learn_target(norm)<0?"OFF":"ARMED",128);return V_OK;}
+ if(id>=RB_V3_ACTIVITY_MASK){vr_wstr(str,"LIVE",128);return V_OK;}
  if(id>=RUBEDO_VST3_MAP_BEGIN&&id<RUBEDO_VST3_MAP_END){int note=(int)(norm*127.+.5);if(note<0)note=0;if(note>127)note=127;char midi[4]={(char)('0'+note/100),(char)('0'+(note/10)%10),(char)('0'+note%10),0};vr_wstr(str,midi,128);return V_OK;}
  int v=(int)(norm*100.+.5);char tmp[8];tmp[0]=(char)('0'+(v/100)%10);tmp[1]=(char)('0'+(v/10)%10);tmp[2]=(char)('0'+v%10);tmp[3]='%';tmp[4]=0;vr_wstr(str,tmp,128);return V_OK;
 }
 static int32_t c_value(void*o,uint32_t id,const Char16*str,double*out){
  (void)o;if(!str||!out||id>=RUBEDO_VST3_PARAMS)return V_FALSE;
  int v=0;for(int i=0;i<7&&str[i]>='0'&&str[i]<='9';i++)v=v*10+str[i]-'0';
- *out=id==0?(v>23?23:v)/23.:id>=RUBEDO_VST3_MAP_BEGIN&&id<RUBEDO_VST3_MAP_END?(v>127?127:v)/127.:(v>100?100:v)/100.;return V_OK;
+ *out=id==0?(v>23?23:v)/23.:id==RB_V3_LEARN_TARGET?(v>24?24:v)/24.:id>=RB_V3_ACTIVITY_MASK?0.:id>=RUBEDO_VST3_MAP_BEGIN&&id<RUBEDO_VST3_MAP_END?(v>127?127:v)/127.:(v>100?100:v)/100.;return V_OK;
 }
-static double c_to_plain(void*o,uint32_t id,double norm){(void)o;return id==0?norm*23.:id>=RUBEDO_VST3_MAP_BEGIN&&id<RUBEDO_VST3_MAP_END?norm*127.:id==232?norm*3.:id>=233&&id<329?norm*65535.:norm;}
-static double c_to_norm(void*o,uint32_t id,double value){(void)o;return id==0?value/23.:id>=RUBEDO_VST3_MAP_BEGIN&&id<RUBEDO_VST3_MAP_END?value/127.:id==232?value/3.:id>=233&&id<329?value/65535.:value;}
+static double c_to_plain(void*o,uint32_t id,double norm){(void)o;return id==0?norm*23.:id==RB_V3_LEARN_TARGET?norm*24.:id>=RUBEDO_VST3_MAP_BEGIN&&id<RUBEDO_VST3_MAP_END?norm*127.:id==232?norm*3.:id>=233&&id<329?norm*65535.:norm;}
+static double c_to_norm(void*o,uint32_t id,double value){(void)o;return id==0?value/23.:id==RB_V3_LEARN_TARGET?value/24.:id>=RUBEDO_VST3_MAP_BEGIN&&id<RUBEDO_VST3_MAP_END?value/127.:id==232?value/3.:id>=233&&id<329?value/65535.:value;}
 static double c_getnorm(void*o,uint32_t id){return id<RUBEDO_VST3_PARAMS?vr_c(o)->params[id]:0.;}
 static void vr_controller_param_changed(VRubedoController*c,uint32_t id,double norm);
 static int32_t c_setnorm(void*o,uint32_t id,double norm){
