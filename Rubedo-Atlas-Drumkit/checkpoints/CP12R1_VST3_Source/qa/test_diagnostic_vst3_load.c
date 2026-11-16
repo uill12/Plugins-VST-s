@@ -12,7 +12,7 @@ static const uint8_t CLS_COMP[16]={0x52,0x42,0x44,0x4b,0x10,0x21,0x49,0x82,0xb9,
 static const uint8_t IID_UNKNOWN[16]={0,0,0,0,0,0,0,0,0xc0,0,0,0,0,0,0,0x46};
 typedef void* (*GetFactory)(void);
 static unsigned check(void){
- const char*path="Rubedo_CP12R1_VST3_SYNTHETIC_DIAGNOSTIC.vst3\\Contents\\x86_64-win\\Rubedo Atlas Drumkit.vst3";
+ const char*path="Rubedo_CP12R1_DIAGNOSTIC_ONLY\\Rubedo Atlas Drumkit.vst3\\Contents\\x86_64-win\\Rubedo Atlas Drumkit.vst3";
  HMODULE dll=LoadLibraryA(path);
  if(!dll)return 11;
  GetFactory get=(GetFactory)GetProcAddress(dll,"GetPluginFactory");
