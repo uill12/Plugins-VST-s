@@ -102,6 +102,14 @@ static int run(void){
  int hostpad=-1,hostnote=-1;
  REQ(rb_v3_learn_decode(learned,&hostpad,&hostnote));
  REQ(hostpad==0&&hostnote==72);
+ /* A detached VST3 edit controller still needs canonical swap behavior:
+  * remapping pad 0 to pad 1's note must update both cached parameters. */
+ REQ(((int32_t(*)(void*,uint32_t,double))ctrlvt[13])(ctrl,136u,37./127.)==OK);
+ REQ((int)(((double(*)(void*,uint32_t))ctrlvt[12])(ctrl,136u)*127.+.5)==37);
+ REQ((int)(((double(*)(void*,uint32_t))ctrlvt[12])(ctrl,137u)*127.+.5)==72);
+ REQ(((int32_t(*)(void*,uint32_t,double))ctrlvt[13])(ctrl,136u,72./127.)==OK);
+ REQ((int)(((double(*)(void*,uint32_t))ctrlvt[12])(ctrl,136u)*127.+.5)==72);
+ REQ((int)(((double(*)(void*,uint32_t))ctrlvt[12])(ctrl,137u)*127.+.5)==37);
  empty_ch(&in);empty_ch(&out);empty_evt();note_event(72);
  REQ(process(audio)==OK);
  REQ(rb_v3_mask_decode(find_out(RB_V3_ACTIVITY_MASK))==1u);
