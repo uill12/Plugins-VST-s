@@ -396,7 +396,8 @@ jobs:
           path: |
             Albedo-Quintessential-Synth/src/
             Albedo-Quintessential-Synth/include/
-            Albedo-Quintessential-Synth/tests/cp19_partial_redraw_win.cpp
+            Albedo-Quintessential-Synth/tests/
+            Albedo-Quintessential-Synth/tools/
             Albedo-Quintessential-Synth/CP19_SOURCE_MANIFEST.json
             Albedo-Quintessential-Synth/CMakeLists.txt
           if-no-files-found: error
