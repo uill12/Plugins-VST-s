@@ -17,6 +17,8 @@ on:
       - 'patches/cp18_perf_manifest.py'
       - 'patches/cp18_release_meta_fix.py'
       - 'patches/cp18r1_realtime_chunk*.txt'
+      - 'patches/cp18r2_part*.txt'
+      - 'patches/cp18r2_quality_contract.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -289,6 +291,21 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP18R1 updated manifest verification failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP18R1 post-opt source QA failed' }
+      - name: CP18R2 Hi-Fi AUTO oversampling and per-voice trig reduction
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/cp18r2_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,4)); assert len(s)==5152,'CP18R2 patch missing parts'; p=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(p).hexdigest()=='20efd330cbd2238d1b0939509e31cda00bd23e041a7034eb87528dc5ef7c42b7','CP18R2 SHA-256 mismatch'; pathlib.Path('CP18R2_DSP_Optimization.patch').write_bytes(p); print('CP18R2 authenticated source patch')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R2 source verification failed' }
+          git apply --check 'CP18R2_DSP_Optimization.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R2 patch cannot apply after CP18R1' }
+          git apply 'CP18R2_DSP_Optimization.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R2 DSP patch failed' }
+          python -c "import hashlib,json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); p=r/'CP18_SOURCE_MANIFEST.json'; j=json.loads(p.read_text(encoding='utf-8')); expected={'include/vitriol_dsp.hpp':'7d9481806f065482f73792017cfe2ba7fca695f66460728b5e4c7b511af87506','src/vitriol_dsp.cpp':'5418cd4c1014553639c3863d008958f79a45dd79d904a20e8c9dabfedd3ab84e'}; [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in expected]; assert all(hashlib.sha256((r/k).read_bytes()).hexdigest()==h for k,h in expected.items()),'CP18R2 source signature mismatch'; j['changed_source_sha256'].update(expected); j['realtime_optimization']='CP18R2: audio-chunk target cache, stereo SVF coefficients, 4096 sine LUT, 2049 pan LUT, shared LFO and velocity gain; AUTO 2x at 48k, 1x at 88.2k+'; p.write_text(json.dumps(j,indent=2,ensure_ascii=False)+'\\n',encoding='utf-8'); print('CP18R2 DSP source hashes verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R2 source manifest update failed' }
+          python 'patches/cp18r2_quality_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R2 Hi-Fi sample rate contract failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R2 source/QA/presets/artwork SHA gate failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
