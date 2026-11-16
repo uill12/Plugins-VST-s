@@ -23,6 +23,7 @@ on:
       - 'patches/cp18r4_part*.txt'
       - 'patches/cp19r5_source_patch.b64'
       - 'patches/cp19r5_win_cursor_fix.py'
+      - 'patches/cp19r5_r2_msvc_redraw.b64'
   workflow_dispatch:
 permissions:
   contents: read
@@ -364,6 +365,19 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP19R5 Unicode Win32 resource correction failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP19R5 post-resource source SHA audit failed' }
+      - name: CP19R5-R2 safe Win32 preset search and focused mouse-up redraw
+        shell: pwsh
+        run: |
+          python -c "import pathlib,hashlib,base64,gzip; s=pathlib.Path('patches/cp19r5_r2_msvc_redraw.b64').read_text(encoding='ascii').strip(); assert len(s)==4368,'CP19R5-R2 delta incomplete'; p=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(p).hexdigest()=='8bf3e352de84fc242973c913ec4b098ea967756788ac3d924afdde8057e17ec2','CP19R5-R2 source patch hash incorrect'; pathlib.Path('CP19R5_R2.patch').write_bytes(p); print('Authenticated CP19R5-R2 patch')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 source validation failed' }
+          git apply --check 'CP19R5_R2.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 patch incompatible with audited CP19' }
+          git apply 'CP19R5_R2.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 source application failed' }
+          python -c "import json,pathlib,hashlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP19_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); expected={'src/albedo_preset_browser_win.cpp':'85d2c0c037af0b062765ed41a7b4e82484ddbc82a1fb59642ba11fec1803f17b','src/editor_native_win.cpp':'f82ce0cd6815b457258fe6f0a87b79534050fd7830edd4bd6c294613107d8a4a','tests/cp19_partial_redraw_win.cpp':'de21f87cb38e43c5a086a6969861f5b1773f53c0fe01a64d3cb24d8c6644e268'}; assert all(hashlib.sha256((r/k).read_bytes()).hexdigest()==h and m['changed_source_sha256'][k]==h for k,h in expected.items()),'CP19R5-R2 SHA verification failed'; print('CP19R5-R2 C++ and test hashes verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 source integrity gate failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 source/art visual parity gate failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
