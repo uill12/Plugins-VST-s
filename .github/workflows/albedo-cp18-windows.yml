@@ -12,6 +12,7 @@ on:
       - 'patches/cp17_rng_reset_fix.py'
       - 'patches/cp18_part*.txt'
       - 'patches/cp18_msvc_fix.py'
+      - 'patches/cp18_output_fix.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -241,6 +242,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP18 MSVC auto-type correction failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP18 source verification after C3538 correction failed' }
+      - name: CP18 correct native Windows build archive and runtime staging names
+        shell: pwsh
+        run: |
+          python 'patches/cp18_output_fix.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 output naming correction failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 output naming manifest verification failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
