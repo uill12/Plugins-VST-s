@@ -26,6 +26,13 @@ Current feedback contract, unchanged VST3 IDs 0–376: `377` Learn target; `378`
 - Save/Load `.rbmap` dialogs use the CP12 codec and embedded CP11 SkinSync style; Windows file I/O is on the GUI thread.
 - Windows source-only compilation with PE32+ x64 and `GetPluginFactory` export passed in GitHub Actions: [run 43965028126](https://github.com/uill12/Plugins-VST-s/actions/runs/43965028126). **This compiled DLL does not contain the bank or artwork.**
 
+## 2026-11-16 continuation — detached-controller map swap and deterministic wrapper-audio QA
+
+- **Detached-controller mapping repair:** VST3 `c_setnorm` now updates the other note parameter in its cache when a duplicate note assignment causes a swap, even without an attached SkinSync editor. The existing canonical DSP mapping swap remains the authority on the processor side. The Windows mock-host test checks pad 1 ↔ pad 2 cache swaps and reversal.
+- **Synthetic-bank audio test:** [CI run 43973501532](https://github.com/uill12/Plugins-VST-s/actions/runs/43973501532) built the actual VST3 processor, then linked it into a standalone Windows test host alongside the exact CP12 canonical engine. A deterministic in-memory 24-bit PCM waveform was substituted for the private bank. The VST3 wrapper and direct engine received identical note events (with nonzero `sampleOffset`), overlapping hits, and changes to per-pad gain, attack and pitch. At **44.1 / 48 / 88.2 / 96 kHz**, every tested 32-bit floating-point output sample compared equal, including two consecutive blocks of tails. This is **source/processor parity**, not a numeric comparison against the separately compiled released CLAP binary.
+- **Test scope is limited:** It does not include the original 2,304-hit bank, all 24 kits/articulations, the actual release ZIP/PE overlay, real Bitwig VST3 callbacks, complete CLAP-vs-VST3 plug-in audio output, GUI frame/draw performance or multi-instance bank memory stability. Those remain release gates.
+- **Build status:** fresh Windows x64 PE source-only core compilation, feedback codec tests, processor↔controller mock-host test and synthetic-PCM wrapper-audio test all passed on the same CI run. The CI artifact is deliberately tagged **NOT INSTALLABLE**.
+
 ## Blocking discrepancies (must be resolved before claiming VST3 equivalence)
 
 | Gate | Expected equivalence | Current VST3 status |
@@ -36,7 +43,7 @@ Current feedback contract, unchanged VST3 IDs 0–376: `377` Learn target; `378`
 | B4 — Parameter/state round trip | Host audio uses exactly the values displayed by GUI after automation and close/reopen, including V3 patterns, per-pad envelope and active flags | **SOURCE PORTED; HOST UNVERIFIED:** verify real transactions and state migration |
 | B5 — Pad audition | Each clicked pad produces exactly the routed voice with reliable repeated trigger | **SOURCE PORTED; HOST UNVERIFIED:** uses host edit parameter 135; not a sample-accurate event bridge |
 | B6 — Map transactional apply | Save/Load and host edits preserve all 24 distinct MIDI notes under update order and multi-instance load | **SOURCE LOGIC IMPROVED; HOST UNVERIFIED** |
-| B7 — Sample-output parity | Same sounds, velocity/round robin, output levels, 88.2k playback and note onset timing | **UNTESTED:** no complete VST3 PCM build to null-test |
+| B7 — Sample-output parity | Same sounds, velocity/round robin, output levels, 88.2k playback and note onset timing | **PARTIAL OFFLINE PASS:** VST3 wrapper vs canonical CP12 engine is bit-identical on synthetic PCM at 44.1/48/88.2/96 kHz. Original CP12R1 embedded bank and released CLAP binary null test still unavailable. |
 | B8 — Plugin host compatibility | Valid VST3 SDK ABI, preset persistence and multiple Bitwig instances | **UNTESTED:** hand-authored VST3 ABI; compiler success does not certify Bitwig |
 | B9 — Runtime performance | No additional RT locks/allocations, bounded note response and GUI CPU; no stuck notes | **UNTESTED in host** |
 | B10 — Distribution | Full VST3 `.vst3` directory, SHA-256, independent 7-Zip extraction, Drive readback | **NOT UPLOADED** |
