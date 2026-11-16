@@ -374,6 +374,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 patch incompatible with audited CP19' }
           git apply 'CP19R5_R2.patch'
           if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 source application failed' }
+          python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); names=('src/albedo_preset_browser_win.cpp','src/editor_native_win.cpp','tests/cp19_partial_redraw_win.cpp'); [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in names]; print('CP19R5-R2 canonical LF normalized on MSVC runner')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 text normalization failed' }
           python -c "import json,pathlib,hashlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP19_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); expected={'src/albedo_preset_browser_win.cpp':'85d2c0c037af0b062765ed41a7b4e82484ddbc82a1fb59642ba11fec1803f17b','src/editor_native_win.cpp':'f82ce0cd6815b457258fe6f0a87b79534050fd7830edd4bd6c294613107d8a4a','tests/cp19_partial_redraw_win.cpp':'de21f87cb38e43c5a086a6969861f5b1773f53c0fe01a64d3cb24d8c6644e268'}; assert all(hashlib.sha256((r/k).read_bytes()).hexdigest()==h and m['changed_source_sha256'][k]==h for k,h in expected.items()),'CP19R5-R2 SHA verification failed'; print('CP19R5-R2 C++ and test hashes verified')"
           if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 source integrity gate failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
