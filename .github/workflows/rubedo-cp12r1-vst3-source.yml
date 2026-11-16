@@ -58,7 +58,7 @@ jobs:
               & clang -target x86_64-pc-windows-msvc -D_WIN32 -std=c11 -O2 -fno-stack-protector -ffreestanding -c $file -o ($file + '.obj')
               if($LASTEXITCODE -ne 0){ throw "C compile failed: $file" }
             }
-            & lld-link /dll /machine:x64 /entry:DllMain /subsystem:windows /out:Rubedo_CP12R1_VST3_CORE_ONLY.vst3 rubedo_vst3.c.obj rubedo_engine.c.obj rubedo_gui.c.obj fltused.c.obj kernel32.lib user32.lib gdi32.lib comdlg32.lib /opt:ref /opt:icf
+            & lld-link /dll /machine:x64 /entry:DllMain /subsystem:windows /out:Rubedo_CP12R1_VST3_CORE_ONLY.vst3 rubedo_vst3.c.obj rubedo_engine.c.obj rubedo_gui.c.obj fltused.c.obj kernel32.lib user32.lib gdi32.lib comdlg32.lib ucrt.lib /opt:ref /opt:icf
             if($LASTEXITCODE -ne 0){throw 'VST3 linker failed'}
             & dumpbin /exports Rubedo_CP12R1_VST3_CORE_ONLY.vst3 | Out-File -Encoding utf8 exports.txt
             if($LASTEXITCODE -ne 0){throw 'dumpbin exports failed'}
