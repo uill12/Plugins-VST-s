@@ -199,7 +199,7 @@ static int32_t a_process(void*o,VProcessData*d){
   if(event.type==0)rubedo_note_on(e,event.noteOn.pitch,event.noteOn.velocity);
   last=pos;
  }
- if(last<frames)rubedo_render(e,l?l+last:0,r?r+last:0,ld?ld+last:0,frames-last);
+ if(last<frames)rubedo_render(e,l?l+last:0,r?r+last:0,ld?ld+last:0,rd?rd+last:0,frames-last);
  vr_output_midi_feedback(p,d,frames?(int32_t)(frames-1u):0);
  return V_OK;
 }
