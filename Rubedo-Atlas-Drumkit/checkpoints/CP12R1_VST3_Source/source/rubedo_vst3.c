@@ -113,7 +113,7 @@ static void apply_rubedo_bridge(RubedoEngine*e,uint32_t id,double norm){
  if(id==134){e->chance=(float)norm;return;}
  if(id==135&&norm>0){int encoded=(int)(norm*49.+.5);int pad=(encoded-1)/2;
   if(pad>=0&&pad<24)rubedo_note_on(e,atomic_load_explicit(&e->mappings[pad],memory_order_acquire),.88);}
-  if(id>=RUBEDO_VST3_MAP_BEGIN&&id<RUBEDO_VST3_MAP_END){int note=(int)(norm*127.+.5);atomic_store_explicit(&e->mappings[id-RUBEDO_VST3_MAP_BEGIN],note,memory_order_release);return;}
+  if(id>=RUBEDO_VST3_MAP_BEGIN&&id<RUBEDO_VST3_MAP_END){int note=(int)(norm*127.+.5);rubedo_assign_note(e,(int)(id-RUBEDO_VST3_MAP_BEGIN),note);return;}
 }
 static void apply_param_changes(RubedoEngine*e,VParamChanges*changes){if(!changes)return;void**vt=vr_vt(changes);typedef int32_t(*cntfn)(void*);typedef void*(*getfn)(void*,int32_t);int32_t n=((cntfn)vt[3])(changes);if(n<0||n>4096)return;
  for(int32_t i=0;i<n;i++){void*q=((getfn)vt[4])(changes,i);if(!q)continue;void**qvt=vr_vt(q);uint32_t id=((uint32_t(*)(void*))qvt[3])(q);int32_t np=((int32_t(*)(void*))qvt[4])(q);if(np<=0||np>8192||id>=RUBEDO_VST3_PARAMS)continue;int32_t off=0;double norm=0;
@@ -193,15 +193,16 @@ static int32_t c_paraminfo(void*o,int32_t idx,VParameterInfo*inf){
 static int32_t c_string(void*o,uint32_t id,double norm,Char16*str){
  (void)o;if(!str||id>=RUBEDO_VST3_PARAMS)return V_FALSE;
  if(id==0){int idx=(int)(norm*23.+.5);if(idx>23)idx=23;if(idx<0)idx=0;vr_wstr(str,rubedo_kit_names[idx],128);return V_OK;}
+ if(id>=RUBEDO_VST3_MAP_BEGIN){int note=(int)(norm*127.+.5);if(note<0)note=0;if(note>127)note=127;char midi[4]={(char)('0'+note/100),(char)('0'+(note/10)%10),(char)('0'+note%10),0};vr_wstr(str,midi,128);return V_OK;}
  int v=(int)(norm*100.+.5);char tmp[8];tmp[0]=(char)('0'+(v/100)%10);tmp[1]=(char)('0'+(v/10)%10);tmp[2]=(char)('0'+v%10);tmp[3]='%';tmp[4]=0;vr_wstr(str,tmp,128);return V_OK;
 }
 static int32_t c_value(void*o,uint32_t id,const Char16*str,double*out){
  (void)o;if(!str||!out||id>=RUBEDO_VST3_PARAMS)return V_FALSE;
  int v=0;for(int i=0;i<7&&str[i]>='0'&&str[i]<='9';i++)v=v*10+str[i]-'0';
- *out=id==0?(v>23?23:v)/23.:(v>100?100:v)/100.;return V_OK;
+ *out=id==0?(v>23?23:v)/23.:id>=RUBEDO_VST3_MAP_BEGIN?(v>127?127:v)/127.:(v>100?100:v)/100.;return V_OK;
 }
-static double c_to_plain(void*o,uint32_t id,double norm){(void)o;return id==0?norm*23.:norm;}
-static double c_to_norm(void*o,uint32_t id,double value){(void)o;return id==0?value/23.:value;}
+static double c_to_plain(void*o,uint32_t id,double norm){(void)o;return id==0?norm*23.:id>=RUBEDO_VST3_MAP_BEGIN?norm*127.:norm;}
+static double c_to_norm(void*o,uint32_t id,double value){(void)o;return id==0?value/23.:id>=RUBEDO_VST3_MAP_BEGIN?value/127.:value;}
 static double c_getnorm(void*o,uint32_t id){return id<RUBEDO_VST3_PARAMS?vr_c(o)->params[id]:0.;}
 static void vr_controller_param_changed(VRubedoController*c,uint32_t id,double norm);
 static int32_t c_setnorm(void*o,uint32_t id,double norm){
@@ -299,7 +300,7 @@ static int32_t f_count(void*o){(void)o;return 2;}
 static void get_cid(int idx,uint8_t*o){vr_copy(o,idx==0?CLS_COMP:CLS_CTRL,16);}
 static int32_t f_class(void*o,int32_t idx,VClassInfo*inf){(void)o;if(!inf||idx<0||idx>1)return V_FALSE;vr_zero(inf,sizeof(*inf));get_cid(idx,inf->cid);inf->cardinality=0x7fffffff;vr_str(inf->category,idx==0?"Audio Module Class":"Component Controller Class",32);vr_str(inf->name,idx==0?"Rubedo Atlas Drumkit":"Rubedo Atlas Controller",64);return V_OK;}
 static int32_t f_class2(void*o,int32_t idx,VClassInfo2*inf){(void)o;if(!inf||idx<0||idx>1)return V_FALSE;vr_zero(inf,sizeof(*inf));get_cid(idx,inf->cid);inf->cardinality=0x7fffffff;vr_str(inf->category,idx==0?"Audio Module Class":"Component Controller Class",32);vr_str(inf->name,idx==0?"Rubedo Atlas Drumkit":"Rubedo Atlas Controller",64);vr_str(inf->subCategories,idx==0?"Instrument|Drum":"",128);vr_str(inf->vendor,"Rubedo Atlas",64);vr_str(inf->version,"0.9.7-cp12r1-vst3",64);vr_str(inf->sdkVersion,"VST 3.7",64);return V_OK;}
-static int32_t f_classW(void*o,int32_t idx,VClassInfoW*inf){(void)o;if(!inf||idx<0||idx>1)return V_FALSE;vr_zero(inf,sizeof(*inf));get_cid(idx,inf->cid);inf->cardinality=0x7fffffff;vr_str(inf->category,idx==0?"Audio Module Class":"Component Controller Class",32);vr_wstr(inf->name,idx==0?"Rubedo Atlas Drumkit":"Rubedo Atlas Controller",64);vr_str(inf->subCategories,idx==0?"Instrument|Drum":"",128);vr_wstr(inf->vendor,"Rubedo Atlas",64);vr_wstr(inf->version,"0.9.3-cp08",64);vr_wstr(inf->sdkVersion,"VST 3.7",64);return V_OK;}
+static int32_t f_classW(void*o,int32_t idx,VClassInfoW*inf){(void)o;if(!inf||idx<0||idx>1)return V_FALSE;vr_zero(inf,sizeof(*inf));get_cid(idx,inf->cid);inf->cardinality=0x7fffffff;vr_str(inf->category,idx==0?"Audio Module Class":"Component Controller Class",32);vr_wstr(inf->name,idx==0?"Rubedo Atlas Drumkit":"Rubedo Atlas Controller",64);vr_str(inf->subCategories,idx==0?"Instrument|Drum":"",128);vr_wstr(inf->vendor,"Rubedo Atlas",64);vr_wstr(inf->version,"0.9.7-cp12r1-vst3",64);vr_wstr(inf->sdkVersion,"VST 3.7",64);return V_OK;}
 static int32_t f_context(void*o,void*context){(void)o;(void)context;return V_OK;}
 static int32_t f_instance(void*o,const uint8_t*cid,const uint8_t*id,void**result){(void)o;if(!result)return V_FALSE;*result=0;
  if(vr_eq16(cid,CLS_COMP)){
