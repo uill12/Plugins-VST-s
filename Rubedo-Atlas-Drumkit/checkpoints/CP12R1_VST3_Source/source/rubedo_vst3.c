@@ -81,6 +81,7 @@ static int32_t p_setstate(void*o,void*stream){
  if(s.kit<24)rubedo_set_param(e,0,(double)s.kit);
  if(s.version>=2){RubedoExtraState extra;if(stream_read(stream,&extra,sizeof(extra))!=V_OK)return V_FALSE;rubedo_import_extra(e,&extra);}
  if(s.version>=3){RubedoExtraStateV3 extra3;if(stream_read(stream,&extra3,sizeof(extra3))!=V_OK)return V_FALSE;rubedo_import_extra_v3(e,&extra3);}
+ atomic_store_explicit(&e->midi_learn_target,-1,memory_order_release); /* transient */
  return V_OK;
 }
 static int32_t p_getstate(void*o,void*stream){
@@ -267,15 +268,19 @@ static int32_t c_paraminfo(void*o,int32_t idx,VParameterInfo*inf){
  else if(idx>=233&&idx<329){group="VAR PATTERN";voice=idx-232;}
  else if(idx>=329&&idx<353){group="DECAY ACTIVE";voice=idx-328;}
  else if(idx>=353&&idx<377){group="FM ACTIVE";voice=idx-352;}
+ else if(idx==RB_V3_LEARN_TARGET)vr_str(p,"LEARN PAD TARGET",64);
+ else if(idx==RB_V3_ACTIVITY_MASK)vr_str(p,"PAD ACTIVITY",64);
+ else if(idx==RB_V3_UNMAPPED_NOTE)vr_str(p,"UNMAPPED NOTE",64);
+ else if(idx==RB_V3_LEARN_RESULT)vr_str(p,"LEARN RESULT",64);
  if(group[0]){
   int a=0;for(;group[a]&&a<40;a++)p[a]=group[a];p[a++]=' ';
   p[a++]=(char)('0'+voice/10);p[a++]=(char)('0'+voice%10);p[a]=0;
  }
  vr_wstr(inf->title,p,128);
  for(int k=0;k<128;k++)inf->shortTitle[k]=inf->title[k];
- inf->stepCount=idx==0?23:idx>=34&&idx<58?65535:idx==58?1:idx==135?48:idx>=RUBEDO_VST3_MAP_BEGIN&&idx<RUBEDO_VST3_MAP_END?127:idx==232?3:idx>=233&&idx<329?65535:idx>=329?1:0;
- inf->defaultNormalizedValue=idx>=RUBEDO_VST3_MAP_BEGIN&&idx<RUBEDO_VST3_MAP_END?(36.+idx-RUBEDO_VST3_MAP_BEGIN)/127.:idx>=160&&idx<184?.5:idx>=184&&idx<208?0:idx>=208&&idx<232?.5:idx==232?0:idx>=233&&idx<329?vr_default_pattern_norm((unsigned)idx):idx>=329?0:idx==0?0:idx>=10&&idx<34?1:idx==58?0:idx==59?(126.-40.)/210.:idx>=34&&idx<58?0:idx==132?.14:idx==133?.18:idx==134?1:idx==135?0:idx==4?0:idx==1?.65:.5;
- inf->unitId=0;inf->flags=1|(idx==0?8:0);return V_OK;
+ inf->stepCount=idx==RB_V3_LEARN_TARGET?24:idx==RB_V3_ACTIVITY_MASK?33554431:idx==RB_V3_UNMAPPED_NOTE?256:idx==RB_V3_LEARN_RESULT?6144:idx==0?23:idx>=34&&idx<58?65535:idx==58?1:idx==135?48:idx>=RUBEDO_VST3_MAP_BEGIN&&idx<RUBEDO_VST3_MAP_END?127:idx==232?3:idx>=233&&idx<329?65535:idx>=329?1:0;
+ inf->defaultNormalizedValue=idx>=RB_V3_LEARN_TARGET?0.:idx>=RUBEDO_VST3_MAP_BEGIN&&idx<RUBEDO_VST3_MAP_END?(36.+idx-RUBEDO_VST3_MAP_BEGIN)/127.:idx>=160&&idx<184?.5:idx>=184&&idx<208?0:idx>=208&&idx<232?.5:idx==232?0:idx>=233&&idx<329?vr_default_pattern_norm((unsigned)idx):idx>=329?0:idx==0?0:idx>=10&&idx<34?1:idx==58?0:idx==59?(126.-40.)/210.:idx>=34&&idx<58?0:idx==132?.14:idx==133?.18:idx==134?1:idx==135?0:idx==4?0:idx==1?.65:.5;
+ inf->unitId=0;inf->flags=idx>=RB_V3_ACTIVITY_MASK?2:(1|(idx==0?8:0));return V_OK;
 }
 static int32_t c_string(void*o,uint32_t id,double norm,Char16*str){
  (void)o;if(!str||id>=RUBEDO_VST3_PARAMS)return V_FALSE;
