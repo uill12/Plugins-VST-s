@@ -43,6 +43,7 @@ jobs:
             "$p/checkpoints/CP11_SkinSync/rubedo_blank_card.inc" = 'rubedo_blank_card.inc'
             "$p/checkpoints/CP12R1_VST3_Source/source/rubedo_vst3_feedback.h" = 'rubedo_vst3_feedback.h'
             "$p/checkpoints/CP12R1_VST3_Source/qa/test_midi_feedback.c" = 'test_midi_feedback.c'
+            "$p/checkpoints/CP12R1_VST3_Source/qa/test_vst3_process_bridge.c" = 'test_vst3_process_bridge.c'
             "$p/source/win_imports.h" = 'win_imports.h'
             "$p/source/vst3_min_abi.h" = 'vst3_min_abi.h'
             "$p/source/rubedo_names.inc" = 'rubedo_names.inc'
@@ -88,6 +89,16 @@ jobs:
             & dumpbin /exports Rubedo_CP12R1_VST3_CORE_ONLY.vst3 | Out-File -Encoding utf8 exports.txt
             if($LASTEXITCODE -ne 0){throw 'dumpbin exports failed'}
             if(!(Select-String -Path exports.txt -Pattern 'GetPluginFactory' -Quiet)){throw 'VST3 GetPluginFactory missing'}
+            # Link the actual processor/editor objects into a mock-host executable.
+            # It exercises VST3 outputParameterChanges and input-event callbacks,
+            # without embedding the private sample bank or requiring Bitwig.
+            & clang -target x86_64-pc-windows-msvc -D_WIN32 -std=c11 -O2 -fno-stack-protector -ffreestanding -c test_vst3_process_bridge.c -o test_vst3_process_bridge.obj
+            if($LASTEXITCODE -ne 0){throw 'VST3 mock host C compilation failed'}
+            & lld-link /machine:x64 /subsystem:console /entry:test_entry /out:test_vst3_process_bridge.exe test_vst3_process_bridge.obj rubedo_vst3.c.obj rubedo_engine.c.obj rubedo_gui.c.obj fltused.c.obj kernel32.lib user32.lib gdi32.lib comdlg32.lib ucrt.lib /opt:ref /opt:icf
+            if($LASTEXITCODE -ne 0){throw 'VST3 mock host linking failed'}
+            & .\\test_vst3_process_bridge.exe
+            if($LASTEXITCODE -ne 0){throw "VST3 mock host integration failed with code $LASTEXITCODE"}
+            'VST3 processor event -> host outputParameterChanges integration: PASS (source-only mock host)' | Out-File -Encoding utf8 processor-bridge-test-output.txt
             @(
              'SOURCE-ONLY BUILD, NOT AN INSTALLABLE PLUGIN'
              'This PE core lacks CP12R1 bitmap and 2304-hit PCM resource overlay.'
@@ -105,4 +116,5 @@ jobs:
             build-rubedo-vst3/SOURCE_ONLY_README.txt
             build-rubedo-vst3/SHA256.txt
             build-rubedo-vst3/feedback-test-output.txt
+            build-rubedo-vst3/processor-bridge-test-output.txt
           if-no-files-found: error
