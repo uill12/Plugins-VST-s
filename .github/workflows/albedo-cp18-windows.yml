@@ -15,6 +15,7 @@ on:
       - 'patches/cp18_output_fix.py'
       - 'patches/cp18_perf_part*.txt'
       - 'patches/cp18_perf_manifest.py'
+      - 'patches/cp18_release_meta_fix.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -267,6 +268,13 @@ jobs:
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime source/asset verification failed' }
           Write-Host 'CP18: 8-note chords must run at <=85 percent wall-clock realtime in Win64 CTest'
+      - name: CP18 align Windows launcher and package metadata
+        shell: pwsh
+        run: |
+          python 'patches/cp18_release_meta_fix.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 Windows launcher/manifest correction failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 Windows release source SHA verification failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
