@@ -13,6 +13,8 @@ on:
       - 'patches/cp18_part*.txt'
       - 'patches/cp18_msvc_fix.py'
       - 'patches/cp18_output_fix.py'
+      - 'patches/cp18_perf_part*.txt'
+      - 'patches/cp18_perf_manifest.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -249,6 +251,22 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP18 output naming correction failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP18 output naming manifest verification failed' }
+      - name: CP18 enforce realtime budget with cached audio control rates
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/cp18_perf_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,4)); assert len(s)==5328,'CP18 performance patch chunks missing'; d=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(d).hexdigest()=='6b3205665c06e999b522e1c414911d7446f591555b85660463073c2bfdbc72cd','CP18 performance SHA mismatch'; pathlib.Path('CP18_Realtime_Optimization.patch').write_bytes(d); print('CP18 realtime optimization patch verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime source patch authentication failed' }
+          git apply --check 'CP18_Realtime_Optimization.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime patch cannot apply' }
+          git apply 'CP18_Realtime_Optimization.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime DSP optimization did not apply' }
+          python -c "from pathlib import Path; names=('include/vitriol_dsp.hpp','src/vitriol_dsp.cpp','tests/cp18_chords_realtime.cpp'); root=Path('Albedo-Quintessential-Synth'); [(root/k).write_bytes((root/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in names];print('CP18 runtime sources normalized to LF')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime LF normalization failed' }
+          python 'patches/cp18_perf_manifest.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime source signatures invalid' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime source/asset verification failed' }
+          Write-Host 'CP18: 8-note chords must run at <=85 percent wall-clock realtime in Win64 CTest'
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
