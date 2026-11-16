@@ -1,4 +1,5 @@
 #include "vst3_min_abi.h"
+#include "rubedo_vst3_feedback.h"
 #include "rubedo_engine.h"
 #include "rubedo_gui.h"
 #include "win_imports.h"
@@ -27,8 +28,8 @@ static const uint8_t CLS_CTRL[16]={0x52,0x42,0x44,0x4b,0x10,0x21,0x49,0x82,0xb9,
 #define Q_FACTORY2(id) vr_guid(id,0x0007b650,0xf24b4c0b,0xa464edb9,0xf00b2abb)
 #define Q_FACTORY3(id) vr_guid(id,0x4555a2ab,0xc1234e57,0x9b122910,0x36878931)
 
-typedef struct VRubedoProcessor {const void**comp;const void**audio;uint32_t refs;uint8_t loaded;RubedoEngine e;}VRubedoProcessor;
-#define RUBEDO_VST3_PARAMS 377
+typedef struct VRubedoProcessor {const void**comp;const void**audio;uint32_t refs;uint8_t loaded;uint8_t feedback_flip;uint32_t delivered_learn_seq,delivered_unmapped_seq;RubedoEngine e;}VRubedoProcessor;
+#define RUBEDO_VST3_PARAMS RB_V3_PARAM_COUNT
 #define RUBEDO_VST3_MAP_BEGIN 136
 #define RUBEDO_VST3_MAP_END 160
 // Extended normalized host parameters bridge the separate Bitwig editor/controller
@@ -121,6 +122,8 @@ static void apply_rubedo_bridge(RubedoEngine*e,uint32_t id,double norm){
  if(id>=233&&id<329){unsigned n=id-233,v=n/24,p=n%24;uint16_t pat=(uint16_t)(norm*65535.+.5);e->patterns[v][p]=pat;if(e->variation==v)e->steps[p]=pat;return;}
  if(id>=329&&id<353){e->decay_active[id-329]=(uint8_t)(norm>=.5);return;}
  if(id>=353&&id<377){e->fm_active[id-353]=(uint8_t)(norm>=.5);return;}
+ if(id==RB_V3_LEARN_TARGET){atomic_store_explicit(&e->midi_learn_target,rb_v3_learn_target(norm),memory_order_release);return;}
+ /* IDs 378-380 are host-returned output telemetry, never DSP input. */
 }
 static void apply_param_changes(RubedoEngine*e,VParamChanges*changes){if(!changes)return;void**vt=vr_vt(changes);typedef int32_t(*cntfn)(void*);typedef void*(*getfn)(void*,int32_t);int32_t n=((cntfn)vt[3])(changes);if(n<0||n>4096)return;
  for(int32_t i=0;i<n;i++){void*q=((getfn)vt[4])(changes,i);if(!q)continue;void**qvt=vr_vt(q);uint32_t id=((uint32_t(*)(void*))qvt[3])(q);int32_t np=((int32_t(*)(void*))qvt[4])(q);if(np<=0||np>8192||id>=RUBEDO_VST3_PARAMS)continue;int32_t off=0;double norm=0;
