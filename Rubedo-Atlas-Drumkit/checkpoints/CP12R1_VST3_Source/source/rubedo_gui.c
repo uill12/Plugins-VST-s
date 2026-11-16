@@ -320,6 +320,7 @@ static double rb_knob_value(RBGui*g,int id){
   default:return .5;
  }
 }
+static void rb_broadcast(RBGui*g,unsigned id,double normalized);
 static void rb_set_knob(RBGui*g,int id,double value){
  if(!g||!g->engine||id<0||id>=16)return;
  RubedoEngine*e=g->engine;unsigned pad=g->selected;int par=rb_knob_param(g,id);
@@ -327,15 +328,15 @@ static void rb_set_knob(RBGui*g,int id,double value){
  if(par>=0){rubedo_set_param(e,(unsigned)par,value);
   if(g->param_changed)g->param_changed(g->callback_context,(unsigned)par,value);
  }else switch(id){
-  case 0:e->pitch[pad]=(float)value;break;
-  case 1:e->decay_shape[pad]=(float)value;e->decay_active[pad]=1;break;
-  case 3:e->fm_depth[pad]=(float)value;e->fm_active[pad]=1;break;
-  case 8:e->pad_gain[pad]=(float)value;break;
-  case 10:e->pad_attack[pad]=(float)value;break;
-  case 11:e->pad_release[pad]=(float)value;break;
-  case 12:e->swing=(float)value;break;
-  case 13:e->scatter=(float)value;break;
-  case 15:e->chance=(float)value;break;
+  case 0:e->pitch[pad]=(float)value;rb_broadcast(g,60u+pad,value);break;
+  case 1:e->decay_shape[pad]=(float)value;e->decay_active[pad]=1;rb_broadcast(g,84u+pad,value);rb_broadcast(g,329u+pad,1.);break;
+  case 3:e->fm_depth[pad]=(float)value;e->fm_active[pad]=1;rb_broadcast(g,108u+pad,value);rb_broadcast(g,353u+pad,1.);break;
+  case 8:e->pad_gain[pad]=(float)value;rb_broadcast(g,160u+pad,value);break;
+  case 10:e->pad_attack[pad]=(float)value;rb_broadcast(g,184u+pad,value);break;
+  case 11:e->pad_release[pad]=(float)value;rb_broadcast(g,208u+pad,value);break;
+  case 12:e->swing=(float)value;rb_broadcast(g,132,value);break;
+  case 13:e->scatter=(float)value;rb_broadcast(g,133,value);break;
+  case 15:e->chance=(float)value;rb_broadcast(g,134,value);break;
  }
  g->hover_control=id;g->changed_tick++;InvalidateRect(g->hwnd,0,0);
 }
@@ -510,9 +511,9 @@ static void rb_click(RBGui*g,int x,int y){if(!g||!g->engine)return;
      if((z&255u)<(i%4==0?195u:103u))pattern|=(uint16_t)(1u<<i);}
     e->steps[g->selected]=pattern?pattern:0x1111;
   }else if(x0<1099)e->steps[g->selected]=0;
-  else {rubedo_select_variation(e,(e->variation+1)&3u);rb_notify_change(g);return;}
-  rubedo_pattern_changed(e);rb_notify_change(g);return;}
- if(y0>=847&&y0<915&&x0>=24&&x0<1173){int step=(x0-24)/72;if(step>=0&&step<16)e->steps[g->selected]^=(uint16_t)(1u<<step);rubedo_pattern_changed(e);rb_notify_change(g);return;}
+  else {rubedo_select_variation(e,(e->variation+1)&3u);rb_broadcast(g,232u,(double)e->variation/3.);rb_notify_change(g);return;}
+  rubedo_pattern_changed(e);rb_broadcast(g,34u+g->selected,(double)e->steps[g->selected]/65535.);rb_broadcast(g,233u+(unsigned)e->variation*24u+g->selected,(double)e->steps[g->selected]/65535.);rb_notify_change(g);return;}
+ if(y0>=847&&y0<915&&x0>=24&&x0<1173){int step=(x0-24)/72;if(step>=0&&step<16)e->steps[g->selected]^=(uint16_t)(1u<<step);rubedo_pattern_changed(e);rb_broadcast(g,34u+g->selected,(double)e->steps[g->selected]/65535.);rb_broadcast(g,233u+(unsigned)e->variation*24u+g->selected,(double)e->steps[g->selected]/65535.);rb_notify_change(g);return;}
  if(y0>=28&&y0<80&&x0>=745&&x0<914){if(x0<790)e->bpm-=1;else e->bpm+=1;if(e->bpm<40)e->bpm=40;if(e->bpm>250)e->bpm=250;rb_broadcast(g,59,(e->bpm-40.)/210.);rb_notify_change(g);return;}
 }
 static LRESULT W32 rb_window_proc(void*hwnd,uint32_t message,WPARAM wp,LPARAM lp){
