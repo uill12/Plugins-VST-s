@@ -301,6 +301,16 @@ static int32_t w_attached(void*o,void*parent,const char*type){VRubedoView*w=o;if
  engine->chance=(float)w->owner->params[134];
  int16_t notes[24];for(int i=0;i<24;i++)notes[i]=(int16_t)(w->owner->params[RUBEDO_VST3_MAP_BEGIN+i]*127.+.5);
  rubedo_import_mappings(engine,notes);
+ for(unsigned i=0;i<24;i++){
+  engine->pad_gain[i]=(float)w->owner->params[160+i];
+  engine->pad_attack[i]=(float)w->owner->params[184+i];
+  engine->pad_release[i]=(float)w->owner->params[208+i];
+  engine->decay_active[i]=(uint8_t)(w->owner->params[329+i]>=.5);
+  engine->fm_active[i]=(uint8_t)(w->owner->params[353+i]>=.5);
+  for(unsigned v=0;v<4;v++)engine->patterns[v][i]=(uint16_t)(w->owner->params[233+v*24+i]*65535.+.5);
+ }
+ engine->variation=(uint8_t)(w->owner->params[232]*3.+.5);
+ for(unsigned i=0;i<24;i++)engine->steps[i]=engine->patterns[engine->variation&3u][i];
  w->gui.kit=engine->kit;
  int ok=rb_gui_attach(&w->gui,parent,engine,w->owner,w_set_kit);
  w->gui.param_changed=w_set_param;
@@ -342,7 +352,13 @@ static int32_t f_instance(void*o,const uint8_t*cid,const uint8_t*id,void**result
   c->params[34]=0x1111/65535.;c->params[36]=0x1010/65535.;
   c->params[38]=0x5555/65535.;c->params[39]=0xaaaa/65535.;
   c->params[59]=(126.-40.)/210.;c->params[132]=.14;c->params[133]=.18;c->params[134]=1.;
-   for(int i=0;i<24;i++)c->params[RUBEDO_VST3_MAP_BEGIN+i]=(36.+i)/127.;
+   for(int i=0;i<24;i++){
+   c->params[RUBEDO_VST3_MAP_BEGIN+i]=(36.+i)/127.;
+   c->params[160+i]=.5;c->params[184+i]=0.;c->params[208+i]=.5;
+   c->params[329+i]=0.;c->params[353+i]=0.;
+   for(unsigned v=0;v<4;v++)c->params[233+v*24+i]=vr_default_pattern_norm(233+v*24+(unsigned)i);
+  }
+  c->params[232]=0.;
   if(Q_CONTROLLER(id)||Q_UNKNOWN(id)||Q_PLUGINBASE(id))*result=c;else {vr_free(c);return V_NOINTERFACE;}return V_OK;
  }return V_NOINTERFACE;
 }
