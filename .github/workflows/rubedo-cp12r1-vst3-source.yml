@@ -47,7 +47,11 @@ jobs:
           python -m pip install --disable-pip-version-check numpy
           python Rubedo-Atlas-Drumkit/generate_sinc_coeffs.py
           Copy-Item Rubedo-Atlas-Drumkit/source/rubedo_sinc_coeffs.inc build-rubedo-vst3/rubedo_sinc_coeffs.inc
-          Set-Content build-rubedo-vst3/fltused.c 'int _fltused = 0;' -Encoding ascii
+          @(
+            '#include <stddef.h>'
+            'int _fltused = 0;'
+            'void *memset(void *p, int value, size_t count) { volatile unsigned char *q = (volatile unsigned char *)p; for(size_t i=0;i<count;i++)q[i]=(unsigned char)value; return p; }'
+          ) | Set-Content build-rubedo-vst3/fltused.c -Encoding ascii
       - name: Compile PE32+ x64 VST3 core (NO EMBEDDED PCM / NOT INSTALLABLE)
         shell: pwsh
         run: |
