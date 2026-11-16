@@ -9,12 +9,16 @@ This is a **source-level port** of Rubedo's CP12R1 pad mapping preset feature to
 ## Source contract
 
 - Original VST3 component/controller CIDs preserved.
-- VST3 IDs 0–135 preserved; new normalized MIDI mapping parameters 136–159 represent 24 unique MIDI note numbers 0–127.
+- VST3 IDs 0–135 preserved; MIDI mapping parameters 136–159 are 24 note numbers 0–127. New host parameter IDs **160–376** cover CP12R1 per-pad gain/attack/release, stored sequencer-variation patterns and activity flags. Existing IDs remain stable.
 - Audio processor consumes MIDI notes using the CP12R1 mapping table; controller receives and sends mapping parameter changes through VST3 host transactions.
 - Save/Load Map Windows file dialogs are enabled in the **editor-only** VST3 GUI model; successful Load Map dispatches 24 mapping parameter edits to the controller/host.
 - Native Save Map/Load Map uses the same `.rbmap` text format as CP12R1 CLAP. It does not change the kit or PCM timbres.
 - VST3 processor state version 3 includes both CP12R1 extra-state blocks; version 1/2 reader is retained. Controller reconstructs mapping parameters on component-state restore.
 - Rubedo CP11 embossed SkinSync appearance and approved CP12 Save/Load buttons retained; no generic overlays or typography changes.
+
+## CLAP/VST3 parity gate
+
+The [CP12R1 format-parity audit](FORMAT_PARITY_GATES.md) is mandatory before distributing the VST3 as a matching CP12R1 release. The VST3 source now forwards previously local-only per-pad envelope and sequencer controls, uses collision-safe MIDI assignments, and reports matching CP12R1 version metadata; the [latest Windows source compile](https://github.com/uill12/Plugins-VST-s/actions/runs/43965028126) passed. This **does not imply host parity** and does not solve the missing embedded-bank/runtime or processor-to-controller note-feedback bridge.
 
 ## Explicit feature limitation
 
