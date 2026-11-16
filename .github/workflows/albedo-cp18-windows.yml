@@ -16,6 +16,7 @@ on:
       - 'patches/cp18_perf_part*.txt'
       - 'patches/cp18_perf_manifest.py'
       - 'patches/cp18_release_meta_fix.py'
+      - 'patches/cp18r1_realtime_chunk*.txt'
   workflow_dispatch:
 permissions:
   contents: read
@@ -275,6 +276,19 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP18 Windows launcher/manifest correction failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP18 Windows release source SHA verification failed' }
+      - name: CP18R1 cache voice pitches and global stereo filter coefficients
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/cp18r1_realtime_chunk%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,4)); assert len(s)==5264,'CP18R1 patch chunks incomplete'; p=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(p).hexdigest()=='50b8a6d9f1ea693f3bc3ada3d57cc717ec6991cfd4729508f6bf378151e37c8b','CP18R1 patch SHA256 mismatch'; pathlib.Path('CP18R1_Realtime_Cache.patch').write_bytes(p); print('CP18R1 authenticated source patch')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R1 source checksum verification failed' }
+          git apply --check 'CP18R1_Realtime_Cache.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R1 patch cannot apply to verified CP18 source' }
+          git apply 'CP18R1_Realtime_Cache.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R1 DSP source patch failed' }
+          python -c "import hashlib,json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=r/'CP18_SOURCE_MANIFEST.json'; j=json.loads(m.read_text(encoding='utf-8')); expected={'include/vitriol_dsp.hpp':'fecf2942c2e060c70a8a2241982d7f384c13d344992c9f52ad927f44318e90ac','src/vitriol_dsp.cpp':'c163ca15392e0dddee5460e749e356fedcb8c70bf38e5bbee7c5048ca5a31dea'}; [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in expected]; assert all(hashlib.sha256((r/k).read_bytes()).hexdigest()==h for k,h in expected.items()),'CP18R1 source content integrity failure'; j['changed_source_sha256'].update(expected); j['realtime_optimization']='CP18R1: per-block voice MIDI tuning target, 8-internal-frame stereo global filter coefficients'; m.write_text(json.dumps(j,indent=2,ensure_ascii=False)+'\n',encoding='utf-8'); print('Verified CP18R1 exact source SHA256')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R1 updated manifest verification failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R1 post-opt source QA failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
