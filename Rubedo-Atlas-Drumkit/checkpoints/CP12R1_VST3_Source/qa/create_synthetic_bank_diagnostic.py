@@ -19,7 +19,7 @@ REGIONS = KIT_COUNT * PAD_COUNT * VAR_COUNT
 WIDTH, HEIGHT, PIXEL_BYTES = 1512, 1009, 3
 PICTURE_BYTES = WIDTH * HEIGHT * PIXEL_BYTES
 FRAMES = 4096
-OUTPUT = pathlib.Path("Rubedo_CP12R1_VST3_SYNTHETIC_DIAGNOSTIC.vst3")
+OUTPUT = pathlib.Path("Rubedo_CP12R1_DIAGNOSTIC_ONLY") / "Rubedo Atlas Drumkit.vst3"
 BINARY_NAME = "Rubedo Atlas Drumkit.vst3"
 
 def sha256(data: bytes) -> str:
