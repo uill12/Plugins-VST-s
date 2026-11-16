@@ -388,6 +388,18 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R3 Win32 test fixture correction failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R3 Win32 test source hash verification failed' }
+      - name: RGNES CP19R5 preserve current native GUI source for readability checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP19R5_Native_GUI_Source
+          path: |
+            Albedo-Quintessential-Synth/src/
+            Albedo-Quintessential-Synth/include/
+            Albedo-Quintessential-Synth/tests/cp19_partial_redraw_win.cpp
+            Albedo-Quintessential-Synth/CP19_SOURCE_MANIFEST.json
+            Albedo-Quintessential-Synth/CMakeLists.txt
+          if-no-files-found: error
+          retention-days: 14
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
