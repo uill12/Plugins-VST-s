@@ -29,11 +29,11 @@ static int32_t q_add(void*v,int32_t offset,double norm,int32_t *idx){
 static const void* Q_VT[7]={0,0,0,(void*)q_id,(void*)q_count,(void*)q_get,(void*)q_add};
 static int32_t ch_count(void*v){return ((TChanges*)v)->n;}
 static void* ch_data(void*v,int32_t idx){TChanges*c=v;return idx>=0&&idx<c->n?&c->q[idx]:0;}
-static void* ch_add(void*v,uint32_t id,int32_t *idx){
- TChanges*c=v;if(!idx)return 0;
- for(int i=0;i<c->n;i++)if(c->q[i].id==id){*idx=i;return &c->q[i];}
+static void* ch_add(void*v,const uint32_t* id,int32_t *idx){
+ TChanges*c=v;if(!idx||!id)return 0;
+ for(int i=0;i<c->n;i++)if(c->q[i].id==*id){*idx=i;return &c->q[i];}
  if(c->n>=64)return 0;
- *idx=c->n;TQueue*q=&c->q[c->n++];q->vt=Q_VT;q->id=id;q->n=0;return q;
+ *idx=c->n;TQueue*q=&c->q[c->n++];q->vt=Q_VT;q->id=*id;q->n=0;return q;
 }
 static const void* CH_VT[6]={0,0,0,(void*)ch_count,(void*)ch_data,(void*)ch_add};
 static int32_t evt_count(void*v){return ((TEvents*)v)->n;}
@@ -94,22 +94,22 @@ static int run(void){
  for(int i=0;i<out.n;i++){
   TQueue*q=&out.q[i];if(!q->n)continue;
   double v=q->points[q->n-1].norm;
-  REQ(((int32_t(*)(void*,uint32_t,double))ctrlvt[13])(ctrl,q->id,v)==OK);
+  REQ(((int32_t(*)(void*,uint32_t,double))ctrlvt[15])(ctrl,q->id,v)==OK);
  }
- double assigned=((double(*)(void*,uint32_t))ctrlvt[12])(ctrl,136u);
+ double assigned=((double(*)(void*,uint32_t))ctrlvt[14])(ctrl,136u);
  REQ(assigned>.565&&assigned<.568); /* note 72 / 127 */
- double learned=((double(*)(void*,uint32_t))ctrlvt[12])(ctrl,RB_V3_LEARN_RESULT);
+ double learned=((double(*)(void*,uint32_t))ctrlvt[14])(ctrl,RB_V3_LEARN_RESULT);
  int hostpad=-1,hostnote=-1;
  REQ(rb_v3_learn_decode(learned,&hostpad,&hostnote));
  REQ(hostpad==0&&hostnote==72);
  /* A detached VST3 edit controller still needs canonical swap behavior:
   * remapping pad 0 to pad 1's note must update both cached parameters. */
- REQ(((int32_t(*)(void*,uint32_t,double))ctrlvt[13])(ctrl,136u,37./127.)==OK);
- REQ((int)(((double(*)(void*,uint32_t))ctrlvt[12])(ctrl,136u)*127.+.5)==37);
- REQ((int)(((double(*)(void*,uint32_t))ctrlvt[12])(ctrl,137u)*127.+.5)==72);
- REQ(((int32_t(*)(void*,uint32_t,double))ctrlvt[13])(ctrl,136u,72./127.)==OK);
- REQ((int)(((double(*)(void*,uint32_t))ctrlvt[12])(ctrl,136u)*127.+.5)==72);
- REQ((int)(((double(*)(void*,uint32_t))ctrlvt[12])(ctrl,137u)*127.+.5)==37);
+ REQ(((int32_t(*)(void*,uint32_t,double))ctrlvt[15])(ctrl,136u,37./127.)==OK);
+ REQ((int)(((double(*)(void*,uint32_t))ctrlvt[14])(ctrl,136u)*127.+.5)==37);
+ REQ((int)(((double(*)(void*,uint32_t))ctrlvt[14])(ctrl,137u)*127.+.5)==72);
+ REQ(((int32_t(*)(void*,uint32_t,double))ctrlvt[15])(ctrl,136u,72./127.)==OK);
+ REQ((int)(((double(*)(void*,uint32_t))ctrlvt[14])(ctrl,136u)*127.+.5)==72);
+ REQ((int)(((double(*)(void*,uint32_t))ctrlvt[14])(ctrl,137u)*127.+.5)==37);
  empty_ch(&in);empty_ch(&out);empty_evt();note_event(72);
  REQ(process(audio)==OK);
  REQ(rb_v3_mask_decode(find_out(RB_V3_ACTIVITY_MASK))==1u);
