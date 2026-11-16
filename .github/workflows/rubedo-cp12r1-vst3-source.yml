@@ -47,7 +47,7 @@ jobs:
             "$p/checkpoints/CP12R1_VST3_Source/qa/test_vst3_audio_equivalence.c" = 'test_vst3_audio_equivalence.c'
             "$p/checkpoints/CP12R1_VST3_Source/qa/test_official_vst3_abi.c" = 'test_official_vst3_abi.c'
             "$p/source/win_imports.h" = 'win_imports.h'
-            "$p/source/vst3_min_abi.h" = 'vst3_min_abi.h'
+            "$p/checkpoints/CP12R1_VST3_Source/source/vst3_min_abi.h" = 'vst3_min_abi.h'
             "$p/source/rubedo_names.inc" = 'rubedo_names.inc'
           }
           foreach($pair in $names.GetEnumerator()){
