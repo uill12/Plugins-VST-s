@@ -303,7 +303,25 @@ static double c_getnorm(void*o,uint32_t id){return id<RUBEDO_VST3_PARAMS?vr_c(o)
 static void vr_controller_param_changed(VRubedoController*c,uint32_t id,double norm);
 static int32_t c_setnorm(void*o,uint32_t id,double norm){
  if(id>=RUBEDO_VST3_PARAMS)return V_FALSE;
- if(norm<0)norm=0;if(norm>1)norm=1;VRubedoController*c=vr_c(o);c->params[id]=norm;vr_controller_param_changed(c,id,norm);return V_OK;
+ if(norm<0)norm=0;if(norm>1)norm=1;
+ VRubedoController*c=vr_c(o);
+ if(id>=RUBEDO_VST3_MAP_BEGIN&&id<RUBEDO_VST3_MAP_END){
+  /* VST3 controllers can exist without an attached editor. Preserve the same
+   * swap-on-collision invariant in the parameter cache as in the audio DSP,
+   * including when Bitwig delivers an individual mapping change.
+   * These cache updates are not new host edit gestures. */
+  int current=(int)(c->params[id]*127.+.5);
+  int proposed=(int)(norm*127.+.5);
+  for(uint32_t other=RUBEDO_VST3_MAP_BEGIN;other<RUBEDO_VST3_MAP_END;other++){
+   if(other!=id&&(int)(c->params[other]*127.+.5)==proposed){
+    c->params[other]=(double)current/127.;
+    break;
+   }
+  }
+ }
+ c->params[id]=norm;
+ vr_controller_param_changed(c,id,norm);
+ return V_OK;
 }
 static int32_t c_handler(void*o,void*handler){vr_c(o)->handler=handler;return V_OK;}
 // Win32 native view displaying approved HTML raster at its exact 1512x1009 geometry.
