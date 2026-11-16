@@ -19,7 +19,7 @@ typedef struct TPoint{int32_t offset;double norm;}TPoint;
 typedef struct TQueue{const void**vt;uint32_t id;int32_t n;TPoint point[4];}TQueue;
 typedef struct TChanges{const void**vt;int32_t n;TQueue q[24];}TChanges;
 static const uint8_t CLS_COMP[16]={0x52,0x42,0x44,0x4b,0x10,0x21,0x49,0x82,0xb9,0x33,0x43,0x22,0x26,0x11,0x14,0x01};
-static const uint8_t IID_UNKNOWN[16]={0,0,0,0,0,0,0,0xc0,0,0,0,0,0,0,0,0x46};
+static const uint8_t IID_UNKNOWN[16]={0,0,0,0,0,0,0,0,0xc0,0,0,0,0,0,0,0x46};
 static const uint8_t IID_PROCESSOR[16]={0x42,0x04,0x3f,0x99,0xb7,0xda,0x45,0x3c,0xa5,0x69,0xe7,0x9d,0x9a,0xae,0xc3,0x3d};
 static int32_t ev_count(void*p){return ((TEvents*)p)->n;}
 static int32_t ev_get(void*p,int32_t idx,VEvent*out){
