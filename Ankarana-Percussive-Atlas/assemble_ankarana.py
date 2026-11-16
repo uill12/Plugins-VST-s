@@ -65,7 +65,7 @@ def assemble(fmt: str) -> None:
                             size += len(chunk)
         with temp.open("rb") as f:
             header = f.read(4)
-        if header.startswith(b"PK\\x03\\x04"):
+        if header.startswith(b"PK\x03\x04"):
             extension = ".zip"
         elif header.startswith(b"MZ"):
             extension = ".clap" if fmt == "clap" else ".vst3"
