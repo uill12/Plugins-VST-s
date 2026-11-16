@@ -20,6 +20,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Parse-check local VST3 assembly helper (no Windows install or file mutation)
+        shell: pwsh
+        run: |
+          $script = 'Rubedo-Atlas-Drumkit/checkpoints/CP12R1_VST3_Source/AssembleRubedoCP12R1VST3.ps1'
+          $tokens = $null
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $script).Path, [ref]$tokens, [ref]$errors)
+          if($errors.Count -gt 0){ $errors | Out-String | Write-Error; throw 'Invalid assembly PowerShell syntax' }
       - name: Assemble exact CP12R1 VST3 source snapshot
         shell: pwsh
         run: |
