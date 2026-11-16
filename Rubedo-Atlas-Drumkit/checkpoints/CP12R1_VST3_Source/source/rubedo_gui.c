@@ -1,4 +1,5 @@
 #include "rubedo_gui.h"
+#include "rubedo_vst3_feedback.h"
 #ifdef _WIN32
 #include "win_imports.h"
 #include <stdint.h>
@@ -87,8 +88,10 @@ static void rb_map_status(RBGui*g,uint8_t code){
  if(g->hwnd)InvalidateRect(g->hwnd,0,0);
 }
 static void rb_map_cancel_learn(RBGui*g){
+ if(!g)return;
  g->learn_active=0;
- if(!g->editor_only)atomic_store_explicit(&g->engine->midi_learn_target,-1,memory_order_release);
+ if(g->editor_only){if(g->param_changed)g->param_changed(g->callback_context,RB_V3_LEARN_TARGET,0.);}
+ else if(g->engine)atomic_store_explicit(&g->engine->midi_learn_target,-1,memory_order_release);
 }
 static int rb_map_dialog(RBGui*g,int save,char path[1024]){
  static const char filter[]="Rubedo MIDI Map (*.rbmap)\0*.rbmap\0All files (*.*)\0*.*\0";
@@ -289,8 +292,10 @@ static void rb_pad_card(void*dc,RBGui*g,int x,int y,int pad,int pressed,int acti
  if(pressed)rb_outline(dc,g,x+2,y+2,97,85,0x0069b3da,2);
 }
 static void rb_update_learn_target(RBGui*g){
- if(g&&g->engine&&g->learn_active&&!g->editor_only)
-  atomic_store_explicit(&g->engine->midi_learn_target,(int)g->selected,memory_order_release);
+ if(!g||!g->engine)return;
+ if(g->editor_only){
+  if(g->param_changed)g->param_changed(g->callback_context,RB_V3_LEARN_TARGET,g->learn_active?rb_v3_learn_arm(g->selected):0.);
+ }else if(g->learn_active)atomic_store_explicit(&g->engine->midi_learn_target,(int)g->selected,memory_order_release);
 }
 static int rb_get_knob_id(int x,int y){
  const int xx[4][4]={{1117,1223,1329,1435},{1117,1223,1329,1435},
@@ -469,9 +474,11 @@ static void rb_click(RBGui*g,int x,int y){if(!g||!g->engine)return;
   rb_flash_pad(g,(int)((g->selected+1)%24));rb_update_learn_target(g);return;}
  if(y0>=218&&y0<=252&&x0>=243&&x0<=452){
   rb_map_action(g,x0<344);rb_notify_change(g);return;}
- if(x0>=345&&x0<452&&y0>=639&&y0<=674){if(g->editor_only){rb_map_status(g,RB_MAP_LEARN_LIMIT);return;}g->learn_active=(uint8_t)!g->learn_active;
-   if(!g->editor_only)atomic_store(&e->midi_learn_target,g->learn_active?(int)g->selected:-1);
-   rb_notify_change(g);return;}
+ if(x0>=345&&x0<452&&y0>=639&&y0<=674){
+  g->learn_active=(uint8_t)!g->learn_active;
+  rb_update_learn_target(g);
+  if(!g->learn_active&&!g->editor_only)atomic_store(&e->midi_learn_target,-1);
+  rb_notify_change(g);return;}
  if(y0>695&&y0<726&&x0>=611&&x0<899){
   g->mode=(uint8_t)(x0<678?0:x0<748?1:x0<834?2:3);
   static const double tones[4]={.5,.6,.8,.35};
@@ -574,7 +581,7 @@ static LRESULT W32 rb_window_proc(void*hwnd,uint32_t message,WPARAM wp,LPARAM lp
  }
  if(message==533){if(gui)gui->dragging=0;return 0;} // WM_CAPTURECHANGED
  if(message==256&&gui&&gui->engine){
-  if(wp==27){gui->learn_active=0;atomic_store(&gui->engine->midi_learn_target,-1);InvalidateRect(hwnd,0,0);return 0;}
+  if(wp==27){rb_map_cancel_learn(gui);InvalidateRect(hwnd,0,0);return 0;}
   if(lp&(1ll<<30))return 0; // suppress held-key retriggers
   const char *keys="1234QWERASDFZXCV";
   for(int j=0;j<16;j++)if((int)wp==(int)keys[j]){
