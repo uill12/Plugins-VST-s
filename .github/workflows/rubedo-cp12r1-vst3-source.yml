@@ -46,6 +46,8 @@ jobs:
             "$p/checkpoints/CP12R1_VST3_Source/qa/test_vst3_process_bridge.c" = 'test_vst3_process_bridge.c'
             "$p/checkpoints/CP12R1_VST3_Source/qa/test_vst3_audio_equivalence.c" = 'test_vst3_audio_equivalence.c'
             "$p/checkpoints/CP12R1_VST3_Source/qa/test_official_vst3_abi.c" = 'test_official_vst3_abi.c'
+            "$p/checkpoints/CP12R1_VST3_Source/qa/create_synthetic_bank_diagnostic.py" = 'create_synthetic_bank_diagnostic.py'
+            "$p/checkpoints/CP12R1_VST3_Source/qa/test_diagnostic_vst3_load.c" = 'test_diagnostic_vst3_load.c'
             "$p/source/win_imports.h" = 'win_imports.h'
             "$p/checkpoints/CP12R1_VST3_Source/source/vst3_min_abi.h" = 'vst3_min_abi.h'
             "$p/source/rubedo_names.inc" = 'rubedo_names.inc'
@@ -129,6 +131,31 @@ jobs:
             ) | Out-File -Encoding utf8 SOURCE_ONLY_README.txt
             Get-FileHash Rubedo_CP12R1_VST3_CORE_ONLY.vst3 -Algorithm SHA256 | Format-List | Out-File -Encoding utf8 SHA256.txt
           } finally {Pop-Location}
+      - name: Generate synthetic-only VST3 bundle and test independent Windows DLL initialization
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Push-Location build-rubedo-vst3
+          try {
+            & python create_synthetic_bank_diagnostic.py Rubedo_CP12R1_VST3_CORE_ONLY.vst3
+            if($LASTEXITCODE -ne 0){throw 'Synthetic diagnostic resource assembly failed'}
+            & clang -target x86_64-pc-windows-msvc -D_WIN32 -std=c11 -O2 -fno-stack-protector -ffreestanding -c test_diagnostic_vst3_load.c -o test_diagnostic_vst3_load.obj
+            if($LASTEXITCODE -ne 0){throw 'Independent diagnostic loader compile failed'}
+            & lld-link /machine:x64 /subsystem:console /entry:test_entry /out:test_diagnostic_vst3_load.exe test_diagnostic_vst3_load.obj kernel32.lib /opt:ref /opt:icf
+            if($LASTEXITCODE -ne 0){throw 'Independent diagnostic loader link failed'}
+            & .\\test_diagnostic_vst3_load.exe
+            if($LASTEXITCODE -ne 0){throw "Synthetic VST3 DLL resource load failed: $LASTEXITCODE"}
+            'Synthetic DIAGNOSTIC ONLY: LoadLibrary + GetPluginFactory + IComponent.initialize + resource load + terminate: PASS' | Out-File -Encoding utf8 synthetic-init-smoke-test-output.txt
+          } finally {Pop-Location}
+      - name: Archive synthetic diagnostic bundle (NOT INSTALLABLE; not the real Rubedo bank)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rubedo_CP12R1_VST3_Synthetic_Diagnostic_NotRelease
+          path: |
+            build-rubedo-vst3/Rubedo_CP12R1_VST3_SYNTHETIC_DIAGNOSTIC.vst3/
+            build-rubedo-vst3/DIAGNOSTIC_ONLY.txt
+            build-rubedo-vst3/synthetic-init-smoke-test-output.txt
+          if-no-files-found: error
       - name: Archive compile-only QA artifacts (not a plugin release)
         uses: actions/upload-artifact@v4
         with:
