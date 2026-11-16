@@ -1,0 +1,94 @@
+{
+  "product": "Ankarana Percussive Atlas",
+  "version": "0.8.1",
+  "release_date": "2026-11-14",
+  "drive_sync_date": "2026-11-16",
+  "distribution": "Google Drive split binary parts",
+  "drive_folder": "https://drive.google.com/drive/folders/1ex26ucUkZWXvW35ZivrIXz9VL-43tBtK",
+  "clap_checkpoint": "CP08R1",
+  "vst3_checkpoint": "CP09",
+  "clap_plugin_id": "com.ankarana.percussive-atlas",
+  "bitwig_windows_host_tested": false,
+  "github_release_binaries_uploaded": false,
+  "drive_uploaded_part_count": 11,
+  "post_upload_verified": "Folder listing returned all 11 filenames and sizes; reassembly checksum after download not yet tested",
+  "parts": [
+    {
+      "format": "CLAP",
+      "part_name": "Ankarana_CLAP_v0.8.1_Part_01.zip",
+      "drive_file_id": "1KkzLD2UzPB0_IhndoSXYpdZjpTBpTeW7",
+      "bytes": 62915852,
+      "url": "https://drive.google.com/file/d/1KkzLD2UzPB0_IhndoSXYpdZjpTBpTeW7/view"
+    },
+    {
+      "format": "CLAP",
+      "part_name": "Ankarana_CLAP_v0.8.1_Part_02.zip",
+      "drive_file_id": "1JJ2fEsmnZn7iZRA8zi4rl9CYnF5oD6Ik",
+      "bytes": 62915852,
+      "url": "https://drive.google.com/file/d/1JJ2fEsmnZn7iZRA8zi4rl9CYnF5oD6Ik/view"
+    },
+    {
+      "format": "CLAP",
+      "part_name": "Ankarana_CLAP_v0.8.1_Part_03.zip",
+      "drive_file_id": "15CIZnscLYdbZd6AfJY_1ZBNPetlfTeqd",
+      "bytes": 62915852,
+      "url": "https://drive.google.com/file/d/15CIZnscLYdbZd6AfJY_1ZBNPetlfTeqd/view"
+    },
+    {
+      "format": "CLAP",
+      "part_name": "Ankarana_CLAP_v0.8.1_Part_04.zip",
+      "drive_file_id": "1jxAsjnQj__1UxiPwu9ZvlIDAm6oMSgBf",
+      "bytes": 62915852,
+      "url": "https://drive.google.com/file/d/1jxAsjnQj__1UxiPwu9ZvlIDAm6oMSgBf/view"
+    },
+    {
+      "format": "CLAP",
+      "part_name": "Ankarana_CLAP_v0.8.1_Part_05.zip",
+      "drive_file_id": "1UYLFiIV8hdOXBC1jq_JYtPPLdEAG_z6l",
+      "bytes": 34023692,
+      "url": "https://drive.google.com/file/d/1UYLFiIV8hdOXBC1jq_JYtPPLdEAG_z6l/view"
+    },
+    {
+      "format": "VST3",
+      "part_name": "Ankarana_VST3_CP09_Part_01.zip",
+      "drive_file_id": "1jcj3DKy-WRlc4gPHV1zEevPcQk0CnHst",
+      "bytes": 43825996,
+      "url": "https://drive.google.com/file/d/1jcj3DKy-WRlc4gPHV1zEevPcQk0CnHst/view"
+    },
+    {
+      "format": "VST3",
+      "part_name": "Ankarana_VST3_CP09_Part_02.zip",
+      "drive_file_id": "1BkIq1OtZvtxMAySiNMwkLEOba_T7mFoU",
+      "bytes": 43825996,
+      "url": "https://drive.google.com/file/d/1BkIq1OtZvtxMAySiNMwkLEOba_T7mFoU/view"
+    },
+    {
+      "format": "VST3",
+      "part_name": "Ankarana_VST3_CP09_Part_03.zip",
+      "drive_file_id": "153Gu-Xbs6MFTg596J9oPeAQgQvvAGo1X",
+      "bytes": 43825996,
+      "url": "https://drive.google.com/file/d/153Gu-Xbs6MFTg596J9oPeAQgQvvAGo1X/view"
+    },
+    {
+      "format": "VST3",
+      "part_name": "Ankarana_VST3_CP09_Part_04.zip",
+      "drive_file_id": "16SF9pRcmQogiJhUF3AYieYlMbuXCmpqo",
+      "bytes": 43825996,
+      "url": "https://drive.google.com/file/d/16SF9pRcmQogiJhUF3AYieYlMbuXCmpqo/view"
+    },
+    {
+      "format": "VST3",
+      "part_name": "Ankarana_VST3_CP09_Part_05.zip",
+      "drive_file_id": "1MgxS6jTKZBdDJQkZeji1T7BjaOm_mC-V",
+      "bytes": 43825996,
+      "url": "https://drive.google.com/file/d/1MgxS6jTKZBdDJQkZeji1T7BjaOm_mC-V/view"
+    },
+    {
+      "format": "VST3",
+      "part_name": "Ankarana_VST3_CP09_Part_06.zip",
+      "drive_file_id": "1y5ZRSPQmySqupWXqgupfj0k5vjKn0nyD",
+      "bytes": 43825992,
+      "url": "https://drive.google.com/file/d/1y5ZRSPQmySqupWXqgupfj0k5vjKn0nyD/view"
+    }
+  ]
+}
