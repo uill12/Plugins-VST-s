@@ -129,10 +129,64 @@ static void apply_param_changes(RubedoEngine*e,VParamChanges*changes){if(!change
  for(int32_t i=0;i<n;i++){void*q=((getfn)vt[4])(changes,i);if(!q)continue;void**qvt=vr_vt(q);uint32_t id=((uint32_t(*)(void*))qvt[3])(q);int32_t np=((int32_t(*)(void*))qvt[4])(q);if(np<=0||np>8192||id>=RUBEDO_VST3_PARAMS)continue;int32_t off=0;double norm=0;
  if(((int32_t(*)(void*,int32_t,int32_t*,double*))qvt[5])(q,np-1,&off,&norm)==V_OK)apply_rubedo_bridge(e,id,norm);}
 }
-static int32_t a_process(void*o,VProcessData*d){if(!d||d->numSamples<0)return V_FALSE;RubedoEngine*e=&vr_p(o)->e;
+/* VST3 IParameterChanges::addParameterData and IParamValueQueue::addPoint
+ * are host-owned. Emitting into them is the VST3-sanctioned RT parameter
+ * feedback mechanism; never call controller/GUI or IMessage here. */
+static int vr_emit_output(VProcessData*d,uint32_t id,double norm,int32_t offset){
+ if(!d||!d->outputParameterChanges)return 0;
+ void**vt=vr_vt(d->outputParameterChanges);
+ if(!vt||!vt[5])return 0;
+ int32_t index=0;
+ typedef void*(*AddParameterData)(void*,uint32_t,int32_t*);
+ void*q=((AddParameterData)vt[5])(d->outputParameterChanges,id,&index);
+ if(!q)return 0;
+ void**qvt=vr_vt(q);if(!qvt||!qvt[6])return 0;
+ int32_t point=0;
+ typedef int32_t(*AddPoint)(void*,int32_t,double,int32_t*);
+ return ((AddPoint)qvt[6])(q,offset,norm,&point)==V_OK;
+}
+static void vr_output_midi_feedback(VRubedoProcessor*p,VProcessData*d,int32_t offset){
+ if(!d||!d->outputParameterChanges)return;
+ RubedoEngine*e=&p->e;
+ uint32_t learned=atomic_load_explicit(&e->ui_learn_seq,memory_order_acquire);
+ if(learned!=p->delivered_learn_seq){
+  /* A Learn swap may modify two note assignments. Send the exact complete
+   * 24-pad mapping as one bounded parameter-output transaction; host/editor
+   * deduplicates and swaps into the same final unique mapping. */
+  int all_sent=1;
+  for(int i=0;i<24;i++){
+   int note=atomic_load_explicit(&e->mappings[i],memory_order_acquire);
+   if(note<0||note>127||!vr_emit_output(d,RUBEDO_VST3_MAP_BEGIN+(uint32_t)i,(double)note/127.0,offset))all_sent=0;
+  }
+  int pad=atomic_load_explicit(&e->ui_last_pad,memory_order_acquire);
+  int note=atomic_load_explicit(&e->ui_learn_note,memory_order_acquire);
+  if(!vr_emit_output(d,RB_V3_LEARN_TARGET,0.,offset))all_sent=0;
+  if(!vr_emit_output(d,RB_V3_LEARN_RESULT,rb_v3_learn_value(pad,note,learned&1u),offset))all_sent=0;
+  if(all_sent)p->delivered_learn_seq=learned;
+ }
+ uint32_t unmapped=atomic_load_explicit(&e->ui_unmapped_seq,memory_order_acquire);
+ if(unmapped!=p->delivered_unmapped_seq){
+  int note=atomic_load_explicit(&e->ui_unmapped_note,memory_order_acquire);
+  if(vr_emit_output(d,RB_V3_UNMAPPED_NOTE,rb_v3_unmapped_value(note,unmapped&1u),offset))
+   p->delivered_unmapped_seq=unmapped;
+ }
+ uint32_t mask=atomic_exchange_explicit(&e->ui_pending_mask,0,memory_order_acq_rel);
+ if(mask){
+  p->feedback_flip^=1u;
+  if(!vr_emit_output(d,RB_V3_ACTIVITY_MASK,rb_v3_mask_value(mask,p->feedback_flip),offset))
+   atomic_fetch_or_explicit(&e->ui_pending_mask,mask,memory_order_release);
+ }
+}
+static int32_t a_process(void*o,VProcessData*d){
+ if(!d||d->numSamples<0)return V_FALSE;
+ VRubedoProcessor*p=vr_p(o);RubedoEngine*e=&p->e;
  apply_param_changes(e,d->inputParameterChanges);
  float *l=0,*r=0;double *ld=0,*rd=0;
- if(d->numOutputs>0&&d->outputs&&d->outputs[0].numChannels>=2){VAudioBusBuffers*b=&d->outputs[0];if(d->symbolicSampleSize==0&&b->channelBuffers32){l=b->channelBuffers32[0];r=b->channelBuffers32[1];}if(d->symbolicSampleSize==1&&b->channelBuffers64){ld=b->channelBuffers64[0];rd=b->channelBuffers64[1];}}
+ if(d->numOutputs>0&&d->outputs&&d->outputs[0].numChannels>=2){
+  VAudioBusBuffers*b=&d->outputs[0];
+  if(d->symbolicSampleSize==0&&b->channelBuffers32){l=b->channelBuffers32[0];r=b->channelBuffers32[1];}
+  if(d->symbolicSampleSize==1&&b->channelBuffers64){ld=b->channelBuffers64[0];rd=b->channelBuffers64[1];}
+ }
  int32_t total=0;void**evt=0;
  if(d->inputEvents){evt=vr_vt(d->inputEvents);total=((int32_t(*)(void*))evt[3])(d->inputEvents);if(total<0||total>8192)total=0;}
  uint32_t last=0,frames=(uint32_t)d->numSamples;
@@ -144,8 +198,10 @@ static int32_t a_process(void*o,VProcessData*d){if(!d||d->numSamples<0)return V_
   if(event.type==0)rubedo_note_on(e,event.noteOn.pitch,event.noteOn.velocity);
   last=pos;
  }
- if(last<frames)rubedo_render(e,l?l+last:0,r?r+last:0,ld?ld+last:0,rd?rd+last:0,frames-last);
- return V_OK;}
+ if(last<frames)rubedo_render(e,l?l+last:0,r?r+last:0,ld?ld+last:0,frames-last);
+ vr_output_midi_feedback(p,d,frames?(int32_t)(frames-1u):0);
+ return V_OK;
+}
 static uint32_t a_tail(void*o){(void)o;return 0;}
 
 static VRubedoController*vr_c(void*o){return (VRubedoController*)o;}
