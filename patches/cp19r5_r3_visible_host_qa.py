@@ -14,7 +14,7 @@ new=""" if(!ui.attach(parent,900,640))return 2;
 if s.count(old)!=1:raise SystemExit("Unexpected CP19R5 Win32 test host setup")
 p.write_text(s.replace(old,new),encoding="utf-8",newline="\n")
 sha=hashlib.sha256(p.read_bytes()).hexdigest()
-if sha!="52b63d151dc58b3f5414c7c12327576a540b885e20f23990e8b7bfe19db1ac20":
+if sha!="141c4a4baca8be98bd67f0ec755c930bb52163919d70465292e117b653e30a75":
  raise SystemExit("Unexpected Win32 source test SHA256: "+sha)
 mf=root/"CP19_SOURCE_MANIFEST.json"
 m=json.loads(mf.read_text(encoding="utf-8"))
