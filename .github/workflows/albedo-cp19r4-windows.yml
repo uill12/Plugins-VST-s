@@ -360,6 +360,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 Windows LF patch cannot apply' }
           git apply --directory=Albedo-Quintessential-Synth 'CP19R4_Windows_LF.patch'
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 Windows LF patch failed' }
+          python -c "import pathlib,base64,gzip,hashlib; s=pathlib.Path('patches/cp19r4_generator_fix.txt').read_text(encoding='ascii').strip();assert len(s)==1604;d=gzip.decompress(base64.b64decode(s,validate=True));assert hashlib.sha256(d).hexdigest()=='c6e19643838a33d08489792b5aad83b952682a9d04c36395f95e4a65f370b506';pathlib.Path('CP19R4_Native_Generator_Fix.patch').write_bytes(d);print('CP19R4 native C++ header generator verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R4 Win32 generator source verification failed' }
+          git apply --directory=Albedo-Quintessential-Synth --check 'CP19R4_Native_Generator_Fix.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R4 generator patch cannot apply' }
+          git apply --directory=Albedo-Quintessential-Synth 'CP19R4_Native_Generator_Fix.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R4 generator patch failed' }
           python -c "import hashlib,json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP19_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); checks=m['changed_source_sha256']; [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in checks]; bad=[k for k,v in checks.items() if hashlib.sha256((r/k).read_bytes()).hexdigest()!=v]; assert not bad,'CP19R4 source SHA gate failed: '+str(bad); print('CP19R4 exact canonical source hash PASS on Windows: %d files'%len(checks))"
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 source canonical LF SHA-256 verification failed' }
           python 'Albedo-Quintessential-Synth/tools/sync_cp19_preset_atlas.py' 'Albedo-Quintessential-Synth/resources/Albedo_CP19R4_Horizontal_Preset_Explorer.html' 'Albedo-Quintessential-Synth/include/albedo_cp19_factory_menu.hpp'
