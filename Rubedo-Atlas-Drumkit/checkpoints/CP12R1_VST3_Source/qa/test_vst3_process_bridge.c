@@ -46,7 +46,7 @@ static TEvents events;
 static void empty_ch(TChanges*c){c->vt=CH_VT;c->n=0;}
 static void empty_evt(void){events.vt=E_VT;events.n=0;}
 static void add_input(uint32_t id,double v){
- int32_t idx=0;TQueue*q=ch_add(&in,id,&idx);REQ(q);if(q)REQ(q_add(q,0,v,&idx)==0);
+ int32_t idx=0;TQueue*q=ch_add(&in,&id,&idx);REQ(q);if(q)REQ(q_add(q,0,v,&idx)==0);
 }
 static void note_event(int note){
  if(events.n>=8){failures++;return;}
