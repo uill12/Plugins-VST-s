@@ -233,6 +233,8 @@ static int32_t c_compstate(void*o,void*stream){
    for(unsigned v=0;v<4;v++)c->params[233+v*24+i]=(double)extra3.patterns[v][i]/65535.;
   }
  }
+ /* Live learn/indicator feedback is never persisted in CP12 component state. */
+ for(unsigned id=RB_V3_LEARN_TARGET;id<RUBEDO_VST3_PARAMS;id++)c->params[id]=0.;
  return V_OK;
 }
 static int32_t c_nparams(void*o){(void)o;return RUBEDO_VST3_PARAMS;}
