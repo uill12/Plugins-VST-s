@@ -2,6 +2,16 @@
 
 Repositório de projetos de instrumentos e efeitos de áudio.
 
+## Ankarana Percussive Atlas
+
+**Current version:** `v0.8.1` (2026-11-14), Windows x64 CLAP (CP08R1) + VST3 (CP09).
+
+- [Release details, verified Google Drive binary parts, and installation notes](Ankarana-Percussive-Atlas/README.md)
+- [Binary-part manifest (Drive IDs and sizes)](Ankarana-Percussive-Atlas/RELEASE_MANIFEST.json)
+- [Split-archive reconstruction helper](Ankarana-Percussive-Atlas/assemble_ankarana.py)
+
+**Distribution:** the plug-in binaries are stored in eleven downloadable parts in the existing Ankarana Google Drive folder. GitHub tracks release metadata and tooling; the large binaries are not GitHub Release assets. Bitwig Windows playback is not yet host-certified.
+
 ## Rubedo Atlas Drumkit
 
 - [Rubedo Atlas Drumkit — CP08 Hi-Fi (Windows x64, CLAP / VST3)](Rubedo-Atlas-Drumkit/README.md)
