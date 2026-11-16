@@ -344,21 +344,21 @@ jobs:
         run: |
           python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/cp19r4_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,13)); assert len(s)==91292,'CP19R4 source chunks incomplete'; d=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(d).hexdigest()=='60e0d4aec9a9241e5ee5f00fff701a6cdd288993464a6b9b3b27fa4df23a05b3','CP19R4 main source checksum mismatch'; pathlib.Path('Albedo_CP19R4_Source.patch').write_bytes(d); print('CP19R4 canonical HTML to native GUI source verified')"
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 source patch authentication failed' }
-          git apply --check 'Albedo_CP19R4_Source.patch'
+          git apply --directory=Albedo-Quintessential-Synth --check 'Albedo_CP19R4_Source.patch'
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 main source patch is incompatible with CP18R4' }
-          git apply 'Albedo_CP19R4_Source.patch'
+          git apply --directory=Albedo-Quintessential-Synth 'Albedo_CP19R4_Source.patch'
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 main source patch failed' }
           python -c "import pathlib,base64,gzip,hashlib; s=pathlib.Path('patches/cp19r4_manifest_fix.txt').read_text(encoding='ascii').strip(); assert len(s)==3164; d=gzip.decompress(base64.b64decode(s,validate=True));assert hashlib.sha256(d).hexdigest()=='8888e7a78bdcd38d6efd68835cc14ed60f77be3dbf9ee1166c1115da9f71218d';pathlib.Path('CP19R4_Manifest_Fix.patch').write_bytes(d);print('CP19R4 source integrity manifest patch verified')"
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 manifest delta verification failed' }
-          git apply --check 'CP19R4_Manifest_Fix.patch'
+          git apply --directory=Albedo-Quintessential-Synth --check 'CP19R4_Manifest_Fix.patch'
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 manifest patch cannot apply' }
-          git apply 'CP19R4_Manifest_Fix.patch'
+          git apply --directory=Albedo-Quintessential-Synth 'CP19R4_Manifest_Fix.patch'
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 manifest delta failed' }
           python -c "import pathlib,base64,gzip,hashlib; s=pathlib.Path('patches/cp19r4_windows_lf_fix.txt').read_text(encoding='ascii').strip(); assert len(s)==1144; d=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(d).hexdigest()=='bdd5afc5ebbd62b8910c1f8ec01fd608b61d23bfdee414d358f57daa4a291527'; pathlib.Path('CP19R4_Windows_LF.patch').write_bytes(d);print('CP19R4 deterministic HTML catalog build patch verified')"
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 Windows catalog patch verification failed' }
-          git apply --check 'CP19R4_Windows_LF.patch'
+          git apply --directory=Albedo-Quintessential-Synth --check 'CP19R4_Windows_LF.patch'
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 Windows LF patch cannot apply' }
-          git apply 'CP19R4_Windows_LF.patch'
+          git apply --directory=Albedo-Quintessential-Synth 'CP19R4_Windows_LF.patch'
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 Windows LF patch failed' }
           python -c "import hashlib,json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP19_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); checks=m['changed_source_sha256']; [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in checks]; bad=[k for k,v in checks.items() if hashlib.sha256((r/k).read_bytes()).hexdigest()!=v]; assert not bad,'CP19R4 source SHA gate failed: '+str(bad); print('CP19R4 exact canonical source hash PASS on Windows: %d files'%len(checks))"
           if ($LASTEXITCODE -ne 0) { throw 'CP19R4 source canonical LF SHA-256 verification failed' }
