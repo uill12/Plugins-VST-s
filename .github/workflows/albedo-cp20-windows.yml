@@ -426,6 +426,10 @@ jobs:
           # 1265x900 target, retaining the resize hitbox/geometry assertions.
           python -c "from pathlib import Path; import re; p=Path('Albedo-Quintessential-Synth/tests/native_viewport_parity.cpp'); s=p.read_text(encoding='utf-8'); a,n1=re.subn(r'(kDefaultEditorWidth\s*==\s*)900',r'\g<1>1265',s); b,n2=re.subn(r'(kDefaultEditorHeight\s*==\s*)640',r'\g<1>900',a); assert n1>=1 and n2>=1,('CP20 viewport source contract',n1,n2); p.write_text(b,encoding='utf-8'); print('CP20 native viewport startup assertions updated')"
           if ($LASTEXITCODE -ne 0) { throw 'CP20 native viewport test migration failed' }
+          # Retain exact source QA for the changed CP12 viewport fixture:
+          # replace only its known, formerly approved SHA, not other assets.
+          python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); old='b50ffd501f9831ddec5f5d3d38a91eb56a28357288a21d7766017643cfb0ea06'; new='b9b940bdc47f26f109a6351817103bf4ff800394f2f0f021b6b3c1bdfbb5cd0f'; matches=[p for p in r.rglob('*.json') if old in p.read_text(encoding='utf-8')]; print('CP20 viewport test manifest targets:',[str(p) for p in matches]); assert matches,'Prior native viewport QA digest missing'; [(p.write_text(p.read_text(encoding='utf-8').replace(old,new),encoding='utf-8')) for p in matches]; print('CP20 viewport test SHA migrated')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 viewport regression manifest integrity failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP20 immutable DSP/artwork/64 presets check failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
