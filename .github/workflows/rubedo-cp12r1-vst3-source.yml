@@ -45,6 +45,7 @@ jobs:
             "$p/checkpoints/CP12R1_VST3_Source/qa/test_midi_feedback.c" = 'test_midi_feedback.c'
             "$p/checkpoints/CP12R1_VST3_Source/qa/test_vst3_process_bridge.c" = 'test_vst3_process_bridge.c'
             "$p/checkpoints/CP12R1_VST3_Source/qa/test_vst3_audio_equivalence.c" = 'test_vst3_audio_equivalence.c'
+            "$p/checkpoints/CP12R1_VST3_Source/qa/test_official_vst3_abi.c" = 'test_official_vst3_abi.c'
             "$p/source/win_imports.h" = 'win_imports.h'
             "$p/source/vst3_min_abi.h" = 'vst3_min_abi.h'
             "$p/source/rubedo_names.inc" = 'rubedo_names.inc'
@@ -64,6 +65,20 @@ jobs:
             'int _fltused = 0;'
             'void *memset(void *p, int value, size_t count) { volatile unsigned char *q = (volatile unsigned char *)p; for(size_t i=0;i<count;i++)q[i]=(unsigned char)value; return p; }'
           ) | Set-Content build-rubedo-vst3/fltused.c -Encoding ascii
+      - name: Verify VST3 ABI against pinned official Steinberg C API
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $upstreamSha = '93a116f7c6c52a317ec3aaee9b13789068b5234e'
+          $root = "https://raw.githubusercontent.com/steinbergmedia/vst3_c_api/$upstreamSha"
+          Invoke-WebRequest -Uri "$root/vst3_c_api.h" -OutFile "build-rubedo-vst3/vst3_c_api.h"
+          Invoke-WebRequest -Uri "$root/LICENSE.txt" -OutFile "build-rubedo-vst3/STEINBERG_VST3_C_API_LICENSE.txt"
+          Push-Location build-rubedo-vst3
+          try {
+            & clang -target x86_64-pc-windows-msvc -D_WIN32 -std=c11 -Wall -Wextra -Werror -fsyntax-only test_official_vst3_abi.c
+            if($LASTEXITCODE -ne 0){throw 'Rubedo custom VST3 ABI layout disagrees with Steinberg C API'}
+            'VST3 ABI static layout and vtable checks against Steinberg official pinned C header: PASS' | Out-File -Encoding utf8 official-abi-test-output.txt
+          } finally {Pop-Location}
       - name: Run Windows x64 MIDI Learn and live-pad feedback wire regression
         shell: pwsh
         run: |
@@ -126,4 +141,5 @@ jobs:
             build-rubedo-vst3/feedback-test-output.txt
             build-rubedo-vst3/processor-bridge-test-output.txt
             build-rubedo-vst3/audio-wrapper-test-output.txt
+            build-rubedo-vst3/official-abi-test-output.txt
           if-no-files-found: error
