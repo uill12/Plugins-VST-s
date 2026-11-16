@@ -21,3 +21,12 @@ O projeto mantém 24 kits, 24 vozes por kit, 4 articulações, MIDI 36–59 e a 
 - [Histórico e estado de distribuição](Nereida-IntraSynth/README.md)
 
 **Estado da entrega:** os dois pacotes binários foram verificados e enviados à pasta particular `Google Drive / PROJETOS / Nereida IntraSynth`. Este repositório contém o manifesto, **não os binários CLAP/VST3 nem um GitHub Release instalável**. Não alegar publicação dos executáveis no GitHub sem assets verificados.
+
+
+## Nigredo Opus Septem
+
+- [Nigredo Opus Septem — CP10 (Audio FX e MIDI Note FX, Windows x64, CLAP/VST3)](Nigredo-Opus-Septem/README.md)
+- [Código-fonte nativo e interface RGNES](Nigredo-Opus-Septem/CP10/src/)
+- [Relatório de testes e limitações](Nigredo-Opus-Septem/CP10/release/CP10_RGNEs_HOTFIX_QA.md)
+
+**Distribuição:** binários CLAP e VST3 ficam na pasta Nigredo Opus Septem do Google Drive; este GitHub contém código-fonte, scripts e QA. CP10 foi compilado e testado offline, mas ainda não foi homologado no Bitwig Windows.
