@@ -20,6 +20,7 @@ on:
       - 'patches/cp18r2_part*.txt'
       - 'patches/cp18r2_quality_contract.py'
       - 'patches/cp18r3_spectral_sine_lut.txt'
+      - 'patches/cp18r4_part*.txt'
   workflow_dispatch:
 permissions:
   contents: read
@@ -322,6 +323,21 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP18R3 spectral Hi-Fi interpolation tolerance failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP18R3 source and original GUI checksum validation failed' }
+      - name: CP18R4 reconstruct 176.4-384k native output at half-rate synthesis
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/cp18r4_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,3)); assert len(s)==4192,'CP18R4 source chunks incomplete'; p=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(p).hexdigest()=='ed3c5599e10300eafbe946f5bf3ad64296c7dd91bd797e3b2e1fb7e0275a5109','CP18R4 source patch checksum mismatch'; pathlib.Path('CP18R4_HighRate_Reconstruction.patch').write_bytes(p); print('CP18R4 native high-rate DSP patch SHA256 verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R4 source authentication failed' }
+          git apply --check 'CP18R4_HighRate_Reconstruction.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R4 source patch does not apply' }
+          git apply 'CP18R4_HighRate_Reconstruction.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R4 source application failed' }
+          python -c "import hashlib,json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=r/'CP18_SOURCE_MANIFEST.json'; j=json.loads(m.read_text(encoding='utf-8')); expected={'include/vitriol_dsp.hpp':'689f15b218451390d2fc32dc3ee76b80a378ac31b2dab2809554a695f42fe49e','src/vitriol_dsp.cpp':'347e72ceb61fffb718de913c8c71cb6e45e254664121e5e013e6ec1ea734c850'}; [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in expected]; assert all(hashlib.sha256((r/k).read_bytes()).hexdigest()==h for k,h in expected.items()),'CP18R4 source content integrity mismatch'; j['changed_source_sha256'].update(expected); j['realtime_optimization']='CP18R4 7th-order 8-tap high-rate interpolation: 192k host / 96k synth, 176.4k host / 88.2k synth; all voices and 4 engines intact'; j['high_rate_reconstruction_delay_samples']=7; m.write_text(json.dumps(j,indent=2,ensure_ascii=False)+'\n',encoding='utf-8'); print('CP18R4 restored source exact hash verification')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R4 source and manifest QA failed' }
+          python -c "import math; w=(-5,49,-245,1225,1225,-245,49,-5); assert sum(w)==2048; print('CP18R4 midpoint 8-tap Lagrange DC unity'); omega=2*math.pi*20000/96000; a=sum(w[i]*math.cos(omega*i) for i in range(8))/2048; b=sum(w[i]*math.sin(omega*i) for i in range(8))/2048; db=20*math.log10(math.hypot(a,b)); print('CP18R4 20kHz gain dB: %.5f'%db); assert abs(db)<.06"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R4 8-tap reconstruction QA failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R4 original GUI, sound-bank and parameter SHA gate failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
