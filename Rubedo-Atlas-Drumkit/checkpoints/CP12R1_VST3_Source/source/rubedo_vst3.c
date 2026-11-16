@@ -138,8 +138,8 @@ static int vr_emit_output(VProcessData*d,uint32_t id,double norm,int32_t offset)
  void**vt=vr_vt(d->outputParameterChanges);
  if(!vt||!vt[5])return 0;
  int32_t index=0;
- typedef void*(*AddParameterData)(void*,uint32_t,int32_t*);
- void*q=((AddParameterData)vt[5])(d->outputParameterChanges,id,&index);
+ typedef void*(*AddParameterData)(void*,const uint32_t*,int32_t*);
+ void*q=((AddParameterData)vt[5])(d->outputParameterChanges,&id,&index);
  if(!q)return 0;
  void**qvt=vr_vt(q);if(!qvt||!qvt[6])return 0;
  int32_t point=0;
@@ -237,6 +237,11 @@ static int32_t c_compstate(void*o,void*stream){
  for(unsigned id=RB_V3_LEARN_TARGET;id<RUBEDO_VST3_PARAMS;id++)c->params[id]=0.;
  return V_OK;
 }
+/* IEditController has setState/getState AFTER setComponentState.
+ * The processor owns all persistent CP12R1 sound/mapping state.
+ * There is no separate editor-only state blob to serialize. */
+static int32_t c_setstate(void*o,void*stream){(void)o;(void)stream;return V_OK;}
+static int32_t c_getstate(void*o,void*stream){(void)o;(void)stream;return V_OK;}
 static int32_t c_nparams(void*o){(void)o;return RUBEDO_VST3_PARAMS;}
 static double vr_default_pattern_norm(unsigned id){
  unsigned n=id-233u,v=n/24u,p=n%24u;
@@ -491,7 +496,7 @@ static VRubedoFactory g_factory={factoryVT,1};
 static const void *factoryVT[13]={f_query,f_add,f_rel,f_info,f_count,f_class,f_instance,f_class2,f_classW,f_context};
 static const void *compVT[16]={p_query,p_add,p_rel,p_init,p_term,p_controller_id,p_io,p_buscount,p_businfo,p_routing,p_actbus,p_active,p_setstate,p_getstate};
 static const void *audioVT[12]={p_query,p_add,p_rel,a_buses,a_arrangement,a_sample,a_latency,a_setup,a_processing,a_process,a_tail};
-static const void *ctrlVT[22]={c_query,c_add,c_rel,c_init,c_term,c_compstate,c_nparams,c_paraminfo,c_string,c_value,c_to_plain,c_to_norm,c_getnorm,c_setnorm,c_handler,c_view};
+static const void *ctrlVT[22]={c_query,c_add,c_rel,c_init,c_term,c_compstate,c_setstate,c_getstate,c_nparams,c_paraminfo,c_string,c_value,c_to_plain,c_to_norm,c_getnorm,c_setnorm,c_handler,c_view};
 VEXPORT void *GetPluginFactory(void){g_factory.refs++;return &g_factory;}
 VEXPORT int InitDll(void){return 1;}
 VEXPORT int ExitDll(void){return 1;}
