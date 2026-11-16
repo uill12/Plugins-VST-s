@@ -26,6 +26,7 @@ on:
       - 'patches/cp19r5_r2_msvc_redraw.b64'
       - 'patches/cp19r5_r3_visible_host_qa.py'
       - 'patches/cp20_fhd_gui_readability.b64'
+      - 'patches/cp20_migrate_window_qa.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -431,6 +432,12 @@ jobs:
           # replace only its known, formerly approved SHA, not other assets.
           python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); old='b50ffd501f9831ddec5f5d3d38a91eb56a28357288a21d7766017643cfb0ea06'; new='b9b940bdc47f26f109a6351817103bf4ff800394f2f0f021b6b3c1bdfbb5cd0f'; matches=[p for p in r.rglob('*.json') if old in p.read_text(encoding='utf-8')]; print('CP20 viewport test manifest targets:',[str(p) for p in matches]); assert matches,'Prior native viewport QA digest missing'; [(p.write_text(p.read_text(encoding='utf-8').replace(old,new),encoding='utf-8')) for p in matches]; print('CP20 viewport test SHA migrated')"
           if ($LASTEXITCODE -ne 0) { throw 'CP20 viewport regression manifest integrity failed' }
+          python 'patches/cp20_migrate_window_qa.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 exact viewport QA fixture migration failed' }
+          python 'Albedo-Quintessential-Synth/tests/check_cp15_resize_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 startup/resizing regression source test failed' }
+          python 'Albedo-Quintessential-Synth/tests/check_cp18_visual_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 original visual identity check failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP20 immutable DSP/artwork/64 presets check failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
