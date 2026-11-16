@@ -58,6 +58,7 @@ static double find_out(uint32_t id){
  failures++;return -1.;
 }
 static const uint8_t CLS_COMP[16]={0x52,0x42,0x44,0x4b,0x10,0x21,0x49,0x82,0xb9,0x33,0x43,0x22,0x26,0x11,0x14,0x01};
+static const uint8_t CLS_CTRL[16]={0x52,0x42,0x44,0x4b,0x10,0x21,0x49,0x82,0xb9,0x33,0x43,0x22,0x26,0x11,0x14,0x02};
 static const uint8_t IID_UNKNOWN[16]={0,0,0,0,0,0,0,0,0xc0,0,0,0,0,0,0,0x46};
 static const uint8_t IID_PROCESSOR[16]={0x42,0x04,0x3f,0x99,0xb7,0xda,0x45,0x3c,0xa5,0x69,0xe7,0x9d,0x9a,0xae,0xc3,0x3d};
 static int32_t process(void*audio){
@@ -74,6 +75,10 @@ static int run(void){
  void*audio=0;const void**cvt=*(const void***)comp;
  rc=((int32_t(*)(void*,const uint8_t*,void**))cvt[0])(comp,IID_PROCESSOR,&audio);
  if(rc!=OK||!audio)return 12;
+ void*ctrl=0;
+ rc=((int32_t(*)(void*,const uint8_t*,const uint8_t*,void**))vt[6])(f,CLS_CTRL,IID_UNKNOWN,&ctrl);
+ if(rc!=OK||!ctrl)return 13;
+ const void**ctrlvt=*(const void***)ctrl;
  empty_ch(&in);empty_ch(&out);empty_evt();
  add_input(RB_V3_LEARN_TARGET,rb_v3_learn_arm(0));note_event(72);
  REQ(process(audio)==OK);
@@ -83,6 +88,20 @@ static int run(void){
  int pad=-1,note=-1;
  REQ(rb_v3_learn_decode(find_out(RB_V3_LEARN_RESULT),&pad,&note));
  REQ(pad==0&&note==72);
+ /* A VST3 host returns outputParameterChanges via IEditController::
+  * setParamNormalized. Exercise the real controller endpoint, not only
+  * the wire codec. The editor is not attached in this source-only test. */
+ for(int i=0;i<out.n;i++){
+  TQueue*q=&out.q[i];if(!q->n)continue;
+  double v=q->points[q->n-1].norm;
+  REQ(((int32_t(*)(void*,uint32_t,double))ctrlvt[13])(ctrl,q->id,v)==OK);
+ }
+ double assigned=((double(*)(void*,uint32_t))ctrlvt[12])(ctrl,136u);
+ REQ(assigned>.565&&assigned<.568); /* note 72 / 127 */
+ double learned=((double(*)(void*,uint32_t))ctrlvt[12])(ctrl,RB_V3_LEARN_RESULT);
+ int hostpad=-1,hostnote=-1;
+ REQ(rb_v3_learn_decode(learned,&hostpad,&hostnote));
+ REQ(hostpad==0&&hostnote==72);
  empty_ch(&in);empty_ch(&out);empty_evt();note_event(72);
  REQ(process(audio)==OK);
  REQ(rb_v3_mask_decode(find_out(RB_V3_ACTIVITY_MASK))==1u);
