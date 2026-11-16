@@ -9,7 +9,7 @@ This is a **source-level port** of Rubedo's CP12R1 pad mapping preset feature to
 ## Source contract
 
 - Original VST3 component/controller CIDs preserved.
-- VST3 IDs 0–135 preserved; MIDI mapping parameters 136–159 are 24 note numbers 0–127. New host parameter IDs **160–376** cover CP12R1 per-pad gain/attack/release, stored sequencer-variation patterns and activity flags. Existing IDs remain stable.
+- VST3 IDs 0–135 preserved; MIDI mapping parameters 136–159 are 24 note numbers 0–127. Host parameter IDs **160–376** cover per-pad gain/attack/release, sequencer patterns, and activity flags. New transient parameters 377–380 provide MIDI Learn targeting and processor-to-editor feedback. Existing IDs remain stable.
 - Audio processor consumes MIDI notes using the CP12R1 mapping table; controller receives and sends mapping parameter changes through VST3 host transactions.
 - Save/Load Map Windows file dialogs are enabled in the **editor-only** VST3 GUI model; successful Load Map dispatches 24 mapping parameter edits to the controller/host.
 - Native Save Map/Load Map uses the same `.rbmap` text format as CP12R1 CLAP. It does not change the kit or PCM timbres.
@@ -22,7 +22,7 @@ The [CP12R1 format-parity audit](FORMAT_PARITY_GATES.md) is mandatory before dis
 
 ## Explicit feature limitation
 
-**MIDI Learn from incoming host notes is not yet wired back from the VST3 audio processor to the separately hosted edit controller.** The VST3 GUI reports this limitation rather than showing a misleading armed Learn state. Edit a `.rbmap` file or use Load Map for now; a verified VST3 processor-to-controller message/host-event contract is needed for true Learn parity.
+**MIDI Learn and live pad feedback have now been source-implemented** using VST3 host `outputParameterChanges`, with event ids 377–380. The source-only Windows QA compiles and passes tests for note capture, note-map updates, repeat triggering, unmapped notes, multiple simultaneous hits, and controller parameter receipt. **This is NOT yet a Bitwig-verified processor-to-controller bridge:** host support for output feedback parameters and saved state must be tested; if Bitwig does not deliver this route, implement the official VST3 Data Exchange compatibility path instead.
 
 This is an **engineering checkpoint**, not full feature parity. Native VST3 ABI, actual Bitwig host integration, controller separate-process behavior, note response, 88.2 kHz output, sample-bank loading, preset state and file dialogs are not yet host-verified.
 
@@ -37,7 +37,7 @@ Other shared source dependencies are in [CP12R1 source](../CP12R1_Pad_Maps/sourc
 
 ## Verified Windows CI compilation
 
-The [CP12R1 VST3 Windows compilation workflow](https://github.com/uill12/Plugins-VST-s/actions/runs/43847931116) completed **successfully** on GitHub Actions `windows-2022`. It compiled the CP12R1 VST3 controller, CP12 engine, SkinSync GUI, sinc resources, and emitted a PE32+ Windows x64 DLL core with `GetPluginFactory` exported. The workflow preserved [one source-only diagnostic artifact](https://github.com/uill12/Plugins-VST-s/actions/runs/43847931116) named `Rubedo_CP12R1_VST3_SourceOnly_NotInstallable`. It is **not** an installable plugin: it has no embedded PCM bank or GUI artwork overlay.
+The [CP12R1 VST3 Windows compilation workflow](https://github.com/uill12/Plugins-VST-s/actions/runs/43847931116) completed **successfully** on GitHub Actions `windows-2022`. It compiled the CP12R1 VST3 controller, CP12 engine, SkinSync GUI, sinc resources, and emitted a PE32+ Windows x64 DLL core with `GetPluginFactory` exported. The latest [Windows CI run](https://github.com/uill12/Plugins-VST-s/actions/runs/43971155669) also passes the actual processor/mock-host and wire-codec regression tests. It produces a source-only diagnostic artifact named `Rubedo_CP12R1_VST3_SourceOnly_NotInstallable`. It is **not** an installable plugin: it has no embedded PCM bank or GUI artwork overlay.
 
 Optional Windows local assembly, when the exact CP12R1 CLAP file is already installed:
 
@@ -52,9 +52,9 @@ A completed installable VST3 needs the freshly compiled Windows core **plus** th
 
 ## QA gates
 
-1. Windows source compile with VST3 `GetPluginFactory` exported.
+1. **PASSED offline:** Windows x64 source compile with VST3 `GetPluginFactory` exported, MIDI Learn/feedback wire codec, real-processor mock-host callbacks and edit-controller synchronization.
 2. Attach image+PCM overlay and update footer offsets; confirm embedded bank start and correct `RBDK24` header.
-3. Load in Bitwig Studio Windows, including VST3 controller/processor lifecycle.
+3. **NOT TESTED:** Load in Bitwig Studio Windows, including VST3 controller/processor lifecycle and actual output-parameter feedback.
 4. Save/Load `.rbmap` and verify all 24 pad triggers, displayed numbers and host save/reopen.
 5. Verify no regression to CLAP, visual SkinSync or CPU/note response.
 6. Package self-contained Windows x64 bundle as native `.7z.001` volumes with SHA-256, upload all to the CP12R1 Drive folder and verify readback.
