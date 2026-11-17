@@ -32,6 +32,7 @@ on:
       - 'patches/cp23_native_alignment.b64'
       - 'patches/cp27_webview2_source.b64'
       - 'patches/cp27_r1_webview_msvc_headers.py'
+      - 'patches/cp27_r2_win_resource_type.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -527,6 +528,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP27-R1 native/HTML contract failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP27-R1 strict DSP, preset and art integrity failed' }
+      - name: CP27-R2 use Unicode Win32 resource type for embedded HTML
+        shell: pwsh
+        run: |
+          python 'patches/cp27_r2_win_resource_type.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27-R2 Unicode resource source patch failed' }
+          python 'Albedo-Quintessential-Synth/tests/cp27_webview_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27-R2 HTML-native contract failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27-R2 DSP/preset/visual source integrity failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
