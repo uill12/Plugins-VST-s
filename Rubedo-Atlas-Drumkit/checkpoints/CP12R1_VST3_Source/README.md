@@ -1,5 +1,7 @@
 # Rubedo Atlas Drumkit — CP12R1 VST3 port (engineering checkpoint)
 
+**Current recommended HostQA package (ABI fix):** [CP12R1 VST3 ABI-Fix Windows x64 — Google Drive](https://drive.google.com/drive/folders/1LIk9LjSZHe7w-NPSZSAMq1Zmb63yPgoo). The source-only 2026-11-17 GitHub Actions run [44028606392](https://github.com/uill12/Plugins-VST-s/actions/runs/44028606392) passed **47/47 official Steinberg VST3 validator tests on the synthetic diagnostic**, and a new full-resource VST3 binary using the same core was independently repackaged and uploaded. The old 2026-11-17 VST3 candidate remains archived for comparison but is superseded; the CP12R1 CLAP rollback is unchanged. **Windows Bitwig real-host validation is still required.** [Detailed ABI-Fix QA](CP12R1_VST3_ABIFIX_HOSTQA.md).
+
 ## Current status — COMPLETE-ASSET VST3 CANDIDATE, NOT BITWIG-VERIFIED
 
 On **2026-11-17**, ChatGPT's active container retrieved the **exact original CP12R1 CLAP** from its Drive multipart archive, verified the CLAP, PCM and GUI SHA-256s, and combined the original resource overlay with the Windows x64 source-only VST3 core from [CI run 43975514483](https://github.com/uill12/Plugins-VST-s/actions/runs/43975514483). A full native multi-volume 7z with the VST3 binary was independently extracted and the complete SHA-256 matched.
