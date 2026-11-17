@@ -1,0 +1,35 @@
+name: Albedo CP32 Source Snapshot for JUCE 8 Migration
+on:
+  push:
+    branches: [albedo-cp32-juce8-webview]
+    paths:
+      - '.github/workflows/albedo-cp32-source-snapshot.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  extract:
+    runs-on: windows-2022
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify original source archive and extract
+        shell: pwsh
+        run: |
+          $p='build-sources/Albedo_CP13_CI_Source_NoBank.zip'
+          if (!(Test-Path $p)) { throw 'Missing original archive' }
+          $sha=(Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '5d5bceedcb6b0a4c78880dd6339d12250c51c9a543e80826c78189028d71d325') { throw "Unexpected source SHA: $sha" }
+          Expand-Archive -LiteralPath $p -DestinationPath . -Force
+          if (!(Test-Path 'Albedo-Quintessential-Synth/include/vitriol_dsp.hpp')) { throw 'Missing DSP source' }
+      - name: Upload reusable audio core and native wrapper source
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP32_Original_DSP_and_Wrappers
+          path: |
+            Albedo-Quintessential-Synth/include/
+            Albedo-Quintessential-Synth/src/
+            Albedo-Quintessential-Synth/CMakeLists.txt
+            Albedo-Quintessential-Synth/tests/render.cpp
+          retention-days: 14
+          if-no-files-found: error
