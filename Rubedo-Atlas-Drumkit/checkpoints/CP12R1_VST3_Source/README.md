@@ -1,10 +1,12 @@
 # Rubedo Atlas Drumkit — CP12R1 VST3 port (engineering checkpoint)
 
-## Current status — NOT an installable VST3 release
+## Current status — COMPLETE-ASSET VST3 CANDIDATE, NOT BITWIG-VERIFIED
 
-This is a **source-level port** of Rubedo's CP12R1 pad mapping preset feature to the older experimental VST3 engine/controller implementation. The Windows CI workflow compiles a PE32+ **core only**. It intentionally does not attach the original >373 MB 2,304-hit PCM bank and 1512×1009 approved GUI artwork, because those private resources are present only in the CP12R1 CLAP release distributed in Google Drive.
+On **2026-11-17**, ChatGPT's active container retrieved the **exact original CP12R1 CLAP** from its Drive multipart archive, verified the CLAP, PCM and GUI SHA-256s, and combined the original resource overlay with the Windows x64 source-only VST3 core from [CI run 43975514483](https://github.com/uill12/Plugins-VST-s/actions/runs/43975514483). A full native multi-volume 7z with the VST3 binary was independently extracted and the complete SHA-256 matched.
 
-**No complete VST3 build has been uploaded to Drive.** Do not rename the CI core to an installable VST3. Keep the working CLAP CP12R1 in place.
+**[Download VST3 HostQA candidate — Google Drive](https://drive.google.com/drive/folders/120_M3KXxH4HyoMFCAp2BOhyn60m-oCeR)** · [Full build evidence and remaining tests](CP12R1_VST3_REAL_ASSETS_HOSTQA.md).
+
+**Do not confuse source-only CI artifacts with the assembled full-resource VST3 candidate.** The previous CLAP CP12R1 remains untouched as the known rollback. The full VST3 must still pass Bitwig real-host scan, GUI, MIDI Learn, state and CPU validation before promotion.
 
 ## Source contract
 
@@ -46,9 +48,9 @@ Optional Windows local assembly, when the exact CP12R1 CLAP file is already inst
 3. The tool verifies the CP12R1 CLAP SHA-256 and the resource footer, copies the image+PCM overlay to the new VST3 core and rewrites the bank's absolute offset. It outputs `Rubedo Atlas Drumkit.vst3/Contents/x86_64-win/Rubedo Atlas Drumkit.vst3` and its SHA-256 report.
 4. This is a **local recovery path**, not a GitHub or Google Drive upload. Back up existing plugins and check the new VST3 inside Bitwig before relying on it.
 
-## Why the Drive release is still blocked
+## Historical source-only limitation (resolved by 2026-11-17 local assembly)
 
-A completed installable VST3 needs the freshly compiled Windows core **plus** the exact CP12R1 CLAP image and audio overlay. The GitHub connector can commit text and compile source via CI, but it cannot transfer the private 378 MB CLAP binary from Google Drive into the CI runner, and the current local build environment is unavailable. Until that transfer and independent full-package checksum/extraction test succeed, no VST3 runtime archive should be promoted into the Drive CP12R1 folder.
+The originally identified missing-bank constraint has been resolved: the active ChatGPT container recovered the approved private resources, created the full VST3 candidate and independently validated full archive extraction. **The outstanding blocker is real Bitwig host certification**, not missing assets. See [HostQA report](CP12R1_VST3_REAL_ASSETS_HOSTQA.md).
 
 ## QA gates
 
@@ -57,4 +59,4 @@ A completed installable VST3 needs the freshly compiled Windows core **plus** th
 3. **NOT TESTED:** Load in Bitwig Studio Windows, including VST3 controller/processor lifecycle and actual output-parameter feedback.
 4. Save/Load `.rbmap` and verify all 24 pad triggers, displayed numbers and host save/reopen.
 5. Verify no regression to CLAP, visual SkinSync or CPU/note response.
-6. Package self-contained Windows x64 bundle as native `.7z.001` volumes with SHA-256, upload all to the CP12R1 Drive folder and verify readback.
+6. **PASSED:** Full VST3 package assembled from real CP12R1 resources, extracted independently, distributed in 13 native `.7z.001` volumes and all 15 Drive folder items read back. **Host test still outstanding.**
