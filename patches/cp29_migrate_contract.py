@@ -25,6 +25,23 @@ for name in ('tests/check_cp15_resize_contract.py','tests/check_cp18_visual_cont
  if t!=s:
   p.write_text(t,encoding='utf-8',newline='\n')
   changed[name]=hashlib.sha256(p.read_bytes()).hexdigest()
+# CP29: the old live Win32 repaint test assumed a horizontal editor and
+# always-visible FX. Select the portrait Effects page before touching FX.
+qa=r/'tests/cp19_partial_redraw_win.cpp'
+if qa.exists():
+ old=qa.read_text(encoding='utf-8')
+ newer=old.replace('0,0,900,640,nullptr','0,0,700,1040,nullptr')
+ newer=newer.replace('ui.attach(parent,900,640)','ui.attach(parent,640,960)')
+ newer=newer.replace('parameters[5000]=53.0;ui.updateParam(5000,53.0);',
+  'SendMessageW(w,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(480,700));UpdateWindow(w);\\n parameters[5000]=53.0;ui.updateParam(5000,53.0);')
+ newer=newer.replace('NativeViewport viewport(900,640);\\n const int dragX=viewport.toX(1236+93),dragY=viewport.toY(1010+8);',
+  'const int dragX=149,dragY=761;')
+ newer=newer.replace('const LPARAM pos=MAKELPARAM(viewport.toX(point[0]),viewport.toY(point[1]));',
+  'const LPARAM pos=MAKELPARAM(point[0],point[1]);')
+ newer=newer.replace('ui.resize(1000,711)','ui.resize(700,1050)')
+ if newer!=old:
+  qa.write_text(newer,encoding='utf-8',newline='\\n')
+  changed['tests/cp19_partial_redraw_win.cpp']=hashlib.sha256(qa.read_bytes()).hexdigest()
 for jpath in r.rglob('*.json'):
  try:s=jpath.read_text(encoding='utf-8')
  except UnicodeDecodeError:continue
