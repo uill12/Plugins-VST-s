@@ -592,9 +592,9 @@ jobs:
         run: |
           python -c "import pathlib,base64,gzip,hashlib; s=pathlib.Path('patches/cp29_directcomposition_3x2.b64').read_text(encoding='ascii').strip(); assert len(s)==12104,'CP29 patch incomplete'; b=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(b).hexdigest()=='e89838091f36c510f04cd4de02dee0ff2d748ca52d290c2719bf68ee9a8dee5c','CP29 patch digest mismatch';pathlib.Path('CP29_DirectComposition_HTML.patch').write_bytes(b);print('CP29 DirectComposition source authenticated')"
           if ($LASTEXITCODE -ne 0) { throw 'CP29 source authentication failed' }
-          git apply --check 'CP29_DirectComposition_HTML.patch'
+          git apply --directory=Albedo-Quintessential-Synth --check 'CP29_DirectComposition_HTML.patch'
           if ($LASTEXITCODE -ne 0) { throw 'CP29 is incompatible with the verified CP28 R2 source' }
-          git apply 'CP29_DirectComposition_HTML.patch'
+          git apply --directory=Albedo-Quintessential-Synth 'CP29_DirectComposition_HTML.patch'
           if ($LASTEXITCODE -ne 0) { throw 'CP29 DirectComposition native source patch failed' }
           python 'Albedo-Quintessential-Synth/tests/cp29_directcomposition_contract.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP29 DirectComposition, fallback and HTML contract failed' }
