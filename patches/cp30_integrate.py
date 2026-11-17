@@ -7,10 +7,17 @@ from pathlib import Path
 import base64,gzip,hashlib,json,re
 repo=Path.cwd();root=repo/'Albedo-Quintessential-Synth'
 encoded=repo/'patches/cp30_cp22_3x2_html.b64'
-data=gzip.decompress(base64.b64decode(encoded.read_text(encoding='ascii').strip(),validate=True))
+canonical=repo/'ui/Albedo_CP30_CP22_Landscape_3x2.html'
+# The editable HTML file is the live source-of-truth. A checksum-pinned
+# compressed snapshot is retained for reproducible fallback/recovery.
+if canonical.is_file():
+ data=canonical.read_bytes().rstrip(b'\r\n')
+else:
+ data=gzip.decompress(base64.b64decode(encoded.read_text(encoding='ascii').strip(),validate=True))
 sha=hashlib.sha256(data).hexdigest()
 EXPECTED='681eaf3c20e84d8e84c45488c6e1b25a8301c8f1650911fe1f795536fa5c084d'
-assert sha==EXPECTED,('CP30 embedded HTML SHA mismatch',sha)
+if not canonical.is_file():
+ assert sha==EXPECTED,('CP30 fallback HTML SHA mismatch',sha)
 s=data.decode('utf-8')
 checks=['const BASE_W=1500,BASE_H=1000',"aspectRatio:'3:2'",'window.ALBEDO_NATIVE_CP27','window.ALBEDO_NATIVE_CP27?.onDial(k,v)','window.ALBEDO_NATIVE_CP27?.onPreset(name)','window.ALBEDO_NATIVE_CP27?.onExtraParam(id,api.state.cp04[id])','id="presetBrowser"','id="cp04Lab"','id="albedoFactoryCatalog"']
 assert all(x in s for x in checks),[x for x in checks if x not in s]
