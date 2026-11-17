@@ -32,8 +32,19 @@ rc.write_text(rs.replace('@ALBEDO_CP27_HTML_PATH@','@ALBEDO_CP30_HTML_PATH@'),en
 layout=root/'include/vitriol_native_layout.hpp';ls=layout.read_text(encoding='utf-8')
 assert ls.count('kDefaultEditorWidth=1440, kDefaultEditorHeight=864')==1
 assert ls.count('constexpr double aspect=5.0/3.0;')==1
-ls=ls.replace('kDefaultEditorWidth=1440, kDefaultEditorHeight=864','kDefaultEditorWidth=1440, kDefaultEditorHeight=960')
-ls=ls.replace('constexpr double aspect=5.0/3.0;','constexpr double aspect=3.0/2.0;')
+ls=ls.replace('constexpr int kDefaultEditorWidth=1440, kDefaultEditorHeight=864',
+'''#if defined(ALBEDO_CP27_WEBVIEW2)
+constexpr int kDefaultEditorWidth=1440, kDefaultEditorHeight=960;
+#else
+// The original GDI-only standalone fixture keeps its historical dimensions.
+constexpr int kDefaultEditorWidth=1440, kDefaultEditorHeight=864;
+#endif''')
+ls=ls.replace('constexpr double aspect=5.0/3.0;',
+'''#if defined(ALBEDO_CP27_WEBVIEW2)
+ constexpr double aspect=3.0/2.0;
+#else
+ constexpr double aspect=5.0/3.0;
+#endif''')
 layout.write_text(ls,encoding='utf-8',newline='\n')
 # Historical contracts refer to the old CP27 resource; migrate expectations
 # narrowly for the new primary renderer, never mutate audio/preset tests.
