@@ -1,0 +1,28 @@
+{
+  "checkpoint": "CP32-Atlas-Taxonomy-Complete",
+  "date_utc": "2026-11-17",
+  "scope": "JUCE 8 native preset Atlas metadata and UI only",
+  "records": 64,
+  "coverage": {
+    "family": 8,
+    "role": 8,
+    "character": 12,
+    "motion": 9,
+    "context": 7
+  },
+  "factory_metadata_complete": true,
+  "factory_name_and_id_untouched": true,
+  "factory_parameter_bank_sha256": "5dd4fc88b126c7c4a6d84644c97a9c43604fa09637b7267ff56b68f8481eeb50",
+  "original_dsp_sha256": "b2a2e6e17138a6895aa9f90ca9a9e83ed700ec8dcc5a2a868aa8a68a7b4c7d41",
+  "juce_host_build": "not yet run",
+  "metadata_note": "Character, motion and suggested musical context are editorial tags; not calibrated/audio-measured classifications.",
+  "files_sha256": {
+    "Metadata/factory_preset_taxonomy.json": "8d5e4ed16138302810f834e32b7c9d471abb913d9dd5ab75b96ad3f05fe9997d",
+    "Source/AlbedoPresetTaxonomy.hpp": "b08ab03751df8f8b4d5b7c69b80d0c9bf1623e3f7f7080d6b11ad00f324d26de",
+    "Source/AlbedoEditor.cpp": "2602a2fbe44252021e8cd43d36c280c933bde7f5efd0e3264f7e4fcb9225c90e",
+    "tools/generate_preset_taxonomy.py": "3f72e09a4184e2b86573e661ce5abbacda6f678f5058fa71398efd3471c6e845",
+    "tests/check_preset_taxonomy.py": "21be2f4148888dab954b9a6d32b2fe61173dddbaf619f799b6441c4ddcd06f6b",
+    "tests/preset_taxonomy_compile.cpp": "4e13e3386ed3bc3eb0825d0b8326bb8249cc9efcd61194ac4ccb38df02b111f0",
+    "CMakeLists.txt": "d583777c643aa9b75402ec0914f6e05828f65faeb34173fd6d4bce08bf9b7d23"
+  }
+}

@@ -1,0 +1,642 @@
+[
+  {
+    "index": 0,
+    "name": "Vitreous | Glass Pressure (Bass)",
+    "family": "Vitreous",
+    "role": "Bass",
+    "character": "Deep",
+    "motion": "Steady",
+    "context": "Electronica",
+    "description": "Compressed glass-like low foundation"
+  },
+  {
+    "index": 1,
+    "name": "Vitreous | Silica Glint (Lead)",
+    "family": "Vitreous",
+    "role": "Lead",
+    "character": "Bright",
+    "motion": "Expressive",
+    "context": "Electronica",
+    "description": "Reflective silica lead for upper melodies"
+  },
+  {
+    "index": 2,
+    "name": "Vitreous | Crystal Veil (Pad)",
+    "family": "Vitreous",
+    "role": "Pad",
+    "character": "Shimmering",
+    "motion": "Evolving",
+    "context": "Ambient",
+    "description": "Translucent sustaining harmonic veil"
+  },
+  {
+    "index": 3,
+    "name": "Vitreous | Ceramic Speck (Pluck)",
+    "family": "Vitreous",
+    "role": "Pluck",
+    "character": "Sharp",
+    "motion": "Decaying",
+    "context": "IDM",
+    "description": "Small ceramic attacks with sparse tails"
+  },
+  {
+    "index": 4,
+    "name": "Vitreous | Porcelain Chord (Keys)",
+    "family": "Vitreous",
+    "role": "Keys",
+    "character": "Resonant",
+    "motion": "Struck",
+    "context": "Cinematic",
+    "description": "Porcelain-toned harmonic keyboard layers"
+  },
+  {
+    "index": 5,
+    "name": "Vitreous | Ice Fragment (Percussion)",
+    "family": "Vitreous",
+    "role": "Percussion",
+    "character": "Sharp",
+    "motion": "Struck",
+    "context": "IDM",
+    "description": "Brittle ice-like percussive accents"
+  },
+  {
+    "index": 6,
+    "name": "Vitreous | Hollow Horizon (Drone)",
+    "family": "Vitreous",
+    "role": "Drone",
+    "character": "Resonant",
+    "motion": "Evolving",
+    "context": "Ambient",
+    "description": "Open hollow glass-toned sustained bed"
+  },
+  {
+    "index": 7,
+    "name": "Vitreous | Refractive Dust (Texture)",
+    "family": "Vitreous",
+    "role": "Texture",
+    "character": "Textured",
+    "motion": "Granular",
+    "context": "Experimental",
+    "description": "Refracted micro-grains and spectral dust"
+  },
+  {
+    "index": 8,
+    "name": "Organic | Reed Floor (Bass)",
+    "family": "Organic",
+    "role": "Bass",
+    "character": "Warm",
+    "motion": "Steady",
+    "context": "Lo-Fi",
+    "description": "Reed-bodied rounded bass foundation"
+  },
+  {
+    "index": 9,
+    "name": "Organic | Woodgrain Voice (Lead)",
+    "family": "Organic",
+    "role": "Lead",
+    "character": "Resonant",
+    "motion": "Expressive",
+    "context": "Electronica",
+    "description": "Woody singing upper-register voice"
+  },
+  {
+    "index": 10,
+    "name": "Organic | Breathing Canopy (Pad)",
+    "family": "Organic",
+    "role": "Pad",
+    "character": "Airy",
+    "motion": "Breathing",
+    "context": "Ambient",
+    "description": "Broad breathing canopy of natural overtones"
+  },
+  {
+    "index": 11,
+    "name": "Organic | Bamboo Needle (Pluck)",
+    "family": "Organic",
+    "role": "Pluck",
+    "character": "Sharp",
+    "motion": "Decaying",
+    "context": "Lo-Fi",
+    "description": "Dry bamboo-like articulated plucks"
+  },
+  {
+    "index": 12,
+    "name": "Organic | Resonant Bark (Keys)",
+    "family": "Organic",
+    "role": "Keys",
+    "character": "Warm",
+    "motion": "Struck",
+    "context": "Cinematic",
+    "description": "Bark and wood resonances for chordal parts"
+  },
+  {
+    "index": 13,
+    "name": "Organic | Root Percussion (Percussion)",
+    "family": "Organic",
+    "role": "Percussion",
+    "character": "Rhythmic",
+    "motion": "Struck",
+    "context": "Experimental",
+    "description": "Rooted tactile percussion articulations"
+  },
+  {
+    "index": 14,
+    "name": "Organic | Air Column Earth (Drone)",
+    "family": "Organic",
+    "role": "Drone",
+    "character": "Airy",
+    "motion": "Evolving",
+    "context": "Ambient",
+    "description": "Sustained earthy air-column atmosphere"
+  },
+  {
+    "index": 15,
+    "name": "Organic | Living Branch (Texture)",
+    "family": "Organic",
+    "role": "Texture",
+    "character": "Textured",
+    "motion": "Breathing",
+    "context": "Experimental",
+    "description": "Shifting branch-like organic texture"
+  },
+  {
+    "index": 16,
+    "name": "Metallic | Copper Foundation (Bass)",
+    "family": "Metallic",
+    "role": "Bass",
+    "character": "Deep",
+    "motion": "Steady",
+    "context": "Progressive Techno",
+    "description": "Dense copper-like tonal bass support"
+  },
+  {
+    "index": 17,
+    "name": "Metallic | Bronze Filament (Lead)",
+    "family": "Metallic",
+    "role": "Lead",
+    "character": "Bright",
+    "motion": "Expressive",
+    "context": "Electronica",
+    "description": "Narrow bronze-like leading filament"
+  },
+  {
+    "index": 18,
+    "name": "Metallic | Alloy Halo (Pad)",
+    "family": "Metallic",
+    "role": "Pad",
+    "character": "Shimmering",
+    "motion": "Evolving",
+    "context": "Ambient",
+    "description": "Luminous alloy harmonic suspension"
+  },
+  {
+    "index": 19,
+    "name": "Metallic | Spring Needle (Pluck)",
+    "family": "Metallic",
+    "role": "Pluck",
+    "character": "Sharp",
+    "motion": "Decaying",
+    "context": "IDM",
+    "description": "Springy metallic short attacks"
+  },
+  {
+    "index": 20,
+    "name": "Metallic | Bellplate Keys (Keys)",
+    "family": "Metallic",
+    "role": "Keys",
+    "character": "Resonant",
+    "motion": "Struck",
+    "context": "Cinematic",
+    "description": "Plate and bell-inspired keyboard tones"
+  },
+  {
+    "index": 21,
+    "name": "Metallic | Iron Strike (Percussion)",
+    "family": "Metallic",
+    "role": "Percussion",
+    "character": "Sharp",
+    "motion": "Struck",
+    "context": "Progressive Techno",
+    "description": "Focused iron-like transient accent"
+  },
+  {
+    "index": 22,
+    "name": "Metallic | Metallic Monolith (Drone)",
+    "family": "Metallic",
+    "role": "Drone",
+    "character": "Resonant",
+    "motion": "Evolving",
+    "context": "Experimental",
+    "description": "Massive slowly changing metallic resonance"
+  },
+  {
+    "index": 23,
+    "name": "Metallic | Resonant Shards (Texture)",
+    "family": "Metallic",
+    "role": "Texture",
+    "character": "Textured",
+    "motion": "Granular",
+    "context": "Experimental",
+    "description": "Scattered ringing metal fragments"
+  },
+  {
+    "index": 24,
+    "name": "Cellular | Soft Circuit (Bass)",
+    "family": "Cellular",
+    "role": "Bass",
+    "character": "Deep",
+    "motion": "Pulsing",
+    "context": "Progressive Techno",
+    "description": "Soft digital low-frequency circuitry"
+  },
+  {
+    "index": 25,
+    "name": "Cellular | Voltage Edge (Lead)",
+    "family": "Cellular",
+    "role": "Lead",
+    "character": "Bright",
+    "motion": "Expressive",
+    "context": "IDM",
+    "description": "Crisp electric edge for melodic lines"
+  },
+  {
+    "index": 26,
+    "name": "Cellular | Circuit Bloom (Pad)",
+    "family": "Cellular",
+    "role": "Pad",
+    "character": "Shimmering",
+    "motion": "Evolving",
+    "context": "Ambient",
+    "description": "Growing harmonics with cellular coloration"
+  },
+  {
+    "index": 27,
+    "name": "Cellular | Logic Grain (Pluck)",
+    "family": "Cellular",
+    "role": "Pluck",
+    "character": "Sharp",
+    "motion": "Decaying",
+    "context": "IDM",
+    "description": "Compact logic-clock plucked impulses"
+  },
+  {
+    "index": 28,
+    "name": "Cellular | Electric Keyway (Keys)",
+    "family": "Cellular",
+    "role": "Keys",
+    "character": "Bright",
+    "motion": "Struck",
+    "context": "Electronica",
+    "description": "Electric stepped harmonic keyboard voice"
+  },
+  {
+    "index": 29,
+    "name": "Cellular | Mechanical Tick (Percussion)",
+    "family": "Cellular",
+    "role": "Percussion",
+    "character": "Rhythmic",
+    "motion": "Rhythmic",
+    "context": "Progressive Techno",
+    "description": "Tight machine-like rhythmic tick"
+  },
+  {
+    "index": 30,
+    "name": "Cellular | Self Similar Current (Drone)",
+    "family": "Cellular",
+    "role": "Drone",
+    "character": "Textured",
+    "motion": "Evolving",
+    "context": "Experimental",
+    "description": "Self-similar sustained current field"
+  },
+  {
+    "index": 31,
+    "name": "Cellular | Automata Rain (Texture)",
+    "family": "Cellular",
+    "role": "Texture",
+    "character": "Textured",
+    "motion": "Granular",
+    "context": "Experimental",
+    "description": "Particle rain with cellular movement"
+  },
+  {
+    "index": 32,
+    "name": "Nocturnal | Carbon Sub (Bass)",
+    "family": "Nocturnal",
+    "role": "Bass",
+    "character": "Dark",
+    "motion": "Steady",
+    "context": "Progressive Techno",
+    "description": "Dense carbon-toned sub foundation"
+  },
+  {
+    "index": 33,
+    "name": "Nocturnal | Inkline Signal (Lead)",
+    "family": "Nocturnal",
+    "role": "Lead",
+    "character": "Dark",
+    "motion": "Expressive",
+    "context": "Electronica",
+    "description": "Ink-dark slender leading signal"
+  },
+  {
+    "index": 34,
+    "name": "Nocturnal | Shadow Canopy (Pad)",
+    "family": "Nocturnal",
+    "role": "Pad",
+    "character": "Dark",
+    "motion": "Evolving",
+    "context": "Ambient",
+    "description": "Shadowed wide harmonic canopy"
+  },
+  {
+    "index": 35,
+    "name": "Nocturnal | Ash Splinter (Pluck)",
+    "family": "Nocturnal",
+    "role": "Pluck",
+    "character": "Sharp",
+    "motion": "Decaying",
+    "context": "Lo-Fi",
+    "description": "Short ash-like muted articulations"
+  },
+  {
+    "index": 36,
+    "name": "Nocturnal | Dark Matter Keys (Keys)",
+    "family": "Nocturnal",
+    "role": "Keys",
+    "character": "Resonant",
+    "motion": "Struck",
+    "context": "Cinematic",
+    "description": "Dark reflective keyboard resonances"
+  },
+  {
+    "index": 37,
+    "name": "Nocturnal | Black Dust Hit (Percussion)",
+    "family": "Nocturnal",
+    "role": "Percussion",
+    "character": "Rhythmic",
+    "motion": "Struck",
+    "context": "IDM",
+    "description": "Muted black-dust transient hits"
+  },
+  {
+    "index": 38,
+    "name": "Nocturnal | Earth Nocturne (Drone)",
+    "family": "Nocturnal",
+    "role": "Drone",
+    "character": "Dark",
+    "motion": "Evolving",
+    "context": "Ambient",
+    "description": "Deep slowly changing nocturnal space"
+  },
+  {
+    "index": 39,
+    "name": "Nocturnal | Ember Drift (Texture)",
+    "family": "Nocturnal",
+    "role": "Texture",
+    "character": "Textured",
+    "motion": "Granular",
+    "context": "Experimental",
+    "description": "Diffuse ember-like drifting particles"
+  },
+  {
+    "index": 40,
+    "name": "Aerial | Aqua Current (Bass)",
+    "family": "Aerial",
+    "role": "Bass",
+    "character": "Soft",
+    "motion": "Steady",
+    "context": "Electronica",
+    "description": "Fluid rounded low-end movement"
+  },
+  {
+    "index": 41,
+    "name": "Aerial | Vowel Ribbon (Lead)",
+    "family": "Aerial",
+    "role": "Lead",
+    "character": "Airy",
+    "motion": "Expressive",
+    "context": "Electronica",
+    "description": "Vowel-shaped floating lead articulation"
+  },
+  {
+    "index": 42,
+    "name": "Aerial | Azure Suspension (Pad)",
+    "family": "Aerial",
+    "role": "Pad",
+    "character": "Airy",
+    "motion": "Evolving",
+    "context": "Ambient",
+    "description": "Wide suspended atmospheric harmonics"
+  },
+  {
+    "index": 43,
+    "name": "Aerial | Pearl Bead (Pluck)",
+    "family": "Aerial",
+    "role": "Pluck",
+    "character": "Bright",
+    "motion": "Decaying",
+    "context": "IDM",
+    "description": "Light pearl-like articulated beads"
+  },
+  {
+    "index": 44,
+    "name": "Aerial | Cloud Glass (Keys)",
+    "family": "Aerial",
+    "role": "Keys",
+    "character": "Shimmering",
+    "motion": "Struck",
+    "context": "Cinematic",
+    "description": "Clouded glass chordal keyboard timbre"
+  },
+  {
+    "index": 45,
+    "name": "Aerial | Rainfall Skin (Percussion)",
+    "family": "Aerial",
+    "role": "Percussion",
+    "character": "Soft",
+    "motion": "Struck",
+    "context": "Experimental",
+    "description": "Fine rainfall-like soft rhythmic attacks"
+  },
+  {
+    "index": 46,
+    "name": "Aerial | High Atmosphere (Drone)",
+    "family": "Aerial",
+    "role": "Drone",
+    "character": "Airy",
+    "motion": "Evolving",
+    "context": "Ambient",
+    "description": "High sustained open-air drone"
+  },
+  {
+    "index": 47,
+    "name": "Aerial | Floating Particles (Texture)",
+    "family": "Aerial",
+    "role": "Texture",
+    "character": "Textured",
+    "motion": "Granular",
+    "context": "Experimental",
+    "description": "Loose floating airborne micro-particles"
+  },
+  {
+    "index": 48,
+    "name": "Kinetic | Felt Foundation (Bass)",
+    "family": "Kinetic",
+    "role": "Bass",
+    "character": "Warm",
+    "motion": "Steady",
+    "context": "Lo-Fi",
+    "description": "Felt-damped weighty rhythmic low support"
+  },
+  {
+    "index": 49,
+    "name": "Kinetic | Mechanism Signal (Lead)",
+    "family": "Kinetic",
+    "role": "Lead",
+    "character": "Bright",
+    "motion": "Pulsing",
+    "context": "Progressive Techno",
+    "description": "Mechanized articulate sequenced lead"
+  },
+  {
+    "index": 50,
+    "name": "Kinetic | Pulse Loom (Pad)",
+    "family": "Kinetic",
+    "role": "Pad",
+    "character": "Rhythmic",
+    "motion": "Pulsing",
+    "context": "Progressive Techno",
+    "description": "Wide pulsing harmonic fabric"
+  },
+  {
+    "index": 51,
+    "name": "Kinetic | Sand Trigger (Pluck)",
+    "family": "Kinetic",
+    "role": "Pluck",
+    "character": "Sharp",
+    "motion": "Decaying",
+    "context": "IDM",
+    "description": "Dry sand-like triggered transient"
+  },
+  {
+    "index": 52,
+    "name": "Kinetic | Membrane Keys (Keys)",
+    "family": "Kinetic",
+    "role": "Keys",
+    "character": "Warm",
+    "motion": "Struck",
+    "context": "Lo-Fi",
+    "description": "Membrane-styled tactile harmonic keys"
+  },
+  {
+    "index": 53,
+    "name": "Kinetic | Transient Atlas (Percussion)",
+    "family": "Kinetic",
+    "role": "Percussion",
+    "character": "Rhythmic",
+    "motion": "Struck",
+    "context": "Progressive Techno",
+    "description": "Short functional percussive transients"
+  },
+  {
+    "index": 54,
+    "name": "Kinetic | Motor Field (Drone)",
+    "family": "Kinetic",
+    "role": "Drone",
+    "character": "Rhythmic",
+    "motion": "Evolving",
+    "context": "Progressive Techno",
+    "description": "Persistent rotating mechanical tone"
+  },
+  {
+    "index": 55,
+    "name": "Kinetic | Rhythmic Detritus (Texture)",
+    "family": "Kinetic",
+    "role": "Texture",
+    "character": "Textured",
+    "motion": "Rhythmic",
+    "context": "IDM",
+    "description": "Broken rhythmic particles and detritus"
+  },
+  {
+    "index": 56,
+    "name": "Chimeric | Stoneweight Bass (Bass)",
+    "family": "Chimeric",
+    "role": "Bass",
+    "character": "Deep",
+    "motion": "Steady",
+    "context": "Progressive Techno",
+    "description": "Mineral-heavy hybrid bass weight"
+  },
+  {
+    "index": 57,
+    "name": "Chimeric | Wireline Lead (Lead)",
+    "family": "Chimeric",
+    "role": "Lead",
+    "character": "Sharp",
+    "motion": "Expressive",
+    "context": "Experimental",
+    "description": "Wired hybrid melodic edge"
+  },
+  {
+    "index": 58,
+    "name": "Chimeric | Bellfield Pad (Pad)",
+    "family": "Chimeric",
+    "role": "Pad",
+    "character": "Shimmering",
+    "motion": "Evolving",
+    "context": "Ambient",
+    "description": "Hybrid bell-like sustained harmonics"
+  },
+  {
+    "index": 59,
+    "name": "Chimeric | Quartz Pluck (Pluck)",
+    "family": "Chimeric",
+    "role": "Pluck",
+    "character": "Bright",
+    "motion": "Decaying",
+    "context": "IDM",
+    "description": "Quartz-inspired articulated hybrid plucks"
+  },
+  {
+    "index": 60,
+    "name": "Chimeric | Mineral Keys (Keys)",
+    "family": "Chimeric",
+    "role": "Keys",
+    "character": "Resonant",
+    "motion": "Struck",
+    "context": "Cinematic",
+    "description": "Composite mineral keyboard resonances"
+  },
+  {
+    "index": 61,
+    "name": "Chimeric | Fracture Knock (Percussion)",
+    "family": "Chimeric",
+    "role": "Percussion",
+    "character": "Rhythmic",
+    "motion": "Struck",
+    "context": "Experimental",
+    "description": "Fractured hybrid impact articulation"
+  },
+  {
+    "index": 62,
+    "name": "Chimeric | Composite Resonance (Drone)",
+    "family": "Chimeric",
+    "role": "Drone",
+    "character": "Hybrid",
+    "motion": "Evolving",
+    "context": "Experimental",
+    "description": "Dense composite sustained resonances"
+  },
+  {
+    "index": 63,
+    "name": "Chimeric | Hybrid Matter (Texture)",
+    "family": "Chimeric",
+    "role": "Texture",
+    "character": "Hybrid",
+    "motion": "Granular",
+    "context": "Experimental",
+    "description": "Mixed-material evolving sound-design layer"
+  }
+]
