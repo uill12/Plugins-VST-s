@@ -61,6 +61,7 @@ static const uint8_t CLS_COMP[16]={0x52,0x42,0x44,0x4b,0x10,0x21,0x49,0x82,0xb9,
 static const uint8_t CLS_CTRL[16]={0x52,0x42,0x44,0x4b,0x10,0x21,0x49,0x82,0xb9,0x33,0x43,0x22,0x26,0x11,0x14,0x02};
 static const uint8_t IID_UNKNOWN[16]={0,0,0,0,0,0,0,0,0xc0,0,0,0,0,0,0,0x46};
 static const uint8_t IID_PROCESSOR[16]={0x42,0x04,0x3f,0x99,0xb7,0xda,0x45,0x3c,0xa5,0x69,0xe7,0x9d,0x9a,0xae,0xc3,0x3d};
+static const uint8_t IID_CONTEXT_REQ[16]={0x2a,0x65,0x43,0x03,0xef,0x76,0x4e,0x3d,0x95,0xb5,0xfe,0x83,0x73,0x0e,0xf6,0xd0};
 static int32_t process(void*audio){
  VProcessData d={0};d.numSamples=64;d.outputParameterChanges=(VParamChanges*)&out;
  d.inputParameterChanges=(VParamChanges*)&in;d.inputEvents=(VEventList*)&events;
@@ -75,6 +76,20 @@ static int run(void){
  void*audio=0;const void**cvt=*(const void***)comp;
  rc=((int32_t(*)(void*,const uint8_t*,void**))cvt[0])(comp,IID_PROCESSOR,&audio);
  if(rc!=OK||!audio)return 12;
+ /* Request mandatory VST3 3.7 process-context support from IComponent. */
+ void*requirements=0;
+ REQ(((int32_t(*)(void*,const uint8_t*,void**))cvt[0])(comp,IID_CONTEXT_REQ,&requirements)==OK);
+ REQ(requirements!=0);
+ if(requirements){
+  const void**rvt=*(const void***)requirements;
+  REQ(((uint32_t(*)(void*))rvt[3])(requirements)==0u);
+  /* Querying back through this interface must preserve the same processor. */
+  void*roundtrip=0;
+  REQ(((int32_t(*)(void*,const uint8_t*,void**))rvt[0])(requirements,IID_PROCESSOR,&roundtrip)==OK);
+  REQ(roundtrip==audio);
+  if(roundtrip){const void**avt=*(const void***)roundtrip;((uint32_t(*)(void*))avt[2])(roundtrip);}
+  ((uint32_t(*)(void*))rvt[2])(requirements);
+ }
  void*ctrl=0;
  rc=((int32_t(*)(void*,const uint8_t*,const uint8_t*,void**))vt[6])(f,CLS_CTRL,IID_UNKNOWN,&ctrl);
  if(rc!=OK||!ctrl)return 13;
