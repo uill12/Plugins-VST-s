@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="theme-color" content="#1a2728"/>
-<title>ALBEDO · Quintessential Synth — CP30 CP22 Landscape / 3:2 DirectComposition</title>
+<title>ALBEDO · Quintessential Synth — CP31 CP22 Landscape / 3:2 DirectComposition</title>
 <style>
 :root{--bg:#101a1d;--ground:#182527;--ink:#26332f;--paper:#f0e9d8;--paper2:#e9dfcc;--panel:#e5e6d8;--frame:#b1a48d;--muted:#687b75;--teal:#496c69;--rose:#bf7367;--blue:#658eac;--ochre:#b79456;--moss:#7a967a;--gold:#c09c59;--display:#1d302f;--e0:#c9806d;--e1:#d5ad67;--e2:#75a8be;--e3:#8cae83;--border:#b5b29d}
 *{box-sizing:border-box}html{min-height:100%;scroll-behavior:smooth}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#394c49,#172425 48%,#101a1d);font:12px/1.4 'Segoe UI',Arial,sans-serif;color:var(--ink)}button,select,input{font:inherit}button{cursor:pointer}select{cursor:pointer}button:focus-visible,select:focus-visible,input:focus-visible,.dial:focus-visible,.morph-pad:focus-visible{outline:2px solid #1b7992;outline-offset:3px}
@@ -1277,6 +1277,250 @@ html.albedo-fit #page .lower .motion-controls .dial{width:27px!important;height:
 
 html.albedo-fit #page .lower>.surface:nth-child(2) .bodypad{padding-bottom:1px!important}
 
+
+/* ALBEDO CP31 — TRUE 3:2 DISPLAY GEOMETRY: no bitmap overlays or shrinking labels.
+   A measured 1320×880 editor, not a squeezed 1500×1000 page. All original
+   inputs, graphs, typographic assets and factory metadata remain in the DOM. */
+html.albedo-fit #page.page{
+  --fit-font:14px!important;--cp24-gap:8px!important;
+  width:1320px!important;min-width:1320px!important;max-width:1320px!important;
+  height:880px!important;max-height:880px!important;
+  grid-template-rows:56px 18px 516px 190px 30px 15px!important;
+  padding:8px 12px!important;gap:7px!important;
+  font:14px/1.25 'Segoe UI',Arial,sans-serif!important;
+}
+html.albedo-fit #page header{height:56px!important;grid-template-columns:330px 330px minmax(0,1fr)!important;gap:10px!important;overflow:visible!important}
+html.albedo-fit #page header .brand svg{width:42px!important;height:44px!important}
+html.albedo-fit #page header .brand strong{font-size:26px!important}
+html.albedo-fit #page header .brand small{font-size:9px!important}
+html.albedo-fit #page header .phead{grid-template-rows:15px 29px!important;gap:2px 4px!important}
+html.albedo-fit #page header .phead label{font-size:10px!important}
+html.albedo-fit #page header .phead select{height:29px!important;font-size:12px!important}
+html.albedo-fit #page header .preset-browse-open{height:29px!important;font-size:11px!important}
+html.albedo-fit #page .control-button{height:31px!important;min-height:31px!important;font-size:10.6px!important;padding:5px 8px!important}
+html.albedo-fit #page .actions{gap:5px!important}
+html.albedo-fit #page .meta{height:18px!important;min-height:18px!important;font-size:9px!important;line-height:16px!important;padding:0 3px!important}
+html.albedo-fit #page .meta .design{font-size:9px!important}
+html.albedo-fit #page .layout{height:516px!important;min-height:516px!important;grid-template-columns:320px minmax(0,1fr) 360px!important;grid-template-rows:105px minmax(0,1fr)!important;gap:8px!important;overflow:visible!important}
+html.albedo-fit #page .layout>.surface{overflow:hidden!important;min-height:0!important}
+html.albedo-fit #page .surface-title{height:39px!important;min-height:39px!important;padding:6px 11px!important;position:relative;z-index:1}
+html.albedo-fit #page .surface-title h2{font:normal 20px/1.12 Georgia,serif!important;white-space:nowrap!important;letter-spacing:0!important}
+html.albedo-fit #page .surface-title .eyebrow{font-size:9px!important;letter-spacing:.035em!important;white-space:nowrap!important}
+html.albedo-fit #page .surface-title .seal{font-size:23px!important}
+html.albedo-fit #page .section-caption{font-size:10.4px!important;letter-spacing:.02em!important;line-height:1.2!important}
+html.albedo-fit #page .micro{font-size:9px!important;letter-spacing:0!important}
+html.albedo-fit #page .divider{margin:5px 0!important}
+html.albedo-fit #page .bodypad{padding:7px!important}
+/* The rack has a full line for source names and a separate graph row. */
+html.albedo-fit #page .rack-header{height:24px!important;min-height:24px!important;padding:2px 10px!important}
+html.albedo-fit #page .rack-header h2{font-size:19px!important}
+html.albedo-fit #page .rack-header .eyebrow,.page .rack-status{font-size:9px!important}
+html.albedo-fit #page .rack-body{padding:5px 8px 7px!important}
+html.albedo-fit #page .engine-rack .sources{gap:8px!important}
+html.albedo-fit #page .engine-rack .source-card{padding:5px 8px!important}
+html.albedo-fit #page .engine-rack .engine-text strong{font-size:13.5px!important}
+html.albedo-fit #page .engine-rack .engine-text small{font-size:9px!important}
+html.albedo-fit #page .engine-rack .wave{height:29px!important}
+html.albedo-fit #page .engine-rack .numeric{font-size:11px!important}
+/* Inspector, method and 2 rows of controls are natural flow: no overlay. */
+html.albedo-fit #page .source-panel .bodypad{height:calc(100% - 39px)!important;padding:7px!important}
+html.albedo-fit #page .source-panel .inspector{height:100%!important;display:flex!important;flex-direction:column!important;margin:0!important;overflow:hidden!important}
+html.albedo-fit #page .source-panel .inspector-head{min-height:34px!important;height:34px!important;padding:6px 9px!important}
+html.albedo-fit #page .source-panel .inspector-head strong{font-size:15px!important}
+html.albedo-fit #page .source-panel .inspector-head small{font-size:9px!important}
+html.albedo-fit #page .source-panel .inspector-body{flex:1;min-height:0;padding:8px 10px!important;display:flex;flex-direction:column;gap:4px}
+html.albedo-fit #page .source-panel .inspector-body label{font-size:10px!important}
+html.albedo-fit #page .source-panel .inspector-body select{height:28px!important;font-size:11px!important;margin:0 0 6px!important;padding:4px!important}
+html.albedo-fit #page .source-panel .inspector-body .section-caption{font-size:10px!important;min-height:14px!important;margin:2px 0 1px!important}
+html.albedo-fit #page .source-panel .knob-grid{gap:7px 4px!important;margin-bottom:2px!important}
+html.albedo-fit #page .source-panel .callrow{margin-top:auto!important;min-height:27px!important;font-size:10px!important;padding:4px 0!important}
+html.albedo-fit #page .tiny-button{font-size:10px!important}
+/* A readable control has its own dial/label/value row. */
+html.albedo-fit #page .param{min-height:70px!important;max-height:none!important;padding:0 2px!important;gap:0!important}
+html.albedo-fit #page .dial,html.albedo-fit #page .dial.medium,
+html.albedo-fit #page .macro-deck .dial,html.albedo-fit #page .motion-controls .dial,html.albedo-fit #page .shape-panel .dial{
+ width:40px!important;height:40px!important;flex-basis:40px!important;min-width:40px!important;
+}
+html.albedo-fit #page .dial:after{height:12px!important;top:5px!important;transform-origin:50% 16px!important}
+html.albedo-fit #page .param-label,html.albedo-fit #page .source-panel .param-label,
+html.albedo-fit #page .macro-deck .param-label,html.albedo-fit #page .shape-panel .param-label,
+html.albedo-fit #page .motion-controls .param-label{
+ font:700 11px/1.1 'Segoe UI',Arial,sans-serif!important;
+ max-width:100%!important;min-height:13px!important;max-height:26px!important;
+ margin:3px 0 0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+}
+html.albedo-fit #page .param-value,html.albedo-fit #page .source-panel .param-value,
+html.albedo-fit #page .macro-deck .param-value,html.albedo-fit #page .shape-panel .param-value,
+html.albedo-fit #page .motion-controls .param-value{
+ font:500 12px/1.1 Georgia,serif!important;min-height:14px!important;margin:1px 0 0!important;
+}
+/* Core reserves rows: title 39, network 156, macro 86, 2 charts + routes 104. */
+html.albedo-fit #page .center .surface-title{height:39px!important;min-height:39px!important}
+html.albedo-fit #page .network{height:155px!important;min-height:155px!important;max-height:155px!important;margin:5px 7px 0!important;flex:none!important}
+html.albedo-fit #page .network .n-label{font-size:12px!important;letter-spacing:.025em!important}
+html.albedo-fit #page .morph-pad{width:88px!important;height:88px!important}
+html.albedo-fit #page .morph-panel .caption{font-size:9px!important}
+html.albedo-fit #page .signal-label{margin:3px 9px!important;height:17px!important;min-height:17px!important;font-size:9px!important}
+html.albedo-fit #page .signal-label strong{font-size:12px!important}
+html.albedo-fit #page .macro-deck{padding:5px 8px!important;min-height:83px!important;max-height:83px!important;flex:none!important}
+html.albedo-fit #page .macro-caption{margin-bottom:3px!important;height:13px!important}
+html.albedo-fit #page .macro-caption .section-caption{font-size:9.5px!important}
+html.albedo-fit #page .macro-deck .knob-grid{gap:3px!important;grid-template-columns:repeat(7,minmax(0,1fr))!important}
+html.albedo-fit #page .macro-deck .param{min-height:62px!important}
+html.albedo-fit #page .macro-deck .dial{height:35px!important;width:35px!important;min-width:35px!important;flex-basis:35px!important}
+html.albedo-fit #page .macro-deck .param-label{font-size:10px!important;min-height:11px!important}
+html.albedo-fit #page .macro-deck .param-value{font-size:11px!important;min-height:12px!important}
+html.albedo-fit #page .analysis-strip{height:107px!important;min-height:107px!important;max-height:107px!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;padding:5px 7px!important;overflow:hidden!important}
+html.albedo-fit #page .field-notes{height:100%!important;min-height:0!important;padding:0!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;overflow:hidden!important}
+html.albedo-fit #page .field-notes .visual-card{padding:4px 6px!important;overflow:hidden!important;min-height:0!important}
+html.albedo-fit #page .field-notes .visual-card h3{font-size:11.5px!important;white-space:nowrap!important;text-overflow:ellipsis;overflow:hidden!important}
+html.albedo-fit #page .field-notes .visual-card p{font-size:8.6px!important;max-height:16px!important;overflow:hidden!important}
+html.albedo-fit #page .field-notes .visual-card svg{height:43px!important;min-height:43px!important;margin:3px 0 0!important}
+html.albedo-fit #page .coupling-deck{height:100%!important;min-height:0!important;margin:0!important;padding:4px 5px!important;overflow:hidden!important}
+html.albedo-fit #page .coupling-head{height:17px!important;min-height:17px!important;margin:0 0 3px!important}
+html.albedo-fit #page .coupling-head h3{font-size:11.5px!important}
+html.albedo-fit #page .coupling-head small{font-size:9px!important;display:none!important}
+html.albedo-fit #page .coupling-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:repeat(2,1fr);gap:4px!important}
+html.albedo-fit #page .couple-item{min-height:0!important;height:36px!important;padding:2px 4px!important}
+html.albedo-fit #page .couple-item .subrow{height:14px!important;min-height:14px!important;line-height:14px!important;margin:0!important}
+html.albedo-fit #page .couple-item strong{font-size:9.5px!important}
+html.albedo-fit #page .couple-item output{font-size:9px!important}
+html.albedo-fit #page .couple-item input{height:10px!important;margin:0!important}
+/* Filters are two 167px cards and a full-width, independent ADSR bay. */
+html.albedo-fit #page .shape-panel .bodypad.shapers{height:calc(100% - 39px)!important;grid-template-rows:154px minmax(0,1fr)!important;gap:7px!important;padding:7px!important;overflow:hidden!important}
+html.albedo-fit #page .shape-panel .shape-block{padding:5px!important;overflow:hidden!important}
+html.albedo-fit #page .shape-panel .shape-head{min-height:20px!important;margin:0 0 4px!important}
+html.albedo-fit #page .shape-panel .shape-head strong{font-size:12px!important}
+html.albedo-fit #page .shape-panel .shape-head select{font-size:9.5px!important;max-width:87px!important}
+html.albedo-fit #page .shape-panel .filter-vis{height:45px!important;min-height:45px!important;margin:0 0 3px!important}
+html.albedo-fit #page .shape-panel .param{min-height:59px!important}
+html.albedo-fit #page .shape-panel .dial{width:31px!important;height:31px!important;min-width:31px!important;flex-basis:31px!important}
+html.albedo-fit #page .shape-panel .param-label{font-size:9.7px!important;max-height:15px!important}
+html.albedo-fit #page .shape-panel .param-value{font-size:10.4px!important;min-height:12px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .dial{width:36px!important;height:36px!important;min-width:36px!important;flex-basis:36px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .param{min-height:65px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .param-label{font-size:10px!important}
+html.albedo-fit #page .shape-panel .callrow{min-height:26px!important;font-size:10.4px!important;padding:4px 0!important}
+html.albedo-fit #page .shape-panel .callrow label{font-size:10px!important}
+html.albedo-fit #page .shape-panel .callrow select{font-size:10px!important}
+/* Functional bottom row: headings never overlap body or other panels. */
+html.albedo-fit #page .lower{height:190px!important;grid-template-columns:1.16fr .97fr .98fr .95fr!important;gap:8px!important;margin:0!important;overflow:hidden!important}
+html.albedo-fit #page .lower>.surface{height:190px!important;min-height:190px!important;overflow:hidden!important}
+html.albedo-fit #page .lower .surface-title{height:34px!important;min-height:34px!important;padding:5px 9px!important}
+html.albedo-fit #page .lower .surface-title h2{font-size:17px!important}
+html.albedo-fit #page .lower .surface-title .eyebrow{display:none!important}
+html.albedo-fit #page .lower .bodypad{height:calc(100% - 34px)!important;min-height:0!important;padding:6px 8px!important;overflow:hidden!important}
+html.albedo-fit #page .lower .section-caption{font-size:9.7px!important}
+html.albedo-fit #page .lower .route-row{height:25px!important;min-height:25px!important;margin:3px 0!important;gap:4px!important}
+html.albedo-fit #page .lower .route-row select{height:23px!important;font-size:10px!important}
+html.albedo-fit #page .lower .route-row input[type=range]{height:13px!important}
+html.albedo-fit #page .lower .add-route{font-size:9px!important;height:23px!important;margin:5px 0!important}
+html.albedo-fit #page .lower .motion-head select{font-size:10px!important}
+html.albedo-fit #page .lower .automata{height:51px!important;max-height:51px!important;min-height:51px!important;margin:4px 0!important}
+html.albedo-fit #page .lower .motion-controls .dial{width:31px!important;height:31px!important;min-width:31px!important;flex-basis:31px!important}
+html.albedo-fit #page .lower .motion-controls .param{min-height:58px!important;max-height:58px!important}
+html.albedo-fit #page .lower .motion-controls .param-label{font-size:10px!important}
+html.albedo-fit #page .lower .motion-controls .param-value{font-size:11px!important}
+html.albedo-fit #page .lower .lfo-small{height:24px!important;min-height:24px!important;margin:3px 0!important}
+html.albedo-fit #page .lower #fx{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-rows:61px!important;gap:5px!important}
+html.albedo-fit #page .lower .fx-card{height:61px!important;min-height:61px!important;max-height:61px!important;padding:5px!important}
+html.albedo-fit #page .lower .fx-line{min-height:22px!important;padding:2px!important}
+html.albedo-fit #page .lower .fx-line strong{font-size:11px!important}
+html.albedo-fit #page .lower .fx-line small{font-size:8.5px!important}
+html.albedo-fit #page .lower .step{height:33px!important;font-size:10px!important}
+html.albedo-fit #page .lower .pattern-note{font-size:9px!important}
+html.albedo-fit #page .lower .pattern-controls button,html.albedo-fit #page .lower .pattern-controls select{font-size:10px!important}
+html.albedo-fit #page .utility{height:30px!important;gap:8px!important}
+html.albedo-fit #page .utility .surface{padding:4px 8px!important}
+html.albedo-fit #page .utility .section-caption{font-size:9px!important}
+html.albedo-fit #page .utility strong{font-size:11px!important}
+html.albedo-fit #page .utility p{font-size:8.5px!important}
+html.albedo-fit #page .utility select{font-size:10px!important}
+html.albedo-fit #page .footer{height:15px!important;font-size:9px!important}
+/* Arbor actively flows while the editor is visible, not only on mouse movement. */
+html.albedo-fit #page .network .conduit,
+html.albedo-fit #page .network .conduit.active{animation:cp31-flow 3.2s linear infinite!important;stroke-dasharray:9 8!important}
+@keyframes cp31-flow{to{stroke-dashoffset:-85}}
+html.albedo-fit #page .cp31-signal-particle{pointer-events:none;opacity:.92}
+html.albedo-fit #page .network .n-label{font-size:11px!important}
+html.albedo-fit #page .cp31-center-pulse{animation:cp31-breathe 3s ease-in-out infinite!important;transform-box:fill-box;transform-origin:center}
+@keyframes cp31-breathe{50%{opacity:.75;transform:scale(1.055)}}
+/* Modal gets all original filtering and matrix resources, with normal text. */
+html.albedo-fit .preset-browser-panel{width:min(1180px,calc(100vw - 30px))!important;max-height:calc(100dvh - 30px)!important}
+html.albedo-fit .preset-browser-heading h2{font-size:25px!important}
+html.albedo-fit .preset-browser-toolbar input,html.albedo-fit .preset-browser-toolbar select{font-size:13px!important}
+html.albedo-fit .pb-item{font-size:13px!important}
+
+/* CP31-R1 measured collision corrections: maintain 3:2, no floating text. */
+html.albedo-fit #page > header{display:grid!important;grid-template-columns:315px 335px minmax(0,1fr)!important;grid-template-rows:1fr!important;align-items:center!important;height:56px!important;overflow:hidden!important}
+html.albedo-fit #page > header > .brand{grid-column:1!important;grid-row:1!important;min-width:0!important}
+html.albedo-fit #page > header > .phead{grid-column:2!important;grid-row:1!important;display:grid!important;grid-template-columns:minmax(0,1fr) 102px!important;grid-template-rows:13px 31px!important;width:100%!important;min-width:0!important;max-width:100%!important;gap:1px 5px!important;justify-content:stretch!important;align-content:center!important}
+html.albedo-fit #page > header > .phead label{grid-column:1/-1!important;grid-row:1!important;min-width:0!important;font-size:10px!important}
+html.albedo-fit #page > header > .phead select{grid-column:1!important;grid-row:2!important;min-width:0!important;max-width:none!important;width:100%!important;height:30px!important;font-size:11.5px!important}
+html.albedo-fit #page > header > .phead .preset-browse-open{grid-column:2!important;grid-row:2!important;width:100%!important;height:30px!important;font-size:10px!important;white-space:nowrap!important;padding:4px 4px!important}
+html.albedo-fit #page > header > .actions{grid-column:3!important;grid-row:1!important;gap:4px!important;flex-wrap:nowrap!important;justify-content:flex-end!important;min-width:0!important;max-width:100%!important}
+html.albedo-fit #page > header > .actions .control-button{padding:5px!important;font-size:9px!important;letter-spacing:0!important;height:30px!important;min-height:30px!important}
+html.albedo-fit #page .meta{white-space:nowrap!important;overflow:hidden!important}
+html.albedo-fit #page .center .network{height:150px!important;min-height:150px!important;max-height:150px!important}
+html.albedo-fit #page .macro-deck{min-height:80px!important;max-height:80px!important}
+html.albedo-fit #page .analysis-strip{height:105px!important;min-height:105px!important;max-height:105px!important}
+html.albedo-fit #page .coupling-grid{grid-template-rows:repeat(2,minmax(0,1fr))!important}
+html.albedo-fit #page .couple-item{height:33px!important}
+html.albedo-fit #page .shape-panel .bodypad.shapers{grid-template-rows:171px minmax(0,1fr)!important}
+html.albedo-fit #page .shape-panel .shape-head{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,80px)!important;column-gap:2px!important;align-items:center!important;min-height:32px!important;max-height:32px!important;overflow:hidden!important}
+html.albedo-fit #page .shape-panel .shape-head>div{min-width:0!important;overflow:hidden!important}
+html.albedo-fit #page .shape-panel .shape-head strong{font-size:11.5px!important;white-space:nowrap!important}
+html.albedo-fit #page .shape-panel .shape-head .section-caption{font-size:8.7px!important;white-space:nowrap!important;letter-spacing:0!important}
+html.albedo-fit #page .shape-panel .shape-head select{min-width:0!important;max-width:80px!important;width:80px!important;height:24px!important;padding:2px!important;font-size:9px!important}
+html.albedo-fit #page .shape-panel .shape-head small{display:none!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .shape-head{grid-template-columns:1fr 65px!important;min-height:27px!important;max-height:27px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .callrow{height:25px!important;min-height:25px!important;max-height:25px!important;padding:2px 0!important;margin:0!important;gap:4px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .callrow label{font-size:9.5px!important;white-space:nowrap!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .callrow select{max-height:23px!important;height:23px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .segment{flex-wrap:nowrap!important;gap:2px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .segment button{height:23px!important;font-size:9px!important;padding:2px 5px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .divider{margin:3px 0!important}
+html.albedo-fit #page .lower .fx-card{height:70px!important;min-height:70px!important;max-height:70px!important;padding:4px!important;display:flex!important;flex-direction:column!important}
+html.albedo-fit #page .lower #fx{grid-auto-rows:70px!important;gap:5px!important}
+html.albedo-fit #page .lower .fx-head{height:21px!important;min-height:21px!important;display:flex!important;align-items:center!important}
+html.albedo-fit #page .lower .fx-head strong{font-size:10.5px!important}
+html.albedo-fit #page .lower .fx-head button{width:20px!important;height:20px!important}
+html.albedo-fit #page .lower .fx-knob-area{height:38px!important;min-height:38px!important;flex:1!important;display:block!important;overflow:hidden!important}
+html.albedo-fit #page .lower .fx-knob-area .param{display:grid!important;grid-template-columns:32px minmax(0,1fr) auto!important;grid-template-rows:1fr!important;align-items:center!important;gap:3px!important;height:37px!important;min-height:37px!important}
+html.albedo-fit #page .lower .fx-knob-area .dial{width:28px!important;height:28px!important;min-width:28px!important;flex-basis:28px!important;grid-column:1!important;grid-row:1!important}
+html.albedo-fit #page .lower .fx-knob-area .param-label{grid-column:2!important;grid-row:1!important;font-size:10px!important;margin:0!important;max-height:20px!important;white-space:nowrap!important}
+html.albedo-fit #page .lower .fx-knob-area .param-value{grid-column:3!important;grid-row:1!important;font-size:10px!important;margin:0!important;white-space:nowrap!important}
+html.albedo-fit #page #cells.automata{height:52px!important;min-height:52px!important;max-height:52px!important;grid-template-rows:repeat(7,minmax(0,1fr))!important;overflow:hidden!important}
+html.albedo-fit #page #cells .cell{height:100%!important;max-height:100%!important;min-height:0!important;aspect-ratio:auto!important;box-shadow:none!important}
+html.albedo-fit #page .lower .motion-controls .param{height:50px!important;min-height:50px!important;max-height:50px!important}
+html.albedo-fit #page .lower .motion-controls .dial{width:29px!important;height:29px!important;min-width:29px!important;flex-basis:29px!important}
+html.albedo-fit #page .lower .lfo-small{height:19px!important;min-height:19px!important}
+
+/* CP31-R2: final containment after Chromium pixel-boundary inspection. */
+html.albedo-fit #page .rack-header{height:26px!important;min-height:26px!important;padding:3px 10px!important;align-items:center!important;overflow:hidden!important}
+html.albedo-fit #page .rack-header>div:first-child{display:flex!important;align-items:baseline!important;gap:10px!important;min-width:0!important;white-space:nowrap!important}
+html.albedo-fit #page .rack-header .eyebrow{font-size:9px!important;white-space:nowrap!important}
+html.albedo-fit #page .rack-header h2{margin:0!important;font-size:18px!important;white-space:nowrap!important;line-height:1!important}
+html.albedo-fit #page .rack-header h2 span{font-size:10px!important}
+html.albedo-fit #page .rack-status{white-space:nowrap!important;font-size:9px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .shape-head{min-height:24px!important;max-height:24px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .knob-grid{height:55px!important;max-height:55px!important;min-height:55px!important;overflow:hidden!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .param{min-height:55px!important;max-height:55px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .dial{height:32px!important;width:32px!important;min-width:32px!important;flex-basis:32px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .param-label{min-height:11px!important;max-height:12px!important;font-size:9.5px!important;margin:2px 0 0!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .param-value{min-height:12px!important;font-size:10px!important;margin:0!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .divider{height:1px!important;margin:2px 0!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .callrow{height:21px!important;min-height:21px!important;max-height:21px!important;padding:1px 0!important;margin:0!important;align-items:center!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .callrow label{font-size:9.6px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .callrow select{height:20px!important;max-height:20px!important;padding:1px 4px!important;font-size:9.6px!important}
+html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .segment button{height:20px!important;min-height:20px!important;font-size:9px!important;padding:2px 5px!important}
+html.albedo-fit #page .macro-deck .param{min-height:58px!important;max-height:58px!important}
+html.albedo-fit #page .macro-deck .param-label{font-size:9.8px!important}
+html.albedo-fit #page .center .analysis-strip{height:102px!important;min-height:102px!important;max-height:102px!important}
+html.albedo-fit #page .center .coupling-grid{gap:2px!important}
+html.albedo-fit #page .center .couple-item{height:31px!important;padding:1px 3px!important}
+html.albedo-fit #page .center .coupling-head{height:16px!important;min-height:16px!important}
+
 </style>
 </head>
 <body>
@@ -1586,17 +1830,17 @@ document.getElementById('graphClose').addEventListener('click',close);overlay.ad
 </script>
 
 <script>
-/* CP30 only scales the complete single-page canvas on actual viewport changes;
+/* CP31 only scales the complete single-page canvas on actual viewport changes;
    pointer movements and parameter changes never modify frame geometry. */
 (()=>{
- const BASE_W=1500,BASE_H=1000,root=document.documentElement;
+ const BASE_W=1320,BASE_H=880,root=document.documentElement;
  function fit(){
    const w=Math.max(1,document.documentElement.clientWidth),h=Math.max(1,document.documentElement.clientHeight);
    const scale=Math.min(w/BASE_W,h/BASE_H);
    root.style.setProperty('--fit-scale',String(Math.max(.1,scale)));
  }
  fit();window.addEventListener('resize',fit,{passive:true});
- Object.defineProperty(window,'ALBEDO_CP30_LAYOUT',{get:()=>({aspectRatio:'3:2',baseWidth:BASE_W,baseHeight:BASE_H,scale:Number(root.style.getPropertyValue('--fit-scale')),logo:'original CP24 SVG — unchanged',nativeBuild:'DirectComposition WebView2 source' })});
+ Object.defineProperty(window,'ALBEDO_CP30_LAYOUT',{get:()=>({aspectRatio:'3:2',baseWidth:BASE_W,baseHeight:BASE_H,scale:Number(root.style.getPropertyValue('--fit-scale')),logo:'original CP24 SVG — unchanged',nativeBuild:'DirectComposition WebView2 CP31 layout' })});
 })();
 </script>
 <script>
@@ -1736,6 +1980,51 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
  host.postMessage('ready');
 })();
 
+</script>
+<script>
+/* CP31: lightweight visible Arbor motion. No DOM rebuilding, no idle input
+   messages, and no changes to the audio thread or the native parameter bridge. */
+(()=>{
+ 'use strict';
+ const NS='http://www.w3.org/2000/svg';
+ const root=document.getElementById('networkPaths');
+ if(!root || !window.ALBEDO_CP04) return;
+ const api=window.ALBEDO_CP04;
+ const colors=['#e9a895','#f0c78c','#9ecbdf','#b7d9a2'];
+ const streams=[];
+ for(let i=0;i<4;i++){
+  const path=document.getElementById('c'+i);
+  if(!path || !path.getTotalLength) continue;
+  const orb=document.createElementNS(NS,'circle');
+  orb.classList.add('cp31-signal-particle');
+  orb.setAttribute('r','4');orb.setAttribute('fill',colors[i]);
+  orb.setAttribute('stroke','#e9eed6');orb.setAttribute('stroke-width','.8');
+  orb.style.pointerEvents='none';
+  root.appendChild(orb);
+  streams.push({path,orb,i,length:path.getTotalLength()});
+ }
+ const morph=document.querySelector('.morph-pad');
+ if(morph)morph.classList.add('cp31-center-pulse');
+ let active=true,frames=0,last=0,clock=0;
+ function render(now){
+  requestAnimationFrame(render);
+  if(!active || document.hidden || now-last<32)return;
+  const dt=last?Math.min(.08,(now-last)/1000):.033;last=now;clock+=dt;frames++;
+  for(const a of streams){
+   const e=api.state.engines[a.i];
+   const level=e&&e.enabled?(Number(e.level)||0)/100:0;
+   const off=(clock*(31+level*29)+a.i*39)%a.length;
+   const point=a.path.getPointAtLength(off);
+   a.orb.setAttribute('cx',point.x.toFixed(1));
+   a.orb.setAttribute('cy',point.y.toFixed(1));
+   a.orb.setAttribute('opacity',String(level>.01?.45+.5*level:0));
+   a.orb.setAttribute('r',String(2.8+level*1.8));
+  }
+ }
+ requestAnimationFrame(render);
+ document.addEventListener('visibilitychange',()=>{last=0});
+ window.ALBEDO_CP31_MOTION={get frames(){return frames}, get paths(){return streams.length},pause(){active=false},resume(){active=true;last=0}};
+})();
 </script>
 </body>
 </html>
