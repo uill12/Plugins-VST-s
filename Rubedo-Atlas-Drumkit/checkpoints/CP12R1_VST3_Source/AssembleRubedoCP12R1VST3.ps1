@@ -62,7 +62,7 @@ try {
     "VST3_SHA256=$outHash",
     "VST3_BYTES=$newLength",
     'STATUS=ASSEMBLED_NOT_TESTED_IN_BITWIG',
-    'NOTICE=VST3 MIDI Learn host-event feedback is still unimplemented; map Save/Load is wired to VST3 host parameters.'
+    'NOTICE=VST3 MIDI Learn and pad feedback are source-implemented via host outputParameterChanges and mock-host-tested; actual Bitwig delivery and state persistence remain unverified.'
   )
   $report | Set-Content -LiteralPath (Join-Path $OutputRoot 'ASSEMBLY_MANIFEST.txt') -Encoding UTF8
   Write-Host "Assembled: $outFile"
