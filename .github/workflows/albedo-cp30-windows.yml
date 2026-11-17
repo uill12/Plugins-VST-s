@@ -41,6 +41,7 @@ on:
       - 'patches/cp29_directcomposition_3x2.b64'
       - 'patches/cp30_cp22_3x2_html.b64'
       - 'patches/cp30_integrate.py'
+      - 'ui/Albedo_CP30_CP22_Landscape_3x2.html'
       - 'patches/cp29_r1_legacy_gdi_geometry.py'
   workflow_dispatch:
 permissions:
@@ -637,7 +638,7 @@ jobs:
           if (!(Test-Path (Join-Path $sdk 'build/native/include/WebView2.h'))) { throw 'WebView2 official SDK headers missing' }
           if (!(Test-Path (Join-Path $sdk 'build/native/x64/WebView2LoaderStatic.lib'))) { throw 'WebView2 static loader missing' }
           $env:ALBEDO_CP27_WEBVIEW2_SDK=$sdk
-          Write-Host "CP30 WebView2 SDK pinned: $version; CP22 landscape 3:2 embedded in both formats"
+          Write-Host "CP30 WebView2 SDK pinned: $version; editable CP22 landscape 3:2 HTML embedded in both formats"
           .\Launch_Windows_Build.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Native Windows build or release verification failed' }
       - name: Publish genuine Windows binaries only after verification
