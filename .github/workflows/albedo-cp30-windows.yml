@@ -1,7 +1,7 @@
-name: Albedo CP30 CP22 Landscape DirectComposition HTML + 3x2 Native Fallback Windows CLAP + VST3
+name: Albedo CP31 Readable Arbor DirectComposition Windows x64 CLAP + VST3
 on:
   push:
-    branches: [albedo-cp30-cp22-landscape-directx]
+    branches: [albedo-cp31-arbor-readable]
     paths:
       - '.github/workflows/albedo-cp30-windows.yml'
       - 'patches/cp15_apply_part*.txt'
@@ -41,6 +41,7 @@ on:
       - 'patches/cp29_directcomposition_3x2.b64'
       - 'patches/cp30_cp22_3x2_html.b64'
       - 'patches/cp30_integrate.py'
+      - 'patches/cp31_layout_contract.py'
       - 'ui/Albedo_CP30_CP22_Landscape_3x2.html'
       - 'patches/cp29_r1_legacy_gdi_geometry.py'
   workflow_dispatch:
@@ -614,11 +615,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP29 48k polyphonic recovery source regression' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP29 original DSP, factory, and artwork source integrity regression' }
-      - name: CP30 replace embedded resource with complete CP22 landscape HTML and 3:2 host geometry
+      - name: CP31 integrate readable 3:2 HTML with moving Arbor and native parameter bridge
         shell: pwsh
         run: |
           python 'patches/cp30_integrate.py'
-          if ($LASTEXITCODE -ne 0) { throw 'CP30 CP22 HTML source integration failed' }
+          if ($LASTEXITCODE -ne 0) { throw 'CP31 HTML source integration failed' }
+          python 'patches/cp31_layout_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP31 moving Arbor and responsive layout resource contract failed' }
           python 'Albedo-Quintessential-Synth/tests/cp27_webview_contract.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP30 native WebView2 parameter bridge contract failed' }
           python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
@@ -644,7 +647,7 @@ jobs:
       - name: Publish genuine Windows binaries only after verification
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP30_Windows_x64_CLAP_VST3
+          name: Albedo_CP31_Windows_x64_CLAP_VST3
           path: |
             Albedo-Quintessential-Synth/Albedo_Quintessential_Synth_Windows_x64_CP19R5.zip
             Albedo-Quintessential-Synth/WINDOWS_BUILD_LOG.txt
@@ -681,7 +684,7 @@ jobs:
       - name: Publish runtime-only CLAP and VST3 distribution for Drive transfer
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP30_Windows_x64_RuntimeOnly
+          name: Albedo_CP31_Windows_x64_RuntimeOnly
           path: |
             Albedo-Quintessential-Synth/dist_windows_runtime_CP19R5/*
           if-no-files-found: error
@@ -689,7 +692,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP30_Verified_Applied_Source
+          name: Albedo_CP31_Verified_Applied_Source
           path: |
             Albedo-Quintessential-Synth/src/editor_native_win.cpp
             Albedo-Quintessential-Synth/src/albedo_webview_win.cpp
@@ -711,7 +714,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP30_Windows_x64_Failure_Logs
+          name: Albedo_CP31_Windows_x64_Failure_Logs
           path: |
             Albedo-Quintessential-Synth/WINDOWS_BUILD_LOG.txt
             Albedo-Quintessential-Synth/build_windows_x64/CMakeCache.txt
