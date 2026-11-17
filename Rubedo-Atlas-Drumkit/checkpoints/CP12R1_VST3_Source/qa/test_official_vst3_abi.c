@@ -42,6 +42,7 @@ S_EQ(offsetof(Steinberg_Vst_IEditControllerVtbl,createView),17*sizeof(void*));
 S_EQ(offsetof(Steinberg_Vst_IParameterChangesVtbl,addParameterData),5*sizeof(void*));
 S_EQ(offsetof(Steinberg_Vst_IParamValueQueueVtbl,addPoint),6*sizeof(void*));
 S_EQ(offsetof(Steinberg_Vst_IEventListVtbl,getEvent),4*sizeof(void*));
+S_EQ(offsetof(Steinberg_Vst_IProcessContextRequirementsVtbl,getProcessContextRequirements),3*sizeof(void*));
 static void abi_typecheck(void){
  /* addParameterData accepts a const uint32_t* (ParamID pointer), not an ID
   * passed by value. Compiler checks this is a correct function signature. */
