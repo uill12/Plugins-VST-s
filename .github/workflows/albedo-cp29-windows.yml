@@ -598,6 +598,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP29 DirectComposition native source patch failed' }
           python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); names=('src/albedo_webview_win.cpp','include/albedo_webview_win.hpp','src/editor_native_win.cpp','CP19_SOURCE_MANIFEST.json','tests/cp29_directcomposition_contract.py'); [(r/n).write_bytes((r/n).read_bytes().replace(bytes([13,10]),bytes([10]))) for n in names]; print('CP29 Windows LF canonical source normalized')"
           if ($LASTEXITCODE -ne 0) { throw 'CP29 CRLF normalization failed' }
+          python -c "from pathlib import Path;import hashlib,json; r=Path('Albedo-Quintessential-Synth'); p=r/'CMakeLists.txt'; p.write_bytes(p.read_bytes().replace(bytes([13,10]),bytes([10]))); h=hashlib.sha256(p.read_bytes()).hexdigest(); assert h=='eadaa6763837429555390839296d4a540338fef7006b84ac9fc05d3e75cd092c','Unexpected CP29 CMake content'; mf=r/'CP19_SOURCE_MANIFEST.json'; j=json.loads(mf.read_text(encoding='utf-8'));j['changed_source_sha256']['CMakeLists.txt']=h;mf.write_text(json.dumps(j,indent=2,ensure_ascii=False)+'\n',encoding='utf-8');print('CP29 authenticated DirectComposition linker manifest: '+h)"
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 CMake SHA migration rejected' }
           python 'Albedo-Quintessential-Synth/tests/cp29_directcomposition_contract.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP29 DirectComposition, fallback and HTML contract failed' }
           python 'Albedo-Quintessential-Synth/tests/cp27_webview_contract.py'
