@@ -21,7 +21,8 @@ if not canonical.is_file():
 s=data.decode('utf-8')
 checks=['const BASE_W=1320,BASE_H=880',"aspectRatio:'3:2'",'window.ALBEDO_NATIVE_CP27','window.ALBEDO_NATIVE_CP27?.onDial(k,v)','window.ALBEDO_NATIVE_CP27?.onPreset(name)','window.ALBEDO_NATIVE_CP27?.onExtraParam(id,api.state.cp04[id])','id="presetBrowser"','id="cp04Lab"','id="albedoFactoryCatalog"']
 assert all(x in s for x in checks),[x for x in checks if x not in s]
-assert 'window.ALBEDO_CP31_MOTION' in s, 'CP31 animated Arbor implementation absent'\nassert s.count('<div class="brand"><svg')==1
+assert 'window.ALBEDO_CP31_MOTION' in s, 'CP31 animated Arbor implementation absent'
+assert s.count('<div class="brand"><svg')==1
 assert s.count('id="presetBrowser"')==1
 assert s.count('id="cp04Lab"')==1
 html_path=root/'resources/Albedo_CP30_CP22_3x2_embedded.html'
