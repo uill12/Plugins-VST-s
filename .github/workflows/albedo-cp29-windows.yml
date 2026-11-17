@@ -39,6 +39,7 @@ on:
       - 'patches/cp28_r1_highrate_voice_budget.py'
       - 'patches/cp28_r2_fast_sine_hifi.py'
       - 'patches/cp29_directcomposition_3x2.b64'
+      - 'patches/cp29_r1_legacy_gdi_geometry.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -600,6 +601,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP29 CRLF normalization failed' }
           python -c "from pathlib import Path;import hashlib,json; r=Path('Albedo-Quintessential-Synth'); p=r/'CMakeLists.txt'; p.write_bytes(p.read_bytes().replace(bytes([13,10]),bytes([10]))); h=hashlib.sha256(p.read_bytes()).hexdigest(); assert h=='eadaa6763837429555390839296d4a540338fef7006b84ac9fc05d3e75cd092c','Unexpected CP29 CMake content'; mf=r/'CP19_SOURCE_MANIFEST.json'; j=json.loads(mf.read_text(encoding='utf-8'));j['changed_source_sha256']['CMakeLists.txt']=h;mf.write_text(json.dumps(j,indent=2,ensure_ascii=False)+'\n',encoding='utf-8');print('CP29 authenticated DirectComposition linker manifest: '+h)"
           if ($LASTEXITCODE -ne 0) { throw 'CP29 CMake SHA migration rejected' }
+          python 'patches/cp29_r1_legacy_gdi_geometry.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 R1 preserved-native-GDI geometry failed' }
           python 'Albedo-Quintessential-Synth/tests/cp29_directcomposition_contract.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP29 DirectComposition, fallback and HTML contract failed' }
           python 'Albedo-Quintessential-Synth/tests/cp27_webview_contract.py'
