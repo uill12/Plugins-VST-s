@@ -70,4 +70,6 @@ Rubedo Atlas Drumkit.vst3/
 7. Test 44.1/48/88.2/96 kHz, kit swaps, pad audition, 2 plugin instances, automation, and device unload/reload.
 8. If Bitwig fails plugin scan or becomes unstable, remove **only the VST3 candidate** and return to the unchanged CP12R1 CLAP.
 
+**2026-11-17 VST3 ABI audit:** The existing downloadable HostQA package was assembled using the pre-fix core from GitHub Actions run `43975514483`. Later official Steinberg validation of that source family detected a missing mandatory `IProcessContextRequirements` interface (46 passed, 1 failed). The missing interface was implemented in source commit `e0d0681dac964951fbd26762177c5898986c22ac`, with regression checks in `8719c8375af89620f4d1203f0109cf9f11869153` and `572f5252676221118319c6ce47838ba3a3318fb2`. **These commits do not modify the VST3 candidate already on Drive. A new full-resource VST3 package and independent official validator rerun are required before replacing/promoting it.**
+
 **Release promotion gate:** Do not mark this VST3 as user-confirmed until the real Bitwig host tests pass. Full byte-identical resources do not by themselves prove controller-host behavior.
