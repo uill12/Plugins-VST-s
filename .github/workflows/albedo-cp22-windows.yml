@@ -3,7 +3,7 @@ on:
   push:
     branches: [albedo-cp22-landscape-flicker]
     paths:
-      - '.github/workflows/albedo-cp21-windows.yml'
+      - '.github/workflows/albedo-cp22-windows.yml'
       - 'patches/cp15_apply_part*.txt'
       - 'patches/cp15_hotfix.py'
       - 'patches/cp16_part*.txt'
