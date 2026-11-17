@@ -37,6 +37,7 @@ on:
       - 'patches/cp28_black_screen_poly48.b64'
       - 'patches/cp28_manifest_verify.py'
       - 'patches/cp28_r1_highrate_voice_budget.py'
+      - 'patches/cp28_r2_fast_sine_hifi.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -576,6 +577,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP28-R1 source contract failed' }
           python Albedo-Quintessential-Synth/tools/verify_source_assets.py
           if ($LASTEXITCODE -ne 0) { throw 'CP28-R1 source integrity gate failed' }
+      - name: CP28-R2 optimize 48k polyphonic sine with exact hi-fi LUT
+        shell: pwsh
+        run: |
+          python patches/cp28_r2_fast_sine_hifi.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP28-R2 sine LUT DSP optimization failed' }
+          python Albedo-Quintessential-Synth/tests/cp28_recovery_polyphony_contract.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP28-R2 12-note source contract failed' }
+          python Albedo-Quintessential-Synth/tools/verify_source_assets.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP28-R2 audio/artwork source integrity gate failed' }
       - name: Compile original Albedo CLAP and VST3 with official Steinberg SDK
         working-directory: Albedo-Quintessential-Synth
         shell: pwsh
