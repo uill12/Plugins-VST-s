@@ -1,5 +1,6 @@
 # Rubedo Atlas Drumkit — CP12R1 VST3 with exact original resources
 
+> **Superseded as the recommended HostQA build (2026-11-17):** This document preserves evidence for the *original* VST3 candidate assembled from CI run 43975514483. Its old core fails the mandatory Steinberg process-context extension test. The **corrected full-resource VST3**, with the same PCM/GUI assets and a recompiled 47/47-validator-passing core, is available in [CP12R1_VST3_ABIFix_HostQA_2026-11-17](https://drive.google.com/drive/folders/1LIk9LjSZHe7w-NPSZSAMq1Zmb63yPgoo). See [updated QA, hashes and tests](CP12R1_VST3_ABIFIX_HOSTQA.md). Neither candidate is certified in Windows Bitwig yet.\n\n
 **Assembly date:** 2026-11-17  
 **Status:** REAL-RESOURCE WINDOWS X64 **HOST QA CANDIDATE**, not Bitwig-certified.  
 **User-confirmed rollback:** CP12R1 CLAP in existing `00_LATEST — CP12R1_Pad_Map_SaveFix` folder — not changed.
