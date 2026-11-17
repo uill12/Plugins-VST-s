@@ -596,6 +596,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP29 is incompatible with the verified CP28 R2 source' }
           git apply --directory=Albedo-Quintessential-Synth 'CP29_DirectComposition_HTML.patch'
           if ($LASTEXITCODE -ne 0) { throw 'CP29 DirectComposition native source patch failed' }
+          python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); names=('src/albedo_webview_win.cpp','include/albedo_webview_win.hpp','src/editor_native_win.cpp','CP19_SOURCE_MANIFEST.json','tests/cp29_directcomposition_contract.py'); [(r/n).write_bytes((r/n).read_bytes().replace(bytes([13,10]),bytes([10]))) for n in names]; print('CP29 Windows LF canonical source normalized')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 CRLF normalization failed' }
           python 'Albedo-Quintessential-Synth/tests/cp29_directcomposition_contract.py'
           if ($LASTEXITCODE -ne 0) { throw 'CP29 DirectComposition, fallback and HTML contract failed' }
           python 'Albedo-Quintessential-Synth/tests/cp27_webview_contract.py'
