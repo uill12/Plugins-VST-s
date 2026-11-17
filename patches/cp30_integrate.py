@@ -19,9 +19,9 @@ EXPECTED='681eaf3c20e84d8e84c45488c6e1b25a8301c8f1650911fe1f795536fa5c084d'
 if not canonical.is_file():
  assert sha==EXPECTED,('CP30 fallback HTML SHA mismatch',sha)
 s=data.decode('utf-8')
-checks=['const BASE_W=1500,BASE_H=1000',"aspectRatio:'3:2'",'window.ALBEDO_NATIVE_CP27','window.ALBEDO_NATIVE_CP27?.onDial(k,v)','window.ALBEDO_NATIVE_CP27?.onPreset(name)','window.ALBEDO_NATIVE_CP27?.onExtraParam(id,api.state.cp04[id])','id="presetBrowser"','id="cp04Lab"','id="albedoFactoryCatalog"']
+checks=['const BASE_W=1320,BASE_H=880',"aspectRatio:'3:2'",'window.ALBEDO_NATIVE_CP27','window.ALBEDO_NATIVE_CP27?.onDial(k,v)','window.ALBEDO_NATIVE_CP27?.onPreset(name)','window.ALBEDO_NATIVE_CP27?.onExtraParam(id,api.state.cp04[id])','id="presetBrowser"','id="cp04Lab"','id="albedoFactoryCatalog"']
 assert all(x in s for x in checks),[x for x in checks if x not in s]
-assert s.count('<div class="brand"><svg')==1
+assert 'window.ALBEDO_CP31_MOTION' in s, 'CP31 animated Arbor implementation absent'\nassert s.count('<div class="brand"><svg')==1
 assert s.count('id="presetBrowser"')==1
 assert s.count('id="cp04Lab"')==1
 html_path=root/'resources/Albedo_CP30_CP22_3x2_embedded.html'
@@ -60,7 +60,7 @@ for rel in ['tests/cp27_webview_contract.py','tests/cp29_directcomposition_contr
  if not p.exists():continue
  t=p.read_text(encoding='utf-8'); orig=t
  t=t.replace('resources/Albedo_CP27_5x3_embedded.html','resources/Albedo_CP30_CP22_3x2_embedded.html')
- t=t.replace('const BASE_W=1650,BASE_H=990','const BASE_W=1500,BASE_H=1000')
+ t=t.replace('const BASE_W=1650,BASE_H=990','const BASE_W=1320,BASE_H=880')
  t=t.replace("aspectRatio:'5:3'","aspectRatio:'3:2'")
  t=t.replace('kDefaultEditorWidth=1440, kDefaultEditorHeight=864','kDefaultEditorWidth=1440, kDefaultEditorHeight=960')
  t=t.replace('constexpr double aspect=5.0/3.0;','constexpr double aspect=3.0/2.0;')
@@ -80,7 +80,7 @@ for rel in ['resources/Albedo_CP30_CP22_3x2_embedded.html','CMakeLists.txt','res
  # only register existing known source, plus embedded HTML & CMake/RC modifications
  m['changed_source_sha256'][rel]=actual
  changed.append((rel,actual))
-m['cp30_landscape_directcomposition']='CP22 source GUI in 3:2 1440x960 DirectComposition/WebView2; all original DOM engines, lab, graphs, factory 64 and CP28 DSP unchanged.'
+m['cp30_landscape_directcomposition']='CP31 readable CP22 3:2 resource, Arbor particle movement on visible editor; 64 factory, CP28 DSP unchanged.'
 mp.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
 # Old manifest references to the audited CP29 layout digest may exist in
 # CP12/CP18 other JSON files. Update that one known hash only.
