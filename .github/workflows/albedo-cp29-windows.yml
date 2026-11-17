@@ -3,7 +3,7 @@ on:
   push:
     branches: [albedo-cp29-directcomposition-3x2]
     paths:
-      - '.github/workflows/albedo-cp28-windows.yml'
+      - '.github/workflows/albedo-cp29-windows.yml'
       - 'patches/cp15_apply_part*.txt'
       - 'patches/cp15_hotfix.py'
       - 'patches/cp16_part*.txt'
