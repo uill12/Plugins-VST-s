@@ -512,6 +512,24 @@ jobs:
           path: |
             Albedo-Quintessential-Synth/dist_windows_runtime_CP19R5/*
           if-no-files-found: error
+      - name: CP21 verified native source snapshot after GUI patches
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP21_Verified_Applied_Source
+          path: |
+            Albedo-Quintessential-Synth/src/editor_native_win.cpp
+            Albedo-Quintessential-Synth/include/editor_native_win.hpp
+            Albedo-Quintessential-Synth/include/vitriol_native_layout.hpp
+            Albedo-Quintessential-Synth/src/albedo_preset_browser_win.cpp
+            Albedo-Quintessential-Synth/src/albedo_preset_browser_win.hpp
+            Albedo-Quintessential-Synth/include/albedo_cp19_factory_menu.hpp
+            Albedo-Quintessential-Synth/resources/
+            Albedo-Quintessential-Synth/tests/cp19_partial_redraw_win.cpp
+            Albedo-Quintessential-Synth/CP19_SOURCE_MANIFEST.json
+            Albedo-Quintessential-Synth/CMakeLists.txt
+          if-no-files-found: warn
+          retention-days: 14
       - name: Preserve Windows build log if compilation failed
         if: failure()
         uses: actions/upload-artifact@v4
