@@ -55,7 +55,7 @@ ls=ls.replace('constexpr double aspect=5.0/3.0;',
 layout.write_text(ls,encoding='utf-8',newline='\n')
 # Historical contracts refer to the old CP27 resource; migrate expectations
 # narrowly for the new primary renderer, never mutate audio/preset tests.
-for rel in ['tests/cp27_webview_contract.py','tests/cp29_directcomposition_contract.py','tests/check_cp18_visual_contract.py','tests/check_cp15_resize_contract.py','tests/native_viewport_parity.cpp']:
+for rel in ['tests/cp27_webview_contract.py','tests/cp29_directcomposition_contract.py','tests/check_cp18_visual_contract.py','tests/check_cp15_resize_contract.py']:
  p=root/rel
  if not p.exists():continue
  t=p.read_text(encoding='utf-8'); orig=t
