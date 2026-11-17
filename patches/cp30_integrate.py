@@ -9,7 +9,7 @@ repo=Path.cwd();root=repo/'Albedo-Quintessential-Synth'
 encoded=repo/'patches/cp30_cp22_3x2_html.b64'
 data=gzip.decompress(base64.b64decode(encoded.read_text(encoding='ascii').strip(),validate=True))
 sha=hashlib.sha256(data).hexdigest()
-EXPECTED='931b2e7cb338455cef139c7fdc1a13fbadb840335a3961b074571e68fc857ed9'
+EXPECTED='681eaf3c20e84d8e84c45488c6e1b25a8301c8f1650911fe1f795536fa5c084d'
 assert sha==EXPECTED,('CP30 embedded HTML SHA mismatch',sha)
 s=data.decode('utf-8')
 checks=['const BASE_W=1500,BASE_H=1000',"aspectRatio:'3:2'",'window.ALBEDO_NATIVE_CP27','window.ALBEDO_NATIVE_CP27?.onDial(k,v)','window.ALBEDO_NATIVE_CP27?.onPreset(name)','window.ALBEDO_NATIVE_CP27?.onExtraParam(id,api.state.cp04[id])','id="presetBrowser"','id="cp04Lab"','id="albedoFactoryCatalog"']
