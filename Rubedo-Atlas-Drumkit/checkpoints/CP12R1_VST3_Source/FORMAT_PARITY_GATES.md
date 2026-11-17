@@ -1,11 +1,11 @@
 # Rubedo CP12R1 — CLAP / VST3 equivalence gate
 
-**Audit:** 2026-11-16. **Status: NOT EQUIVALENT YET — VST3 release blocked.** This is a factual comparison of the actual source at the two linked checkpoints. The ChatGPT local compilation/container runtime was unavailable during this audit; authoring was performed through the connected GitHub source tools. Windows compilation checks below are GitHub Actions (external), *not a native build executed inside ChatGPT*.
+**Audit:** 2026-11-16; **updated 2026-11-17. Status: VST3 complete-resource HostQA candidate; full CLAP/VST3 host equivalence still unverified.** Windows x64 PE core was compiled by GitHub Actions. The exact original private CP12R1 CLAP resources were later recovered and assembled with this core **inside ChatGPT's active container**, with full independent archive extraction and SHA checks. The host integration tests remain external/unverified.
 
 ## Canonical baseline
 
 - CLAP: `checkpoints/CP12R1_Pad_Maps/source/` with the released self-contained Windows x64 CLAP in Google Drive folder `00_LATEST — CP12R1_Pad_Map_SaveFix`.
-- VST3 candidate: `checkpoints/CP12R1_VST3_Source/source/` (not installable). Both compile against the exact **CP12R1 engine C/H** and the CP11 embossed skin-card source.
+- VST3 source: `checkpoints/CP12R1_VST3_Source/source/`; complete-resource Windows VST3 host-QA candidate now available in [Drive](https://drive.google.com/drive/folders/120_M3KXxH4HyoMFCAp2BOhyn60m-oCeR). Both formats compile against exact CP12R1 engine C/H and CP11/CP12 embossed GUI art.
 - Exact CP12R1 full CLAP binary (SHA-256): `65668f7a244c0e311741d6545b71d603e188ea27eed2e9b57c963da1edf28e1a`. The VST3 assembly helper checks this hash before reading the private GUI/PCM overlay.
 - Original CP11/CP12 PCM bank region should be identical in both formats if the assembly succeeds: 373,714,116 bytes, SHA-256 `968aa26a3fe0b7abf89e68ff6354977c2e24d30b270e0036219e2906dc856454`. **Not yet checked on a completed VST3.**
 
@@ -33,20 +33,24 @@ Current feedback contract, unchanged VST3 IDs 0–376: `377` Learn target; `378`
 - **Test scope is limited:** It does not include the original 2,304-hit bank, all 24 kits/articulations, the actual release ZIP/PE overlay, real Bitwig VST3 callbacks, complete CLAP-vs-VST3 plug-in audio output, GUI frame/draw performance or multi-instance bank memory stability. Those remain release gates.
 - **Build status:** fresh Windows x64 PE source-only core compilation, feedback codec tests, processor↔controller mock-host test and synthetic-PCM wrapper-audio test all passed on the same CI run. The CI artifact is deliberately tagged **NOT INSTALLABLE**.
 
+## 2026-11-17 — Full original PCM/GUI resource recovery and self-contained VST3 candidate
+
+[Real-resource assembly and SHA report](CP12R1_VST3_REAL_ASSETS_HOSTQA.md) documents 13/13 CP12R1 CLAP Drive volumes recovered, full SHA comparison, exact 2,304-hit PCM bank and SkinSync raster copied, verified Windows PE bundle, independent 7z extraction, 13 candidate volumes uploaded to a separate [Drive HostQA folder](https://drive.google.com/drive/folders/120_M3KXxH4HyoMFCAp2BOhyn60m-oCeR). The compiled Windows core comes from CI [run 43975514483](https://github.com/uill12/Plugins-VST-s/actions/runs/43975514483), including an independent **synthetic** resource startup test. It is now possible to test the complete candidate in Bitwig; no claim of user-confirmed runtime compatibility has been made.
+
 ## Blocking discrepancies (must be resolved before claiming VST3 equivalence)
 
 | Gate | Expected equivalence | Current VST3 status |
 | --- | --- | --- |
-| B1 — Installable VST3 | Full CP12R1 GUI + 2,304-hit PCM bank embedded, valid PE+footer and proper VST3 bundle | **BLOCKED:** only source/compiled core; no final resource overlay |
+| B1 — Complete VST3 resource assembly | Full CP12R1 GUI + 2,304-hit PCM bank embedded, valid PE+footer and proper VST3 bundle | **PASSED STATIC/RESOURCE QA:** full Windows x64 candidate assembled; complete bank and artwork byte-identical to CP12R1 CLAP, PE GetPluginFactory present. **Bitwig initialization NOT YET TESTED.** |
 | B2 — MIDI Learn | Bitwig MIDI note enters processor, captured target pad and updated map returned to editor and host state | **SOURCE IMPLEMENTED / MOCK-HOST PASS:** Uses VST3 outputParameterChanges IDs 377 and 380 with the canonical 24 note-map IDs; Bitwig support not yet verified. |
 | B3 — MIDI note indication | Host MIDI notes drive Core/Extended pad flash, including simultaneous hits and unmapped notes | **SOURCE IMPLEMENTED / MOCK-HOST PASS:** Output parameters 378 (bounded 24-pad activity mask) and 379 (unmapped notes) update the editor model; actual host callbacks, repaint and timing remain unverified. |
 | B4 — Parameter/state round trip | Host audio uses exactly the values displayed by GUI after automation and close/reopen, including V3 patterns, per-pad envelope and active flags | **SOURCE PORTED; HOST UNVERIFIED:** verify real transactions and state migration |
 | B5 — Pad audition | Each clicked pad produces exactly the routed voice with reliable repeated trigger | **SOURCE PORTED; HOST UNVERIFIED:** uses host edit parameter 135; not a sample-accurate event bridge |
 | B6 — Map transactional apply | Save/Load and host edits preserve all 24 distinct MIDI notes under update order and multi-instance load | **SOURCE LOGIC IMPROVED; HOST UNVERIFIED** |
-| B7 — Sample-output parity | Same sounds, velocity/round robin, output levels, 88.2k playback and note onset timing | **PARTIAL OFFLINE PASS:** VST3 wrapper vs canonical CP12 engine is bit-identical on synthetic PCM at 44.1/48/88.2/96 kHz. Original CP12R1 embedded bank and released CLAP binary null test still unavailable. |
+| B7 — Sample-output parity | Same sounds, velocity/round robin, output levels, 88.2k playback and note onset timing | **PARTIAL OFFLINE PASS:** exact original bank bytes now present in both formats; VST3 wrapper vs canonical CP12 engine bit-identical with synthetic PCM at 44.1/48/88.2/96 kHz. Full released CLAP-vs-assembled VST3 binary null test in Bitwig still unperformed. |
 | B8 — Plugin host compatibility | Valid VST3 SDK ABI, preset persistence and multiple Bitwig instances | **UNTESTED:** hand-authored VST3 ABI; compiler success does not certify Bitwig |
 | B9 — Runtime performance | No additional RT locks/allocations, bounded note response and GUI CPU; no stuck notes | **UNTESTED in host** |
-| B10 — Distribution | Full VST3 `.vst3` directory, SHA-256, independent 7-Zip extraction, Drive readback | **NOT UPLOADED** |
+| B10 — Distribution | Full VST3 `.vst3` directory, SHA-256, independent 7-Zip extraction, Drive readback | **PASSED:** 13 native 7z volumes and 2 sidecars listed in a separate HostQA Drive candidate folder. Archive SHA-256 verified after reassembly; extracted full VST3 SHA-256 matches original. |
 
 ### Release acceptance procedure
 
@@ -57,6 +61,6 @@ Current feedback contract, unchanged VST3 IDs 0–376: `377` Learn target; `378`
 5. Save a named .rbmap file in both formats; cross-load it; save/reopen a Bitwig project; compare all 24 notes and V3 settings.
 6. Render a scripted 24-pad ×2 velocity ×2 round-robin test at 44.1/48/88.2/96 kHz with matched settings; compare timing and PCM output numerically (not merely both audible).
 7. Validate scale, redraw, font rendering, no overlays, CPU/latency and multiple instances in Windows Bitwig for each format separately.
-8. Only after all gates pass, archive an installable VST3 bundle as native `.7z.001` volumes, verify complete extraction and upload to its existing Drive CP12R1 folder. Keep prior working CLAP intact.
+8. **Completed for HostQA candidate:** complete VST3 bundle packed into 13 native `.7z.001` volumes, verified with an independent decoder, and uploaded to a **separate HostQA folder**. Preserve CP12R1 CLAP rollback. **Promote only after real Bitwig QA gates pass.**
 
 **Do not promote a CI core or checklist as an installable VST3 or imply release parity based solely on a passing PE/export check.**
