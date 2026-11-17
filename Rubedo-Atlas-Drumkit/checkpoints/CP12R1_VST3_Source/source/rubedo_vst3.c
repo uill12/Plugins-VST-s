@@ -22,13 +22,15 @@ static const uint8_t CLS_CTRL[16]={0x52,0x42,0x44,0x4b,0x10,0x21,0x49,0x82,0xb9,
 #define Q_UNKNOWN(id) vr_guid(id,0,0,0xc0000000,0x00000046)
 #define Q_COMPONENT(id) vr_guid(id,0xe831ff31,0xf2d54301,0x928ebbee,0x25697802)
 #define Q_PROCESSOR(id) vr_guid(id,0x42043f99,0xb7da453c,0xa569e79d,0x9aaec33d)
+/* VST3 3.7+ mandatory extension; this drumkit reads no host process-context fields. */
+#define Q_PROCESS_CONTEXT_REQ(id) vr_guid(id,0x2a654303,0xef764e3d,0x95b5fe83,0x730ef6d0)
 #define Q_CONTROLLER(id) vr_guid(id,0xdcd7bbe3,0x7742448d,0xa874aacc,0x979c759e)
 #define Q_PLUGINBASE(id) vr_guid(id,0x22888ddb,0x156e45ae,0x8358b348,0x08190625)
 #define Q_FACTORY(id) vr_guid(id,0x7a4d811c,0x52114a1f,0xaed9d2ee,0x0b43bf9f)
 #define Q_FACTORY2(id) vr_guid(id,0x0007b650,0xf24b4c0b,0xa464edb9,0xf00b2abb)
 #define Q_FACTORY3(id) vr_guid(id,0x4555a2ab,0xc1234e57,0x9b122910,0x36878931)
 
-typedef struct VRubedoProcessor {const void**comp;const void**audio;uint32_t refs;uint8_t loaded;uint8_t feedback_flip;uint32_t delivered_learn_seq,delivered_unmapped_seq;RubedoEngine e;}VRubedoProcessor;
+typedef struct VRubedoProcessor {const void**comp;const void**audio;const void**contextReq;uint32_t refs;uint8_t loaded;uint8_t feedback_flip;uint32_t delivered_learn_seq,delivered_unmapped_seq;RubedoEngine e;}VRubedoProcessor;
 #define RUBEDO_VST3_PARAMS RB_V3_PARAM_COUNT
 #define RUBEDO_VST3_MAP_BEGIN 136
 #define RUBEDO_VST3_MAP_END 160
@@ -36,7 +38,7 @@ typedef struct VRubedoProcessor {const void**comp;const void**audio;uint32_t ref
 // process to the audio processor. IDs 0..33 preserve CP03 state compatibility.
 typedef struct VRubedoController {const void**ctrl;uint32_t refs;double params[RUBEDO_VST3_PARAMS];void*handler;void*active_view;}VRubedoController;
 typedef struct VRubedoFactory {const void**vt;uint32_t refs;}VRubedoFactory;
-static const void *compVT[16],*audioVT[12],*ctrlVT[22],*factoryVT[13];
+static const void *compVT[16],*audioVT[12],*contextReqVT[4],*ctrlVT[22],*factoryVT[13];
 static VRubedoProcessor *g_active_processor=0;
 
 static void*vr_alloc(uint64_t size){
@@ -53,8 +55,15 @@ static void vr_free(void*p){
  free(p);
 #endif
 }
-static VRubedoProcessor *vr_p(void*iface){VRubedoProcessor*a=iface; if(a->comp==compVT)return a;return (VRubedoProcessor*)((char*)iface-sizeof(void*));}
-static int32_t p_query(void*o,const uint8_t*id,void**out){if(!out)return V_FALSE;*out=0;VRubedoProcessor*p=vr_p(o);if(Q_COMPONENT(id)||Q_PLUGINBASE(id)||Q_UNKNOWN(id))*out=&p->comp;else if(Q_PROCESSOR(id))*out=&p->audio;else return V_NOINTERFACE;p->refs++;return V_OK;}
+static VRubedoProcessor *vr_p(void*iface){
+ const void **vt=*(const void***)iface;
+ if(vt==compVT)return (VRubedoProcessor*)iface;
+ if(vt==audioVT)return (VRubedoProcessor*)((char*)iface-sizeof(void*));
+ if(vt==contextReqVT)return (VRubedoProcessor*)((char*)iface-2*sizeof(void*));
+ return 0;
+}
+static int32_t p_query(void*o,const uint8_t*id,void**out){if(!out)return V_FALSE;*out=0;VRubedoProcessor*p=vr_p(o);if(Q_COMPONENT(id)||Q_PLUGINBASE(id)||Q_UNKNOWN(id))*out=&p->comp;else if(Q_PROCESSOR(id))*out=&p->audio;else if(Q_PROCESS_CONTEXT_REQ(id))*out=&p->contextReq;else return V_NOINTERFACE;p->refs++;return V_OK;}
+static uint32_t p_context_requirements(void*o){(void)o;return 0u; /* No host transport/time fields needed. */}
 static uint32_t p_add(void*o){return ++vr_p(o)->refs;}
 static uint32_t p_rel(void*o){VRubedoProcessor*p=vr_p(o);if(p->refs<=1){if(g_active_processor==p)g_active_processor=0;if(p->loaded)rubedo_unload_bank();vr_free(p);return 0;}return --p->refs;}
 static int32_t p_init(void*o,void*context){(void)context;VRubedoProcessor*p=vr_p(o);if(p->loaded)return V_OK;p->loaded=rubedo_load_bank();if(p->loaded)g_active_processor=p;return p->loaded?V_OK:V_FALSE;}
@@ -471,8 +480,8 @@ static int32_t f_classW(void*o,int32_t idx,VClassInfoW*inf){(void)o;if(!inf||idx
 static int32_t f_context(void*o,void*context){(void)o;(void)context;return V_OK;}
 static int32_t f_instance(void*o,const uint8_t*cid,const uint8_t*id,void**result){(void)o;if(!result)return V_FALSE;*result=0;
  if(vr_eq16(cid,CLS_COMP)){
-  VRubedoProcessor*p=vr_alloc(sizeof(*p));if(!p)return V_FALSE;vr_zero(p,sizeof(*p));p->comp=compVT;p->audio=audioVT;p->refs=1;rubedo_init_engine(&p->e);
-  if(Q_COMPONENT(id)||Q_UNKNOWN(id)||Q_PLUGINBASE(id))*result=&p->comp;else if(Q_PROCESSOR(id))*result=&p->audio;else {vr_free(p);return V_NOINTERFACE;}return V_OK;
+  VRubedoProcessor*p=vr_alloc(sizeof(*p));if(!p)return V_FALSE;vr_zero(p,sizeof(*p));p->comp=compVT;p->audio=audioVT;p->contextReq=contextReqVT;p->refs=1;rubedo_init_engine(&p->e);
+  if(Q_COMPONENT(id)||Q_UNKNOWN(id)||Q_PLUGINBASE(id))*result=&p->comp;else if(Q_PROCESSOR(id))*result=&p->audio;else if(Q_PROCESS_CONTEXT_REQ(id))*result=&p->contextReq;else {vr_free(p);return V_NOINTERFACE;}return V_OK;
  }
  if(vr_eq16(cid,CLS_CTRL)){
   VRubedoController*c=vr_alloc(sizeof(*c));if(!c)return V_FALSE;vr_zero(c,sizeof(*c));c->ctrl=ctrlVT;c->refs=1;
@@ -496,6 +505,7 @@ static VRubedoFactory g_factory={factoryVT,1};
 static const void *factoryVT[13]={f_query,f_add,f_rel,f_info,f_count,f_class,f_instance,f_class2,f_classW,f_context};
 static const void *compVT[16]={p_query,p_add,p_rel,p_init,p_term,p_controller_id,p_io,p_buscount,p_businfo,p_routing,p_actbus,p_active,p_setstate,p_getstate};
 static const void *audioVT[12]={p_query,p_add,p_rel,a_buses,a_arrangement,a_sample,a_latency,a_setup,a_processing,a_process,a_tail};
+static const void *contextReqVT[4]={p_query,p_add,p_rel,p_context_requirements};
 static const void *ctrlVT[22]={c_query,c_add,c_rel,c_init,c_term,c_compstate,c_setstate,c_getstate,c_nparams,c_paraminfo,c_string,c_value,c_to_plain,c_to_norm,c_getnorm,c_setnorm,c_handler,c_view};
 VEXPORT void *GetPluginFactory(void){g_factory.refs++;return &g_factory;}
 VEXPORT int InitDll(void){return 1;}
