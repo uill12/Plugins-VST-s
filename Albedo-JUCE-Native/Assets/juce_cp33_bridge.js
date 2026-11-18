@@ -22,6 +22,14 @@
       if(Number.isSafeInteger(id)&&Number.isFinite(v))bridge.receive?.(id,v);
     }
   });
+  backend.addEventListener('albedoActionStatus', text=>{
+    const toast=document.getElementById('toast');
+    if(!toast)return;
+    toast.textContent=String(text);
+    toast.classList.add('show');
+    clearTimeout(window.__albedoStatusTimeout);
+    window.__albedoStatusTimeout=setTimeout(()=>toast.classList.remove('show'),3000);
+  });
   backend.addEventListener('albedoProgram', index=>{
     const n=Number(index);
     const patch=window.ALBEDO_PRESET_ATLAS.catalog.find(p=>p.id===n);
