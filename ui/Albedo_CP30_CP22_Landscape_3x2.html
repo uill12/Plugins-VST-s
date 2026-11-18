@@ -1682,6 +1682,112 @@ html.albedo-fit #page .shape-panel .bodypad.shapers > .shape-block:nth-child(-n+
  font-variant-numeric:tabular-nums!important;
 }
 
+
+/* CP38 R2: full Pulsus 16-step audio amplitude rhythm (not MIDI arp).
+   Two banks of 8 visible steps; enable, rate, depth and gate on separate
+   aligned rows. Total body 156 px: padding 2x6, rows 16+57+26+25+11,
+   four 2px gaps = 143px within the 144px available content height.
+   Scope strictly to fourth lower module, leaving Motus and filters intact. */
+html.albedo-fit #page .lower {
+  grid-template-columns:1.12fr .97fr .94fr 1.09fr!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .bodypad {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:16px 57px 26px 25px 11px!important;
+  align-content:start!important;justify-items:stretch!important;
+  gap:2px!important;padding:6px 7px!important;
+  height:calc(100% - 34px)!important;min-height:0!important;
+  overflow:hidden!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .subrow {
+  display:flex!important;align-items:center!important;
+  justify-content:space-between!important;gap:3px!important;
+  width:100%!important;height:16px!important;min-height:16px!important;
+  max-height:16px!important;white-space:nowrap!important;overflow:hidden!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .subrow .section-caption {
+  font-size:9px!important;line-height:16px!important;
+  white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .subrow .micro {
+  font-size:8px!important;line-height:16px!important;white-space:nowrap!important;
+  flex:none!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) #steps {
+  display:grid!important;
+  grid-template-columns:repeat(8,minmax(0,1fr))!important;
+  grid-template-rows:repeat(2,27px)!important;
+  grid-auto-flow:row!important;column-gap:3px!important;row-gap:3px!important;
+  justify-items:stretch!important;align-items:stretch!important;
+  width:100%!important;height:57px!important;min-height:57px!important;
+  max-height:57px!important;margin:0!important;padding:0!important;
+  overflow:visible!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) #steps .step {
+  display:block!important;width:100%!important;min-width:0!important;
+  height:27px!important;min-height:27px!important;max-height:27px!important;
+  padding:0!important;margin:0!important;font-size:10px!important;
+  font-weight:750!important;line-height:25px!important;
+  box-sizing:border-box!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .pattern-controls {
+  display:grid!important;grid-template-columns:1fr .88fr .85fr!important;
+  grid-template-rows:26px!important;align-items:stretch!important;gap:3px!important;
+  width:100%!important;height:26px!important;min-height:26px!important;
+  max-height:26px!important;margin:0!important;padding:0!important;
+  overflow:hidden!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .pattern-controls button,
+html.albedo-fit #page .lower > .surface:nth-child(4) .pattern-controls select {
+  display:block!important;min-width:0!important;width:100%!important;
+  min-height:26px!important;max-height:26px!important;height:26px!important;
+  box-sizing:border-box!important;padding:2px 3px!important;margin:0!important;
+  font-size:10px!important;line-height:20px!important;text-align:center!important;
+  white-space:nowrap!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .pulse-shape-controls {
+  display:grid!important;grid-template-columns:75px repeat(2,minmax(0,1fr))!important;
+  grid-template-rows:25px!important;align-items:center!important;gap:4px!important;
+  width:100%!important;min-width:0!important;height:25px!important;min-height:25px!important;
+  max-height:25px!important;margin:0!important;padding:0!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .pulse-shape-controls > button {
+  display:block!important;width:100%!important;height:25px!important;
+  min-height:25px!important;max-height:25px!important;
+  padding:1px 3px!important;margin:0!important;box-sizing:border-box!important;
+  border:1px solid #91aa97;border-radius:4px;
+  background:#dbe6dc;color:#3d6556;
+  font:bold 9.5px/21px 'Segoe UI',sans-serif!important;white-space:nowrap!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .pulse-shape-controls > button.active {
+  background:#55796c!important;color:#fff4da!important;border-color:#3d6154!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .pulse-shape-controls label {
+  display:grid!important;grid-template-columns:minmax(0,1fr) 24px!important;
+  grid-template-rows:11px 12px!important;align-content:center!important;align-items:center!important;
+  width:100%!important;min-width:0!important;height:25px!important;
+  margin:0!important;padding:0!important;
+  color:#4c695e;font:bold 9px/11px 'Segoe UI',sans-serif!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .pulse-shape-controls label output {
+  grid-column:2!important;grid-row:1!important;
+  text-align:right!important;font:9px/11px 'Segoe UI',sans-serif!important;
+  white-space:nowrap!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .pulse-shape-controls input[type=range] {
+  grid-column:1/-1!important;grid-row:2!important;
+  width:100%!important;min-width:0!important;height:12px!important;
+  min-height:12px!important;margin:0!important;padding:0!important;
+  accent-color:#b68765!important;cursor:ew-resize!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(4) .pattern-note {
+  display:block!important;overflow:hidden!important;white-space:nowrap!important;
+  text-overflow:ellipsis!important;
+  width:100%!important;height:11px!important;min-height:11px!important;max-height:11px!important;
+  padding:0!important;margin:0!important;
+  font-size:8.5px!important;line-height:11px!important;
+}
 </style>
 </head>
 <body>
@@ -1731,7 +1837,19 @@ html.albedo-fit #page .shape-panel .bodypad.shapers > .shape-block:nth-child(-n+
  <div class="surface"><div class="surface-title"><div><div class="eyebrow">04 / ASSIGNMENT WITHOUT CABLES</div><h2>Correspondentiae</h2></div><span class="seal">◇</span></div><div class="bodypad"><div class="subrow"><span class="section-caption">SOURCE → TARGET · DEPTH</span><span class="micro" id="routeCount">4 ROUTES</span></div><div id="routes"></div><button id="addRoute" class="add-route">+ ADD SYMBOLIC ASSIGNMENT</button></div></div>
  <div class="surface"><div class="surface-title"><div><div class="eyebrow">05 / ORGANIC MODULATION</div><h2>Motus & Cellular</h2></div><span class="seal">✣</span></div><div class="bodypad"><div class="motion-head"><span class="section-caption">WOLFRAM-LIKE CELLULAR MORPH</span><select id="rule"><option value="30">RULE 30</option><option value="90">RULE 90</option><option value="110" selected>RULE 110</option><option value="150">RULE 150</option></select><svg class="lfo-small" id="lfoGraphic" viewBox="0 0 270 55" preserveAspectRatio="none"></svg></div><div class="automata" id="cells" aria-label="Thirty two cell automaton visual pattern"></div><div class="motion-controls" id="motionKnobs"></div><div class="pattern-note" title="Cellular motion targets texture, density and color — not automatic MIDI notes.">Modulates texture, density &amp; color — not MIDI notes.</div></div></div>
  <div class="surface"><div class="surface-title"><div><div class="eyebrow">06 / POST-SYNTHESIS PROCESSING</div><h2>Spatium & Transform</h2></div><span class="seal">☽</span></div><div class="bodypad"><div id="fx"></div><div class="pattern-note">Insert processes / dry-wet mix / bypass. Processing algorithms are proposed.</div></div></div>
- <div class="surface"><div class="surface-title"><div><div class="eyebrow">07 / OPTIONAL AMPLITUDE RHYTHM</div><h2>Pulsus</h2></div><span class="seal">◷</span></div><div class="bodypad"><div class="subrow"><span class="section-caption">16-STEP PULSE GRID</span><span class="micro">NOT A MIDI ARPEGGIATOR</span></div><div class="steps" id="steps"></div><div class="pattern-controls"><button class="tiny-button" id="play">▶ PREVIEW</button><button class="tiny-button" id="regen">✧ NEW</button><select id="division" aria-label="Step division"><option value="250">1/16</option><option value="500">1/8</option><option value="125">1/32</option></select></div><div class="pattern-note">Graphic timing preview only; actual pulse modulation requires DSP.</div></div></div>
+ <div class="surface"><div class="surface-title"><div><div class="eyebrow">07 / OPTIONAL AMPLITUDE RHYTHM</div><h2>Pulsus</h2></div><span class="seal">◷</span></div><div class="bodypad"><div class="subrow"><span class="section-caption">16-STEP AMPLITUDE SEQUENCER</span><span class="micro" title="Pulsus modulates amplitude; it does not generate MIDI notes.">AUDIO PULSE</span></div>
+<div class="steps" id="steps" role="group" aria-label="16 amplitude pulse steps arranged in two rows of eight"></div>
+<div class="pattern-controls">
+  <button type="button" class="tiny-button" id="play" title="Preview the 16-step graphic animation">▶ PREVIEW</button>
+  <button type="button" class="tiny-button" id="regen" title="Randomize the 16 pulse amplitudes">✧ NEW</button>
+  <select id="division" aria-label="Pulse step duration"><option value="250">1/16</option><option value="500">1/8</option><option value="125">1/32</option></select>
+</div>
+<div class="pulse-shape-controls" aria-label="Audio amplitude pulse parameters">
+  <button type="button" class="tiny-button" id="pulseEnable" aria-pressed="false" title="Enable amplitude pulse in the JUCE DSP">PULSE OFF</button>
+  <label title="Pulse amplitude modulation depth">DEPTH <output id="pulseDepthValue" for="pulseDepth">70%</output><input type="range" id="pulseDepth" min="0" max="100" step="1" value="70" aria-label="Pulse depth percent"></label>
+  <label title="Length of each audible pulse gate">GATE <output id="pulseGateValue" for="pulseGate">72%</output><input type="range" id="pulseGate" min="0" max="100" step="1" value="72" aria-label="Pulse gate percent"></label>
+</div>
+<div class="pattern-note" title="Pulsus controls real audio-amplitude modulation, not MIDI note arpeggiation.">Audio pulse modulation · not MIDI notes</div></div></div>
 </section>
 <section class="utility"><div class="surface"><div class="subrow"><div><span class="section-caption">VOICE & EXPRESSION</span><p><strong>MIDI · MPE</strong> / velocity, expression, pressure mapping</p></div><select id="tuning"><option>12-TET</option><option>19-TET</option><option>JUST</option><option>USER SCALE</option></select></div></div><div class="surface"><div class="subrow"><div><span class="section-caption">HIGH FIDELITY TARGET</span><p><strong>64-BIT INTERNAL · OVERSAMPLED NONLINEAR PATHS</strong></p></div><select id="oversample"><option>AUTO</option><option>1×</option><option>2×</option><option>4×</option><option>8×</option></select></div></div><div class="surface"><div class="subrow"><div><span class="section-caption">MASTER CONDITION</span><p><strong>TONAL GUARD</strong> / predictable pitch · mono compatibility · headroom</p></div><button class="tiny-button active" id="safety">GUARD ON</button></div></div></section>
 <div class="footer"><em>Ex uno, omnia.</em><span>ALBEDO / QUINTESSENTIAL SYNTH — CP19R3 · LANDSCAPE WORKBENCH · DSP IN NATIVE PLUGIN</span><span>Inspired by architectural logic, not a reproduction of the engraving.</span></div>
@@ -1822,7 +1940,18 @@ function renderCells(){const rule=state.motionRule;let cells=Array(32).fill(fals
 function renderRoutes(){const selects=(opts,v)=>opts.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('');$('#routes').innerHTML=state.routes.map((r,i)=>`<div class="route-row"><select aria-label="Route ${i+1} source" data-route="${i}" data-field="src">${selects(SRC,r.src)}</select><span class="rarr">→</span><select aria-label="Route ${i+1} destination" data-route="${i}" data-field="dst">${selects(DST,r.dst)}</select><input type="range" aria-label="Route ${i+1} depth" data-route="${i}" data-field="depth" min="-100" max="100" value="${r.depth}" title="${r.depth}%"/><button class="remove" data-remove="${i}" aria-label="Remove route">×</button></div>`).join('');$('#routeCount').textContent=state.routes.length+' ROUTES'}
 function renderFx(){$('#fx').innerHTML=state.effects.map((f,i)=>`<div class="fx-card ${f.on?'enabled':'bypassed'}"><div class="fx-head"><strong>${f.name}</strong><button type="button" aria-label="Toggle ${f.name}" aria-pressed="${f.on}" data-fxon="${i}" class="${f.on?'on':''}">⏻</button></div><div class="fx-knob-area">${knob('fx:'+i,'MIX','#92ad9e','medium')}</div></div>`).join('')}
 function renderCouplings(){const pairs=['A ↔ B','A ↔ C','A ↔ D','B ↔ C','B ↔ D','C ↔ D'];$('#couplings').innerHTML=pairs.map((pair,i)=>`<div class="couple-item"><div class="subrow"><strong>${pair}</strong><output>${Math.round(state.couplings[i])}%</output></div><input type="range" data-couple="${i}" aria-label="Coupling ${pair}" value="${state.couplings[i]}" min="0" max="100"/><small>${state.couplings[i]===0?'BYPASS · CLEAN':'CROSS-SOURCE INFLUENCE'}</small></div>`).join('');}
-function renderSteps(){$('#steps').innerHTML=state.steps.map((v,i)=>`<button class="step ${v?'on':''} ${i===seqIndex?'current':''}" data-step="${i}" aria-pressed="${v}">${i+1}</button>`).join('')}
+function renderSteps(){
+ const grid=$('#steps');
+ if(grid.children.length!==16){
+   grid.innerHTML=state.steps.map((v,i)=>`<button type="button" class="step" data-step="${i}" aria-label="Pulse step ${i+1}" aria-pressed="false">${i+1}</button>`).join('');
+ }
+ [...grid.children].forEach((button,i)=>{
+   button.classList.toggle('on',!!state.steps[i]);
+   button.classList.toggle('current',i===seqIndex);
+   button.setAttribute('aria-pressed',String(!!state.steps[i]));
+   button.title='Step '+(i+1)+(state.steps[i]?' enabled':' disabled');
+ });
+}
 function renderAll(){renderSources();renderEditor();renderMacros();$('#filterKnobsA').innerHTML=knob('filterAcut','CUTOFF','#74a99f','medium')+knob('filterAres','RESO','#74a99f','medium')+knob('filterAdrive','DRIVE','#b79456','medium');$('#filterKnobsB').innerHTML=knob('filterBcut','CUTOFF','#74a99f','medium')+knob('filterBres','RESO','#74a99f','medium')+knob('filterBdrive','DRIVE','#b79456','medium');$('#envKnobs').innerHTML=knob('envAttack','ATTACK')+knob('envDecay','DECAY')+knob('envSustain','SUSTAIN')+knob('envRelease','RELEASE');$('#motionKnobs').innerHTML=knob('motionRate','RATE')+knob('motionDepth','DEPTH')+knob('motionSlew','SLEW');renderFilters();renderEnvelope();renderSpectrum();renderLFO();renderCells();renderFx();renderRoutes();renderCouplings();renderSteps();renderXY();$('#filterTypeA').value=state.filterTypes[0];$('#filterTypeB').value=state.filterTypes[1];$('#filterRoute').value=state.filterRoute;$('#voiceMode').value=state.voiceMode;$('#rule').value=state.motionRule;$('#tuning').value=state.tuning;$('#oversample').value=state.oversample;$('#safety').textContent=state.safety?'GUARD ON':'GUARD OFF';$('#safety').classList.toggle('active',state.safety);$$('#pitchMode button').forEach(b=>b.classList.toggle('active',b.dataset.value===state.pitchMode));$('#page').classList.toggle('nigredo',state.dark);$('#theme').textContent=state.dark?'☼':'☾'}
 function selectEngine(i){state.selected=i;renderSources();renderEditor();mark()}
 function renderXY(){const {x,y}=state.xy;$('#aim').style.left=x*100+'%';$('#aim').style.top=y*100+'%';$('#coords').textContent=`FORM ${Math.round(x*100)} · MATTER ${Math.round(y*100)}`;$('#xy').setAttribute('aria-valuenow',Math.round(x*100))}
@@ -2072,9 +2201,10 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
   else if(id===3112){s.tuning=TUNINGS[Math.max(0,Math.min(4,Math.round(value)))];document.getElementById('tuning').value=s.tuning;}
   else if(id===4003){s.motionRule=RULES[Math.max(0,Math.min(3,Math.round(value)))];document.getElementById('rule').value=String(s.motionRule);needsRefresh=!batch;}
   else if(id>=5000&&id<=5007){const i=Math.floor((id-5000)/2);if(id%2===0){s.effects[i].mix=value;const slider=document.querySelector(`[data-fxmix="${i}"]`);if(slider)slider.value=value;if(!batch)setDial('fx:'+i,value);}else{s.effects[i].on=value>=.5;needsRefresh=true;}}
-  else if(id>=6000&&id<=6015){const i=id-6000;s.steps[i]=value>=.5;const button=document.querySelector(`[data-step="${i}"]`);if(button)button.classList.toggle('on',s.steps[i]);}
-  else if(id===6020){const b=document.getElementById('play');if(b)b.dataset.nativePulse=String(value>=.5);}
-  else if(id===6021){s.division=value*1000;const c=document.getElementById('division');if(c)c.value=String(value);}
+  else if(id>=6000&&id<=6015){const i=id-6000;s.steps[i]=value>=.5;const button=document.querySelector(`[data-step="${i}"]`);if(button){button.classList.toggle('on',s.steps[i]);button.setAttribute('aria-pressed',String(s.steps[i]));}}
+  else if(id===6020){const b=document.getElementById('pulseEnable');if(b){const on=value>=.5;b.setAttribute('aria-pressed',String(on));b.textContent=on?'PULSE ON':'PULSE OFF';b.classList.toggle('active',on);}}
+  else if(id===6021){s.division=value*1000;const c=document.getElementById('division');if(c){const ms=Math.round(value*1000);const available=[...c.options].map(o=>Number(o.value));c.value=String(available.reduce((a,b)=>Math.abs(b-ms)<Math.abs(a-ms)?b:a,available[0]));}}
+  else if(id===6022||id===6023){const name=id===6022?'pulseDepth':'pulseGate';const control=document.getElementById(name),readout=document.getElementById(name+'Value');if(control)control.value=String(value);if(readout)readout.textContent=Math.round(value)+'%';}
   else if(id>=8000&&id<=8023){let i=Math.floor((id-8000)/3),j=(id-8000)%3;if(i>=s.routes.length)return;const item=s.routes[i];if(j===0)item.src=SOURCE[Math.round(value)]||SOURCE[0];else if(j===1)item.dst=TARGET[Math.round(value)]||TARGET[0];else item.depth=value;}
   else if(id===9001){s.safety=value>=.5;const b=document.getElementById('safety');if(b){b.textContent=s.safety?'GUARD ON':'GUARD OFF';b.classList.toggle('active',s.safety);}}
   else if(id===9002){s.oversample=RATES[Math.max(0,Math.min(4,Math.round(value)))];document.getElementById('oversample').value=s.oversample;}
@@ -2092,7 +2222,7 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
   else if(target.id==='rule')post('param',4003,RULES.indexOf(s.motionRule));
   else if(target.id==='tuning')post('param',3112,TUNINGS.indexOf(s.tuning));
   else if(target.id==='oversample')post('param',9002,RATES.indexOf(s.oversample));
-  else if(target.id==='division')post('param',6021,Number(target.value));
+  else if(target.id==='division')post('param',6021,Number(target.value)/1000);
   else if(target.dataset.route!==undefined){const i=Number(target.dataset.route),f=target.dataset.field,p=s.routes[i];const base=8000+3*i;post('param',base+(f==='src'?0:f==='dst'?1:2),f==='src'?SOURCE.indexOf(p.src):f==='dst'?TARGET.indexOf(p.dst):p.depth);}
  }
  window.ALBEDO_NATIVE_CP27={
@@ -2111,6 +2241,7 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
   if(t.dataset.level!==undefined)post('param',1002+Number(t.dataset.level)*32,Number(t.value));
   if(t.dataset.couple!==undefined)post('param',2200+Number(t.dataset.couple),Number(t.value));
   if(t.dataset.fxmix!==undefined)post('param',5000+Number(t.dataset.fxmix)*2,Number(t.value));
+  if(t.id==='pulseDepth'||t.id==='pulseGate')post('param',t.id==='pulseDepth'?6022:6023,Number(t.value));
   if(t.dataset.route!==undefined)transmitSelectChange(t);
  },false);
  document.addEventListener('change',e=>transmitSelectChange(e.target),false);
@@ -2123,7 +2254,7 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
    else if(t.closest('[data-fxon]')){const i=Number(t.closest('[data-fxon]').dataset.fxon);post('param',5001+i*2,state().effects[i].on?1:0);}
    else if(t.closest('#safety'))post('param',9001,state().safety?1:0);
    else if(t.closest('#regen'))state().steps.forEach((v,i)=>post('param',6000+i,v?1:0));
-   else if(t.closest('#play'))post('param',6020,state().steps.some(Boolean)?1:0);
+   else if(t.closest('#pulseEnable'))post('param',6020,t.closest('#pulseEnable').getAttribute('aria-pressed')==='true'?1:0);
  },false);
  // In plugin mode Save/Import must operate on the real DAW parameter set,
  // rather than exporting a visual-only JSON and pretending it is audio state.
@@ -2185,6 +2316,27 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
  requestAnimationFrame(render);
  document.addEventListener('visibilitychange',()=>{last=0});
  window.ALBEDO_CP31_MOTION={get frames(){return frames}, get paths(){return streams.length},pause(){active=false},resume(){active=true;last=0}};
+})();
+</script>
+
+<script>
+/* CP38 Pulsus: local visual state and readouts for the DSP-connected
+   amplitude sequencer. The JUCE CP27 bridge owns all real parameter IDs. */
+(()=>{
+  const power=document.getElementById('pulseEnable');
+  const depth=document.getElementById('pulseDepth');
+  const gate=document.getElementById('pulseGate');
+  if(!power||!depth||!gate)return;
+  power.addEventListener('click',()=>{
+    const enabled=power.getAttribute('aria-pressed')!=='true';
+    power.setAttribute('aria-pressed',String(enabled));
+    power.textContent=enabled?'PULSE ON':'PULSE OFF';
+    power.classList.toggle('active',enabled);
+  });
+  for(const el of [depth,gate]){
+    const output=document.getElementById(el.id+'Value');
+    el.addEventListener('input',()=>{output.textContent=String(Math.round(Number(el.value)))+'%'});
+  }
 })();
 </script>
 </body>
