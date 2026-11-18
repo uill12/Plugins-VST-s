@@ -22,8 +22,8 @@ for text in (
 ):
     assert text in css, text
 assert "const BASE_W=1500,BASE_H=1000,root=document.documentElement" in html
-assert "const BASE_W=1500,BASE_H=1000" in geometry
-assert "Math.min(w/BASE_W,h/BASE_H)" in geometry
+assert "transform-origin:0 0!important" in geometry
+assert "Math.min(w/page.offsetWidth,h/page.offsetHeight)" in geometry
 assert "g.minWidth=std::min(720,g.maxWidth)" in fit
 assert "g.initialHeight=g.initialWidth*2/3" in fit
 assert "g.initialWidth=std::min(1200,g.maxWidth)" in fit

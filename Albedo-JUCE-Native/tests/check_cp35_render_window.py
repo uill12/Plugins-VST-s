@@ -40,17 +40,17 @@ for item in metadata:
 assert len({(x["family"],x["role"]) for x in metadata})==64
 required=[
     "albedoViewport","ResizeObserver","visualViewport",
-    "const BASE_W=1500,BASE_H=1000",
+    "transform-origin:0 0!important",
     "root.clientWidth||window.innerWidth","--albedo-viewport-w","--albedo-viewport-h",
     "root.style.setProperty('--fit-scale'",
-    "--albedo-center-x","--albedo-center-y",
+    "--albedo-offset-x","--albedo-offset-y",
     "--albedo-atlas-width","--albedo-atlas-height",
     "Math.floor(h*.96)",
     ".preset-browser-panel",
     "min-height:0!important","overflow-y:auto!important",
     "albedo-cp35-resize-grip","setPointerCapture",
     "requestAnimationFrame","resize|",
-    "albedo-cp35-reset","Math.min(w/BASE_W,h/BASE_H)"
+    "albedo-cp35-reset","Math.min(w/page.offsetWidth,h/page.offsetHeight)"
 ]
 for value in required:assert value in js, value
 assert "document.body.innerHTML" not in js and "location.reload" not in js
