@@ -1714,6 +1714,93 @@ html.albedo-fit #page #filterKnobsB .param-value {
   height:14px!important;line-height:14px!important;margin:0!important;
 }
 </style>
+
+<style id="cp41-compact-atlas">
+/* CP41 — one modal, no page navigation or scrolling selections. */
+html.albedo-fit #presetBrowser .preset-browser-panel,
+#presetBrowser .preset-browser-panel{
+  width:min(960px,calc(100vw - 22px))!important;
+  height:min(642px,calc(100dvh - 18px))!important;
+  max-height:calc(100dvh - 18px)!important;min-height:0!important;
+  overflow:hidden!important;box-sizing:border-box!important;
+}
+#presetBrowser .preset-browser-titlebar{flex:0 0 48px!important;min-height:0!important;padding:5px 11px!important;gap:8px!important}
+#presetBrowser .preset-browser-mark{width:34px!important;height:34px!important;flex:0 0 34px!important;font-size:19px!important}
+#presetBrowser .preset-browser-heading h2{font-size:20px!important;line-height:1!important;margin:1px 0!important}
+#presetBrowser .preset-browser-heading small{font-size:8px!important;letter-spacing:.11em!important}
+#presetBrowser .preset-browser-heading p{font-size:9px!important}
+#presetBrowser .preset-browser-collections{flex:0 0 34px!important;min-height:0!important;gap:4px!important;padding:3px 10px 0!important;white-space:nowrap!important}
+#presetBrowser .preset-browser-collections button{padding:5px 9px!important;font-size:9px!important;letter-spacing:.045em!important}
+#presetBrowser .preset-browser-provenance{font-size:8px!important}
+#presetBrowser .preset-browser-toolbar{
+  display:grid!important;grid-template-columns:minmax(160px,1fr) minmax(365px,1.65fr)!important;
+  gap:7px!important;align-items:end!important;padding:5px 10px!important;flex:0 0 auto!important;
+}
+#presetBrowser .preset-browser-toolbar>select[hidden]{display:none!important}
+#presetBrowser .pb-search-field{min-width:0!important;gap:2px!important}
+#presetBrowser .pb-search-field span,#presetBrowser .pb-sort-caption{font:bold 9px Arial,sans-serif;letter-spacing:.055em;color:#5c7666}
+#presetBrowser .pb-search-field input{height:27px!important;min-height:27px!important;padding:3px 8px!important;font-size:11px!important}
+#presetBrowser .pb-sort-buttons{display:flex;align-items:center;gap:4px;min-width:0}
+#presetBrowser .pb-sort-caption{flex:0 0 auto;margin-right:3px}
+#presetBrowser .pb-sort-choice,#presetBrowser .pb-filter-chip,#presetBrowser .pb-filter-apply{
+  color:#3a594b;border:1px solid #acbca9;border-radius:4px;
+  background:linear-gradient(#f3f0df,#dce8db);font:bold 9px Arial,sans-serif;
+  height:25px;min-height:25px;padding:3px 7px;cursor:pointer;white-space:nowrap;
+}
+#presetBrowser .pb-sort-choice.on,#presetBrowser .pb-filter-chip.on,
+#presetBrowser .pb-sort-choice[aria-pressed=true],#presetBrowser .pb-filter-chip[aria-pressed=true]{
+  background:linear-gradient(#628574,#426b59);border-color:#527b69;color:#fff9e9;
+}
+#presetBrowser .pb-filter-apply{margin-left:auto;background:#ad8d56;color:#fff9e5;border-color:#967748;padding:3px 12px;font-size:10px}
+#presetBrowser .pb-filter-apply:hover{background:#957340}
+#presetBrowser .pb-filter-stack{flex:0 0 auto;display:flex;flex-direction:column;gap:3px;padding:2px 10px 5px;min-height:0!important}
+#presetBrowser .pb-filter-line{display:grid;grid-template-columns:52px repeat(9,minmax(0,1fr));gap:3px;align-items:center;min-height:23px}
+#presetBrowser .pb-filter-caption{font:bold 9px Arial,sans-serif;color:#607769;letter-spacing:.055em}
+#presetBrowser .pb-filter-chip{width:100%;min-width:0;height:21px;min-height:21px;line-height:14px;padding:2px 2px;font-size:8.5px;overflow:hidden;text-overflow:ellipsis}
+#presetBrowser .preset-browser-summary{flex:0 0 33px!important;min-height:0!important;padding:3px 10px!important;gap:6px!important}
+#presetBrowser .preset-browser-summary strong{font-size:13px!important}
+#presetBrowser .preset-browser-summary span{font-size:9px!important}
+#presetBrowser .pb-actions{gap:3px!important;flex-wrap:nowrap!important}
+#presetBrowser .pb-minor{height:23px!important;min-height:23px!important;padding:3px 6px!important;font-size:8px!important}
+#presetBrowser #pbResultContainer{flex:1 1 auto!important;min-height:0!important;overflow:hidden!important;padding:3px 10px 5px!important}
+#presetBrowser .pb-column-headers{display:none!important}
+#presetBrowser #pbItems:not([hidden]){
+  display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;
+  grid-auto-rows:minmax(0,1fr)!important;align-items:stretch!important;
+  gap:4px!important;width:100%;height:100%;min-height:0;overflow:hidden!important;
+}
+#presetBrowser .pb-item{
+  position:relative;display:flex!important;flex-direction:column;justify-content:center;align-items:flex-start;
+  width:100%!important;min-width:0!important;min-height:0!important;height:100%!important;
+  padding:3px 5px!important;margin:0!important;gap:1px!important;overflow:hidden!important;
+  border-radius:4px!important;box-sizing:border-box!important;
+}
+#presetBrowser .pb-item-name{font-size:11px!important;line-height:1.04!important;white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden!important;max-width:100%!important}
+#presetBrowser .pb-item-family,#presetBrowser .pb-item-role{display:block;font-size:8px!important;line-height:1.05!important;max-width:100%;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+#presetBrowser .pb-item-index{position:absolute;right:2px;top:1px;font-size:8px!important;opacity:.65}
+#presetBrowser #pbMatrix:not([hidden]){display:block!important;width:100%;height:100%;min-height:0!important;overflow:hidden!important;padding:0!important}
+#presetBrowser .pb-matrix-grid{
+  display:grid!important;grid-template-columns:minmax(76px,.9fr) repeat(8,minmax(0,1fr))!important;
+  grid-template-rows:repeat(9,minmax(0,1fr))!important;
+  gap:3px!important;min-width:0!important;width:100%!important;height:100%!important;
+}
+#presetBrowser .pb-matrix-axis{min-width:0;min-height:0;padding:2px!important;font-size:8px!important;display:grid;place-items:center;overflow:hidden;text-overflow:ellipsis}
+#presetBrowser .pb-matrix-family{font-size:9px!important;text-align:left!important;padding:3px!important}
+#presetBrowser .pb-matrix-cell{min-width:0!important;min-height:0!important;height:100%!important;padding:2px!important;font-size:9px!important;line-height:1.05!important;overflow:hidden!important;word-break:normal!important}
+#presetBrowser #pbEmpty:not([hidden]){display:grid;place-items:center;align-content:center;height:100%;padding:8px}
+#presetBrowser .preset-browser-footer{flex:0 0 25px!important;min-height:0!important;padding:3px 10px!important;font-size:8px!important}
+#presetBrowser .preset-browser-backdrop,#presetBrowser{overscroll-behavior:none}
+@media(max-width:800px){
+  #presetBrowser .preset-browser-heading p,#presetBrowser .preset-browser-provenance{display:none!important}
+  #presetBrowser .preset-browser-toolbar{grid-template-columns:minmax(110px,1fr) minmax(285px,2fr)!important}
+  #presetBrowser .pb-sort-choice{padding:2px 4px!important;font-size:8px!important}
+  #presetBrowser .pb-filter-apply{padding:2px 5px!important}
+  #presetBrowser .pb-filter-line{grid-template-columns:40px repeat(9,minmax(0,1fr));gap:2px}
+  #presetBrowser .pb-filter-chip{font-size:7.5px!important}
+  #presetBrowser .pb-item-name{font-size:9px!important}
+  #presetBrowser .pb-item-family,#presetBrowser .pb-item-role{font-size:7px!important}
+}
+</style>
 </head>
 <body>
 <div class="page" id="page">
@@ -1791,10 +1878,21 @@ html.albedo-fit #page #filterKnobsB .param-value {
       <span class="preset-browser-provenance">NATIVE FACTORY IDS PRESERVED</span>
     </div>
     <div class="preset-browser-toolbar">
-      <label class="pb-search-field"><span>NAME / GLOBAL SEARCH</span><input type="search" id="pbSearch" placeholder="Search any preset, family or role" autocomplete="off" aria-label="Search all preset names, families and roles"/></label>
-      <label><span>MATERIAL FAMILY</span><select id="pbFamily" aria-label="Filter by family"><option value="">ALL 8 FAMILIES</option></select></label>
-      <label><span>INSTRUMENT ROLE</span><select id="pbRole" aria-label="Filter by instrument role"><option value="">ALL 8 ROLES</option></select></label>
-      <label><span>SORT BY</span><select id="pbSort" aria-label="Sort presets"><option value="name">NAME A–Z</option><option value="family">FAMILY A–Z</option><option value="role">INSTRUMENT ROLE A–Z</option></select></label>
+      <label class="pb-search-field"><span>FIND PRESET</span><input type="search" id="pbSearch" placeholder="Name, family or instrument" autocomplete="off" aria-label="Search presets by name, family or instrument"/></label>
+      <div class="pb-sort-buttons" role="group" aria-label="Sort by">
+        <span class="pb-sort-caption">SORT BY</span>
+        <button type="button" class="pb-sort-choice on" data-pb-sort="name" aria-pressed="true">NAME</button>
+        <button type="button" class="pb-sort-choice" data-pb-sort="family" aria-pressed="false">FAMILY</button>
+        <button type="button" class="pb-sort-choice" data-pb-sort="role" aria-pressed="false">ROLE</button>
+        <button type="button" id="pbApply" class="pb-filter-apply" aria-label="Apply sorting and filters">✓ APPLY</button>
+      </div>
+      <select id="pbFamily" hidden aria-hidden="true" tabindex="-1"><option value="">ALL FAMILIES</option></select>
+      <select id="pbRole" hidden aria-hidden="true" tabindex="-1"><option value="">ALL ROLES</option></select>
+      <select id="pbSort" hidden aria-hidden="true" tabindex="-1"><option value="name">NAME A–Z</option><option value="family">FAMILY A–Z</option><option value="role">ROLE A–Z</option></select>
+    </div>
+    <div class="pb-filter-stack" aria-label="Label button preset filters">
+      <div id="pbFamilyChips" class="pb-filter-line" role="group" aria-label="Material family filters"></div>
+      <div id="pbRoleChips" class="pb-filter-line" role="group" aria-label="Instrument role filters"></div>
     </div>
     <div class="preset-browser-summary">
       <div><strong id="pbCount">64 / 64</strong><span id="pbSummary">Factory voices · Name × Family × Instrument Role</span></div>
@@ -2006,7 +2104,7 @@ dialog.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();hi
   const all=[...dialog.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled])')].filter(el=>el.offsetParent!==null);if(!all.length)return;
   const first=all[0],last=all[all.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
 }});
-get('pbSearch').addEventListener('input',render);get('pbFamily').addEventListener('change',render);get('pbRole').addEventListener('change',render);
+get('pbSearch').addEventListener('change',render);get('pbFamily').addEventListener('change',render);get('pbRole').addEventListener('change',render);
 get('pbSort').addEventListener('change',e=>{state.sort=e.target.value;render();});
 get('pbOrder').addEventListener('click',()=>{state.descending=!state.descending;render();});
 get('pbClear').addEventListener('click',()=>{get('pbSearch').value='';get('pbFamily').value='';get('pbRole').value='';state.sort='name';state.descending=false;get('pbSort').value='name';render();});
@@ -2021,6 +2119,77 @@ window.addEventListener('albedo:gui-patch-imported',e=>{if(state.replaying)retur
 // Debug/CI contract: independent crossing across real factory IDs, no native-preset renumbering.
 window.ALBEDO_PRESET_ATLAS={get catalog(){return catalog.map(p=>({...p}));},get creative(){return creative.map(p=>({...p}));},get filtered(){return sortedItems().map(p=>({...p}));},get view(){return state.view;},get collection(){return state.collection;},get nativeAligned(){return nativeValid??true;},open:show,close:hide};
 updateFilters();
+})();
+</script>
+<script id="cp41-atlas-label-appliers">
+(()=>{'use strict';
+// The original Atlas is the only preset selection surface. Keep Factory,
+// Recursive Forms, User and Archives tabs, stable program IDs and native loader.
+const dialog=document.getElementById('presetBrowser');
+const family=document.getElementById('pbFamily'),role=document.getElementById('pbRole'),sort=document.getElementById('pbSort');
+const familyRow=document.getElementById('pbFamilyChips'),roleRow=document.getElementById('pbRoleChips');
+if(!dialog||!family||!role||!sort||!familyRow||!roleRow)return;
+const draft={family:'',role:'',sort:'name'};
+function pressState(){
+  dialog.querySelectorAll('[data-pb-sort]').forEach(b=>{
+    const active=b.dataset.pbSort===draft.sort;
+    b.classList.toggle('on',active);b.setAttribute('aria-pressed',String(active));
+  });
+  dialog.querySelectorAll('[data-pb-filter]').forEach(b=>{
+    const active=b.dataset.pbValue===draft[b.dataset.pbFilter];
+    b.classList.toggle('on',active);b.setAttribute('aria-pressed',String(active));
+  });
+}
+function populate(row,field,control,caption){
+  row.replaceChildren();
+  const label=document.createElement('strong');
+  label.className='pb-filter-caption';label.textContent=caption;
+  row.appendChild(label);
+  for(const option of control.options){
+    const b=document.createElement('button');
+    b.type='button';b.className='pb-filter-chip';b.dataset.pbFilter=field;
+    b.dataset.pbValue=option.value;
+    b.textContent=option.value||'ALL';
+    b.title=option.value||'All '+caption.toLowerCase();
+    b.setAttribute('aria-pressed','false');
+    b.addEventListener('click',()=>{draft[field]=option.value;pressState()});
+    row.appendChild(b);
+  }
+}
+function refreshChips(){
+  draft.family=family.value;draft.role=role.value;draft.sort=sort.value;
+  populate(familyRow,'family',family,'FAMILY');
+  populate(roleRow,'role',role,'ROLE');
+  pressState();
+}
+function apply(){
+  family.value=draft.family;
+  role.value=draft.role;
+  sort.value=draft.sort;
+  // One atomic render: the existing sorter reads both select values.
+  sort.dispatchEvent(new Event('change',{bubbles:true}));
+  const container=document.getElementById('pbResultContainer');
+  if(container)container.scrollTop=0;
+  pressState();
+}
+dialog.querySelectorAll('[data-pb-sort]').forEach(b=>b.addEventListener('click',()=>{
+  draft.sort=b.dataset.pbSort;pressState();
+}));
+document.getElementById('pbApply').addEventListener('click',apply);
+document.getElementById('pbSearch').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();apply();}
+});
+document.getElementById('pbClear').addEventListener('click',refreshChips);
+dialog.querySelectorAll('[data-collection]').forEach(b=>b.addEventListener('click',refreshChips));
+document.getElementById('presetBrowseOpen').addEventListener('click',refreshChips);
+window.addEventListener('albedo:gui-patch-imported',()=>{if(!dialog.hidden)refreshChips()});
+window.ALBEDO_CP41_ATLAS={
+  get tabs(){return [...dialog.querySelectorAll('[data-collection]')].map(b=>b.dataset.collection)},
+  get draft(){return {...draft}},
+  get hasPages(){return false},
+  apply,refreshChips
+};
+refreshChips();
 })();
 </script>
 
