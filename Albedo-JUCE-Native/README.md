@@ -1,28 +1,32 @@
-# Albedo CP32 — JUCE 8 Native Graphics Migration
+# Albedo CP34 — JUCE 8 + WebView2 HTML (native fallback)
 
-This is an isolated native JUCE implementation, not an embedded HTML browser.
-It uses the original CP22/CP31 landscape HTML as a design and behavior reference.
-It draws interactive knobs, panels, module diagrams, parameter automation, MIDI,
-and a searchable 64-preset Atlas as JUCE C++ components. The Arbor animation is
-local to its graphic component and never redraws the whole editor on mouse motion.
+This CP34 branch uses JUCE 8 `WebBrowserComponent` / WebView2 to render the original Albedo HTML.
+It includes the previous JUCE-native editor only as a fallback if WebView2 is unavailable.
+**It is not the JUCE No-WebView2 variant.** The standalone C++-drawn implementation lives on the
+[albedo-juce-native-no-webview2](https://github.com/uill12/Plugins-VST-s/tree/albedo-juce-native-no-webview2) branch,
+with separate VST3 and CLAP IDs. Do not distribute CP34 files under a Native NoWebView2 name.
+
+**Renderer:** `juce-webview2-html` · **WebView2 required for HTML GUI:** yes · **native fallback:** yes.
+The source of truth is the [variant metadata](Metadata/PLUGIN_IDENTITY.json); the CMake target explicitly sets `NEEDS_WEBVIEW2 TRUE`.
 
 ## Rendering / platform
-- JUCE 8.0.17-security, default Direct2D rendering on Windows; software renderer available as JUCE fallback
+- JUCE 8 with WebView2 / Chromium HTML rendering on Windows; original JUCE C++ editor available as fallback
 - Fixed 3:2 editor aspect ratio; launch 1440×960 and resize 960×640 to 1920×1280
 - Preserved exact original Albedo logo SVG, no font files bundled
-- No WebView2, Web2View, browsers, `WebBrowserComponent`, or HTML resources in runtime
+- WebView2 is **enabled** (`NEEDS_WEBVIEW2 TRUE`, `JUCE_WEB_BROWSER=1`) and the HTML UI is embedded. This is a WebView2 runtime variant.
 - Original DSP source and original 32-material PCM resource, reused without changes
 - All 64 factory patches and 197 parameter IDs, with an advanced control inspector
 - VST3 via JUCE; CLAP via clap-juce-extensions (unofficial adapter)
 
 ## Status and caveats
-- New wrapper and components are independently staged; not yet a replacement for verified CP31
-- Metadata/parameter encoding differ from the legacy CLAP/VST3 and sessions should not be silently replaced
+- CP34 WebView2 host-fit integration is tracked separately from the native-only implementation. Bitwig host QA remains a separate verification step.
+- This branch retains its existing WebView2 VST3 code `AQ32`, bundle ID `org.vitriol.albedo.juce32` and CLAP ID `org.vitriol.opussonorum.juce32`. Do not reuse these IDs for JUCE Native NoWebView2.
 - Final audiovisual visual-parity and host performance must be tested in Windows Bitwig at 48/88.2/96 kHz
 - Source integration and CI build reports, when available, determine deliverability
 
 ## Build
 
+The CP34 WebView2 build additionally requires the original HTML asset and WebView2 Windows SDK.
 From the repository root, after reconstructing verified Albedo CP31 sources into
 `Albedo-Quintessential-Synth`, download a pinned JUCE 8 checkout under
 `Albedo-JUCE-Native/ext/JUCE` and the recursively initialized
