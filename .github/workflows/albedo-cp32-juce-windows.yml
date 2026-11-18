@@ -682,7 +682,14 @@ jobs:
           $bundle=Get-ChildItem -Path build-cp32-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp32/' -Recurse -Force
-          Get-ChildItem 'dist-cp32' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
+          Copy-Item -LiteralPath 'Albedo-JUCE-Native/Metadata/PLUGIN_IDENTITY.json' -Destination 'dist-cp32/Albedo_JUCE_Native_NoWebView2_IDENTITY.json'
+          $artifactRoot=(Resolve-Path 'dist-cp32').Path
+          Get-ChildItem 'dist-cp32' -Recurse -File | ForEach-Object {
+            $digest=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            $relative=$_.FullName.Substring($artifactRoot.Length+1).Replace('\','/')
+            "$digest *$relative"
+          } | Set-Content -Encoding utf8 'dist-cp32/SHA256SUMS.txt'
+          Write-Host 'JUCE Native NoWebView2: unique host IDs, filename, manifest, and checksums packaged'
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
