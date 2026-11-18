@@ -1521,6 +1521,80 @@ html.albedo-fit #page .center .coupling-grid{gap:2px!important}
 html.albedo-fit #page .center .couple-item{height:31px!important;padding:1px 3px!important}
 html.albedo-fit #page .center .coupling-head{height:16px!important;min-height:16px!important}
 
+
+/* CP37 — Motus & Cellular: recover square interactive knobs and clipped
+   graphics. 34px title + 154px body -> 142px content rows: 27+37+63+12
+   plus 3x1px gaps. All 3 knobs, 7x32 automata cells, animated LFO and the
+   explanatory note remain displayed in the original 3:2 GUI. */
+html.albedo-fit #page .lower > .surface:nth-child(2) .bodypad {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:27px 37px 63px 12px!important;
+  align-content:start!important;align-items:stretch!important;justify-content:stretch!important;
+  gap:1px!important;height:calc(100% - 34px)!important;min-height:0!important;
+  box-sizing:border-box!important;padding:6px 8px!important;overflow:hidden!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(2) .motion-head {
+  display:grid!important;grid-template-columns:minmax(0,1fr) 84px!important;
+  grid-template-rows:16px 10px!important;gap:1px 4px!important;
+  height:27px!important;min-height:27px!important;max-height:27px!important;
+  align-items:center!important;padding:0!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(2) .motion-head .section-caption {
+  grid-column:1!important;grid-row:1!important;font-size:9.7px!important;line-height:16px!important;
+  white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(2) .motion-head select {
+  grid-column:2!important;grid-row:1!important;width:100%!important;
+  height:18px!important;min-height:18px!important;max-height:18px!important;
+  margin:0!important;padding:0 3px!important;line-height:16px!important;font-size:9.5px!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(2) #lfoGraphic {
+  grid-column:1 / -1!important;grid-row:2!important;
+  width:100%!important;height:10px!important;min-height:10px!important;max-height:10px!important;
+  margin:0!important;display:block!important;border-width:1px!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(2) #cells {
+  height:37px!important;min-height:37px!important;max-height:37px!important;
+  margin:0!important;padding:2px 3px!important;box-sizing:border-box!important;
+  gap:1px!important;overflow:hidden!important;grid-template-rows:repeat(7,minmax(0,1fr))!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(2) #motionKnobs {
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-template-rows:63px!important;align-items:stretch!important;justify-items:stretch!important;
+  gap:4px!important;height:63px!important;min-height:63px!important;max-height:63px!important;
+  overflow:visible!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(2) #motionKnobs .param {
+  display:flex!important;flex-direction:column!important;justify-content:flex-start!important;
+  align-items:center!important;gap:0!important;width:100%!important;
+  height:63px!important;min-height:63px!important;max-height:63px!important;
+  box-sizing:border-box!important;padding:0!important;margin:0!important;overflow:visible!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(2) #motionKnobs .dial {
+  display:block!important;width:39px!important;height:39px!important;
+  min-width:39px!important;max-width:39px!important;min-height:39px!important;max-height:39px!important;
+  flex:0 0 39px!important;box-sizing:border-box!important;
+  margin:0 auto!important;padding:0!important;aspect-ratio:1 / 1!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(2) #motionKnobs .param-label {
+  display:block!important;width:auto!important;height:11px!important;min-height:11px!important;
+  max-height:11px!important;flex:0 0 11px!important;margin:0!important;padding:0!important;
+  font-size:10px!important;font-weight:750!important;line-height:11px!important;
+  letter-spacing:0!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(2) #motionKnobs .param-value {
+  display:block!important;width:auto!important;height:13px!important;min-height:13px!important;
+  max-height:13px!important;flex:0 0 13px!important;margin:0!important;padding:0!important;
+  font-size:11px!important;font-weight:650!important;line-height:13px!important;
+  white-space:nowrap!important;overflow:visible!important;
+}
+html.albedo-fit #page .lower > .surface:nth-child(2) .pattern-note {
+  display:block!important;height:12px!important;min-height:12px!important;max-height:12px!important;
+  margin:0!important;padding:0!important;font-size:8.7px!important;
+  line-height:12px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+}
+
 </style>
 </head>
 <body>
@@ -1568,7 +1642,7 @@ html.albedo-fit #page .center .coupling-head{height:16px!important;min-height:16
 </main>
 <section class="lower" aria-label="Modulation motion processing and rhythm">
  <div class="surface"><div class="surface-title"><div><div class="eyebrow">04 / ASSIGNMENT WITHOUT CABLES</div><h2>Correspondentiae</h2></div><span class="seal">◇</span></div><div class="bodypad"><div class="subrow"><span class="section-caption">SOURCE → TARGET · DEPTH</span><span class="micro" id="routeCount">4 ROUTES</span></div><div id="routes"></div><button id="addRoute" class="add-route">+ ADD SYMBOLIC ASSIGNMENT</button></div></div>
- <div class="surface"><div class="surface-title"><div><div class="eyebrow">05 / ORGANIC MODULATION</div><h2>Motus & Cellular</h2></div><span class="seal">✣</span></div><div class="bodypad"><div class="motion-head"><span class="section-caption">WOLFRAM-LIKE CELLULAR MORPH</span><select id="rule"><option value="30">RULE 30</option><option value="90">RULE 90</option><option value="110" selected>RULE 110</option><option value="150">RULE 150</option></select></div><div class="automata" id="cells" aria-label="Thirty two cell automaton visual pattern"></div><div class="motion-controls" id="motionKnobs"></div><svg class="lfo-small" id="lfoGraphic" viewBox="0 0 270 55" preserveAspectRatio="none"></svg><div class="pattern-note">Cellular motion targets texture, density and color — not automatic MIDI notes.</div></div></div>
+ <div class="surface"><div class="surface-title"><div><div class="eyebrow">05 / ORGANIC MODULATION</div><h2>Motus & Cellular</h2></div><span class="seal">✣</span></div><div class="bodypad"><div class="motion-head"><span class="section-caption">WOLFRAM-LIKE CELLULAR MORPH</span><select id="rule"><option value="30">RULE 30</option><option value="90">RULE 90</option><option value="110" selected>RULE 110</option><option value="150">RULE 150</option></select><svg class="lfo-small" id="lfoGraphic" viewBox="0 0 270 55" preserveAspectRatio="none"></svg></div><div class="automata" id="cells" aria-label="Thirty two cell automaton visual pattern"></div><div class="motion-controls" id="motionKnobs"></div><div class="pattern-note" title="Cellular motion targets texture, density and color — not automatic MIDI notes.">Modulates texture, density &amp; color — not MIDI notes.</div></div></div>
  <div class="surface"><div class="surface-title"><div><div class="eyebrow">06 / POST-SYNTHESIS PROCESSING</div><h2>Spatium & Transform</h2></div><span class="seal">☽</span></div><div class="bodypad"><div id="fx"></div><div class="pattern-note">Insert processes / dry-wet mix / bypass. Processing algorithms are proposed.</div></div></div>
  <div class="surface"><div class="surface-title"><div><div class="eyebrow">07 / OPTIONAL AMPLITUDE RHYTHM</div><h2>Pulsus</h2></div><span class="seal">◷</span></div><div class="bodypad"><div class="subrow"><span class="section-caption">16-STEP PULSE GRID</span><span class="micro">NOT A MIDI ARPEGGIATOR</span></div><div class="steps" id="steps"></div><div class="pattern-controls"><button class="tiny-button" id="play">▶ PREVIEW</button><button class="tiny-button" id="regen">✧ NEW</button><select id="division" aria-label="Step division"><option value="250">1/16</option><option value="500">1/8</option><option value="125">1/32</option></select></div><div class="pattern-note">Graphic timing preview only; actual pulse modulation requires DSP.</div></div></div>
 </section>
