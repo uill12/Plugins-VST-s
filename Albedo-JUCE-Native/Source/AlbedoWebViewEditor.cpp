@@ -292,7 +292,7 @@ void AlbedoWebViewEditor::activateFallback(const juce::String& reason)
     browser.setVisible(false);
     nativeFallback=std::make_unique<AlbedoEditor>(processor);
     addAndMakeVisible(*nativeFallback);
-    nativeFallback->setBounds(getLocalBounds());
+    resized(); // Fit its proven 1260x840 logical canvas into the current editor.
     nativeFallback->toFront(true);
     pageReady=false;
 }
@@ -336,7 +336,19 @@ void AlbedoWebViewEditor::timerCallback()
 void AlbedoWebViewEditor::resized()
 {
     browser.setBounds(getLocalBounds());
-    if(nativeFallback) nativeFallback->setBounds(getLocalBounds());
+    if(nativeFallback)
+    {
+        // The original native GUI requires at least 1260x840 for its
+        // filter/envelope rows. Scale it uniformly rather than clipping or
+        // reflowing its labels when the host window starts at 1152x768.
+        constexpr float logicalW=1260.0f,logicalH=840.0f;
+        nativeFallback->setTransform(juce::AffineTransform());
+        nativeFallback->setBounds(0,0,(int)logicalW,(int)logicalH);
+        const auto fit=juce::jmin((float)getWidth()/logicalW,(float)getHeight()/logicalH);
+        const auto ox=juce::jmax(0.0f,((float)getWidth()-logicalW*fit)*.5f);
+        const auto oy=juce::jmax(0.0f,((float)getHeight()-logicalH*fit)*.5f);
+        nativeFallback->setTransform(juce::AffineTransform::scale(fit).translated(ox,oy));
+    }
 }
 void AlbedoWebViewEditor::paint(juce::Graphics& g)
 {
