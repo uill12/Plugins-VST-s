@@ -783,7 +783,7 @@ void AlbedoEditor::resized()
     allControlsButton.setBounds(W-295,20,133,36);
     auto r=juce::Rectangle<int>(10,78,juce::jmax(0,W-20),juce::jmax(0,H-102));
     const int gap=8;
-    const int engineH=juce::jlimit(93,135,(int)(r.getHeight()*.16f));
+    const int engineH=juce::jlimit(100,135,(int)(r.getHeight()*.16f));
     const int lowerH=juce::jlimit(155,275,(int)(r.getHeight()*.27f));
     auto engine=r.removeFromTop(engineH);r.removeFromTop(gap);
     auto lower=r.removeFromBottom(lowerH);r.removeFromBottom(gap);
