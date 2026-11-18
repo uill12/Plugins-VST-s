@@ -27,6 +27,8 @@ private:
     juce::TextButton atlasButton {"PRESET ATLAS"}, allControlsButton {"ALL CONTROLS"};
     juce::TextButton closeAdvanced {"CLOSE"};
     juce::ComboBox sourceSelector;
+    juce::ComboBox methodSelector;
+    juce::Label sourceCaption, methodCaption;
     std::array<juce::Label,4> engineMethodLabels;
     int inspectorMethodIndex=-1;
     std::unique_ptr<Atlas> atlas;
