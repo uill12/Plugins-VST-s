@@ -16,13 +16,12 @@
    window.__JUCE__?.backend?.emitEvent?.('albedoMessage',{payload});
  };
  function measured(){
-   // A DAW may embed WebView2 with a rasterization scale different from the
-   // JUCE component's logical dimensions. Native bounds take precedence.
-   const cssW=Math.max(1,root.clientWidth);
-   const cssH=Math.max(1,root.clientHeight);
-   const vv=window.visualViewport;
-   const w=Math.max(1,Math.floor(Math.min(cssW,vv?.width||cssW,nativeW||cssW)));
-   const h=Math.max(1,Math.floor(Math.min(cssH,vv?.height||cssH,nativeH||cssH)));
+   // CP40: root.clientWidth/clientHeight are the actual WebView2 CSS viewport.
+   // JUCE HWND logical dimensions and visualViewport can report different units
+   // under Windows DPI scaling / host embedding. Never take their minimum:
+   // it created a reduced canvas with empty borders in Bitwig.
+   const w=Math.max(1,Math.floor(root.clientWidth||window.innerWidth||1));
+   const h=Math.max(1,Math.floor(root.clientHeight||window.innerHeight||1));
    return {w,h};
  }
  function fit(){
@@ -128,8 +127,7 @@
    max-height:100%!important;min-height:0!important;overflow:auto!important;
  }
  #albedo-cp35-controls{
-   position:fixed;left:calc(var(--albedo-viewport-w,1320px) - 163px);
-   top:calc(var(--albedo-viewport-h,880px) - 35px);
+   position:fixed;right:8px;bottom:8px;left:auto;top:auto;
    width:153px;height:29px;z-index:12000;
    display:flex;align-items:center;gap:3px;
    padding:2px 4px;box-sizing:border-box;
@@ -164,7 +162,7 @@
  controls.id='albedo-cp35-controls';
  controls.setAttribute('aria-label','Resize the Albedo plugin window');
  controls.innerHTML='<button type="button" id="albedo-cp35-smaller" title="Smaller 3:2 window">−</button>'+
-   '<span id="albedo-cp35-size-value">1320×880</span>'+
+   '<span id="albedo-cp35-size-value">1200×800</span>'+
    '<button type="button" id="albedo-cp35-reset" title="Request comfortable 1200×800 (limited by available screen area)">↔</button>'+
    '<button type="button" id="albedo-cp35-resize-grip" title="Drag to resize the 3:2 plugin window">◢</button>';
  document.body.appendChild(controls);
@@ -221,10 +219,7 @@
    observer.observe(root);
    window.__ALBEDO_CP35_RESIZE_OBSERVER=observer;
  }
- const timer=window.setInterval(()=>{
-   if(!document.hidden)fit();
- },650);
- window.addEventListener('pagehide',()=>window.clearInterval(timer),{once:true});
+ // ResizeObserver, window events and host viewport events update fit without polling.
  fit();
  window.ALBEDO_CP35_WINDOW={
    get geometry(){return{width:lastW,height:lastH,scale:lastScale,nativeWidth:nativeW,nativeHeight:nativeH}},
