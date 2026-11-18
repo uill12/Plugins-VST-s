@@ -5,7 +5,7 @@ Feed **small, technical, sanitized JSON events** into `rgnes_learn.py`. Never in
 Required: `event_id`, `project`, `rule_id`, `area`, `source_kind`, `status`, `observed_at`, `symptom`, `source_ref`.
 Optional: `corrective_action`, `acceptance_test`, `source_revision`, `target_format`, `environment`, `severity`.
 
-- `source_kind`: `user_feedback`, `build_log`, `source_audit`, `offline_test`, `host_test`, `user_confirmation`.
+- `source_kind`: `user_feedback`, `assistant_history` (unverified prior assistant report), `build_log`, `source_audit`, `offline_test`, `host_test`, `user_confirmation`.
 - `status`: `reported`, `reproduced`, `fix_attempted`, `offline_test_passed`, `host_test_passed`, `user_confirmed`, `regressed`, `superseded`, `blocked`.
 - `source_ref`: a relevant, non-sensitive public commit/filename/checkpoint reference, not a complete private transcript or prompt.
 - `rule_id`: stable namespace such as `midi.stuck-notes`, `gui.hover-rerender`, or `build.ci-stall`.
