@@ -48,8 +48,8 @@
    top:calc(var(--albedo-viewport-h,880px) / 2)!important;
  }
  html.albedo-fit .preset-browser-backdrop{
-   position:fixed!important;left:0!important;top:0!important;
-   inset:auto!important;width:var(--albedo-viewport-w,100vw)!important;
+   position:fixed!important;inset:0 auto auto 0!important;
+   width:var(--albedo-viewport-w,100vw)!important;
    height:var(--albedo-viewport-h,100vh)!important;
    max-width:none!important;max-height:none!important;
    padding:10px!important;box-sizing:border-box!important;
