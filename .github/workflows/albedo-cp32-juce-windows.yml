@@ -664,9 +664,9 @@ jobs:
           $clap=Get-ChildItem -Path build-cp32-juce -Recurse -File -Filter '*.clap' | Select-Object -First 1
           $vst=Get-ChildItem -Path build-cp32-juce -Recurse -File -Filter '*.vst3' | Select-Object -First 1
           if (!$clap -or !$vst) { throw 'Compiled native binaries missing' }
-          python tools/verify_pe_exports.py $clap.FullName --require clap_entry
+          python Albedo-Quintessential-Synth/tools/verify_pe_exports.py $clap.FullName --require clap_entry
           if ($LASTEXITCODE -ne 0) { throw 'CLAP export missing' }
-          python tools/verify_pe_exports.py $vst.FullName --require GetPluginFactory
+          python Albedo-Quintessential-Synth/tools/verify_pe_exports.py $vst.FullName --require GetPluginFactory
           if ($LASTEXITCODE -ne 0) { throw 'VST3 export missing' }
           python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB1'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in CLAP'; print('CLAP PCM24 32-material bank present')" $clap.FullName
           if ($LASTEXITCODE -ne 0) { throw 'CLAP sound bank resource missing' }
