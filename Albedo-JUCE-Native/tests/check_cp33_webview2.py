@@ -40,7 +40,7 @@ assert "return new AlbedoEditor(*this)" in processor
 assert len(taxonomy)==64
 assert [x["index"] for x in taxonomy]==list(range(64))
 assert len({(x["family"],x["role"]) for x in taxonomy})==64
-assert "const BASE_W=1320,BASE_H=880" in html
+assert "const BASE_W=1500,BASE_H=1000" in html
 assert "window.ALBEDO_CP31_MOTION" in html
 assert html.count('id="presetBrowser"')==1
 assert html.count('id="cp04Lab"')==1
