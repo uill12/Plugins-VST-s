@@ -80,7 +80,9 @@ AlbedoWebViewEditor::AlbedoWebViewEditor(AlbedoProcessor& p)
     const auto fit=albedo_window_fit::calculate();
     aspect.setFixedAspectRatio(1.5);
     aspect.setSizeLimits(fit.minWidth,fit.minHeight,fit.maxWidth,fit.maxHeight);
-    setResizable(true,true);
+    // WebView2 is an HWND drawn in front of JUCE's native corner-resizer.
+    // Allow host resize but use the HTML drag-grip for user interaction.
+    setResizable(true,false);
     setConstrainer(&aspect);
     setSize(fit.initialWidth,fit.initialHeight);
     browser.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
@@ -112,7 +114,7 @@ AlbedoWebViewEditor::resource(const juce::String& path) const
             "('albedoMessage',{payload:String(payload)})};";
         if(!html.contains(oldHost)) return std::nullopt; // fail closed on mismatched HTML
         html=html.replace(oldHost,juceHost);
-        html=html.replace("</body>","<script src=\"juce_cp33_bridge.js\"></script><script src=\"cp34_window_fit.js\"></script></body>");
+        html=html.replace("</body>","<script src=\"juce_cp33_bridge.js\"></script><script src=\"cp35_editor_geometry.js\"></script></body>");
         return htmlResource(html);
     }
 
@@ -120,8 +122,8 @@ AlbedoWebViewEditor::resource(const juce::String& path) const
     const char* mime=nullptr;
     if(path=="/juce_cp33_bridge.js")
     { name="juce_cp33_bridge_js"; mime="text/javascript"; }
-    else if(path=="/cp34_window_fit.js")
-    { name="cp34_window_fit_js"; mime="text/javascript"; }
+    else if(path=="/cp35_editor_geometry.js")
+    { name="cp35_editor_geometry_js"; mime="text/javascript"; }
     else if(path=="/factory_preset_taxonomy.json")
     { name="factory_preset_taxonomy_json"; mime="application/json"; }
     else return std::nullopt;
@@ -143,11 +145,21 @@ void AlbedoWebViewEditor::receive(const juce::var& value)
     if(parts[0]=="ready")
     {
         pageReady=true;
+        lastViewportW=-1;lastViewportH=-1;
         fullSyncPending=true;
         pendingTicks=0;
         return;
     }
     if(parts.size()<2) return;
+    if(parts[0]=="resize" && parts.size()==3)
+    {
+        const auto requestedWidth=(int)parts[1].getIntValue();
+        const auto requestedHeight=(int)parts[2].getIntValue();
+        if(requestedWidth>=480 && requestedWidth<=1900 &&
+           requestedHeight>=320 && requestedHeight<=1400)
+            requestHostResize(requestedWidth);
+        return;
+    }
     if(parts[0]=="action")
     {
         handleAction(parts[1]);
@@ -279,6 +291,28 @@ void AlbedoWebViewEditor::handleAction(const juce::String& action)
     });
 }
 
+void AlbedoWebViewEditor::requestHostResize(int width)
+{
+    const auto fit=albedo_window_fit::calculate();
+    int clipped=juce::jlimit(fit.minWidth,fit.maxWidth,width);
+    clipped=juce::jmax(fit.minWidth,(clipped/6)*6);
+    const int height=clipped*2/3;
+    if(getWidth()==clipped && getHeight()==height) return;
+    // JUCE requests the new VST3/CLAP host window size. The WebView2 page
+    // also receives the *actual* resulting dimensions, even if Bitwig refuses.
+    setSize(clipped,height);
+    sendViewportSize(true);
+}
+void AlbedoWebViewEditor::sendViewportSize(bool force)
+{
+    if(!pageReady || !browserHasLoaded || nativeFallback)return;
+    const int w=getWidth(),h=getHeight();
+    if(!force && w==lastViewportW && h==lastViewportH)return;
+    lastViewportW=w;lastViewportH=h;
+    browser.emitEventIfBrowserIsVisible("albedoViewport",
+        juce::var(juce::String(w)+","+juce::String(h)));
+}
+
 void AlbedoWebViewEditor::onBrowserPageLoaded()
 {
     browserHasLoaded=true;
@@ -324,6 +358,7 @@ void AlbedoWebViewEditor::timerCallback()
             activateFallback("WebView2 startup timed out; reverted to native JUCE editor");
         return;
     }
+    sendViewportSize();
     sendDelta(fullSyncPending);
     fullSyncPending=false;
     const int current=processor.getCurrentProgram();
@@ -336,6 +371,7 @@ void AlbedoWebViewEditor::timerCallback()
 void AlbedoWebViewEditor::resized()
 {
     browser.setBounds(getLocalBounds());
+    sendViewportSize();
     if(nativeFallback)
     {
         // The original native GUI requires at least 1260x840 for its
