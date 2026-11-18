@@ -20,7 +20,7 @@ assert "template<typename Sample> void processTyped" in h
 assert "std::array<float,256> a{},b{}" not in s
 assert "pb-juce-extra" not in b and "pb-juce-extra" not in ui
 assert "Name × Material × Role" in b
-assert "Math.min(1200" in ui and "Math.min(795" in ui
+assert "Math.min(960" in ui and "Math.min(642" in ui, "CP41 compact Atlas geometry"
 assert "font-size:14px!important" in ui
 assert len(t)==64 and len({(x["family"],x["role"]) for x in t})==64
 assert all(x["name"] and x["role"] and x["family"] for x in t)
