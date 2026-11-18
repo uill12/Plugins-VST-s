@@ -12,6 +12,7 @@ html=(root.parent/"ui/Albedo_CP30_CP22_Landscape_3x2.html").read_text(encoding="
 metadata=json.loads((root/"Metadata/factory_preset_taxonomy.json").read_text(encoding="utf-8"))
 assert "initialWidth=1320" in fit and "initialHeight=880" in fit
 assert "g.initialHeight=g.initialWidth*2/3" in fit
+assert "g.minWidth=std::min(720,g.maxWidth)" in fit
 assert "getPrimaryDisplay()" in fit and "userArea.getHeight()" in fit
 assert "availableH-95" in fit and "availableW-80" in fit
 assert "setResizable(true,false)" in cpp, "HTML resize grip must replace covered native corner"
@@ -26,7 +27,7 @@ assert 'cp35_editor_geometry.js' in cpp and 'cp35_editor_geometry_js' in cpp
 assert "cp35_editor_geometry.js" in cm
 assert "cp34_window_fit.js" not in cm, "old conflicting browser fit must be unbundled"
 assert "cp34_window_fit.js" not in cpp
-assert "const BASE_W=1320,BASE_H=880" in html
+assert "const BASE_W=1500,BASE_H=1000" in html
 assert 'id="presetBrowser"' in html and 'id="cp04Lab"' in html
 assert "window.ALBEDO_CP31_MOTION" in html
 assert len(metadata)==64 and [x["index"] for x in metadata]==list(range(64))
@@ -36,7 +37,7 @@ for item in metadata:
 assert len({(x["family"],x["role"]) for x in metadata})==64
 required=[
     "albedoViewport","ResizeObserver","visualViewport",
-    "const BASE_W=1320,BASE_H=880",
+    "const BASE_W=1500,BASE_H=1000",
     "nativeW||cssW","--albedo-viewport-w","--albedo-viewport-h",
     "root.style.setProperty('--fit-scale'",
     "--albedo-center-x","--albedo-center-y",
@@ -46,9 +47,9 @@ required=[
     "min-height:0!important","overflow-y:auto!important",
     "albedo-cp35-resize-grip","setPointerCapture",
     "requestAnimationFrame","resize|",
-    "albedo-cp35-reset","Math.min(1,w/BASE_W,h/BASE_H)"
+    "albedo-cp35-reset","Math.min(w/BASE_W,h/BASE_H)"
 ]
 for value in required:assert value in js, value
 assert "document.body.innerHTML" not in js and "location.reload" not in js
 assert "juce::juce_gui_extra" in cm and "NEEDS_WEBVIEW2 TRUE" in cm
-print("CP35 PASS: exact 1320x880 editor, 3:2 host resize, matched WebView viewport, golden-ratio Atlas, animations, 64 presets")
+print("CP39 PASS: 1320x880 initial editor, 1500x1000 HTML canvas, 720x480 minimum, 3:2 host resize, matched WebView viewport, 64 factory presets")
