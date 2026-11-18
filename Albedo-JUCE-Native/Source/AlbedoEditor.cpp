@@ -1,5 +1,4 @@
 #include "AlbedoEditor.h"
-#include "AlbedoWindowFit.h"
 #include "AlbedoPresetTaxonomy.hpp"
 #include <algorithm>
 #include <BinaryData.h>
@@ -734,11 +733,12 @@ AlbedoEditor::AlbedoEditor(AlbedoProcessor& p):juce::AudioProcessorEditor(&p),pr
         advancedContent.addAndMakeVisible(ctrl);
         advancedControls.push_back(ctrl);
     }
-    const auto fit=albedo_window_fit::calculate();
+    // Native fallback keeps its proven, non-overlapping 1260x840 layout;
+    // the WebView2 parent scales its drawing into the smaller host window.
     constrainer.setFixedAspectRatio(1.5);
-    constrainer.setSizeLimits(fit.minWidth,fit.minHeight,fit.maxWidth,fit.maxHeight);
+    constrainer.setSizeLimits(1260,840,1920,1280);
     setResizable(true,true);setConstrainer(&constrainer);
-    setSize(fit.initialWidth,fit.initialHeight);
+    setSize(1290,860);
     startTimerHz(24); // animated regions 24 Hz; host parameter sync 12 Hz
 }
 AlbedoEditor::~AlbedoEditor(){stopTimer();setLookAndFeel(nullptr);}
