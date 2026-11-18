@@ -32,7 +32,8 @@
   });
   backend.addEventListener('albedoProgram', index=>{
     const n=Number(index);
-    const patch=window.ALBEDO_PRESET_ATLAS.catalog.find(p=>p.id===n);
+    const patch=[...window.ALBEDO_PRESET_ATLAS.catalog,
+                 ...window.ALBEDO_PRESET_ATLAS.creative].find(p=>p.id===n);
     const select=document.getElementById('preset');
     if(patch && select && select.value!==patch.factoryKey)select.value=patch.factoryKey;
   });
