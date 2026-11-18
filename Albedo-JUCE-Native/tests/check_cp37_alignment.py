@@ -49,7 +49,7 @@ assert "window.__JUCE__?.backend?.addEventListener?.('albedoUpdate'" in html
 # Compile all inline JS blocks individually with node in CI to detect syntax errors.
 if __name__=='__main__':
     import re, subprocess, tempfile
-    js_blocks=re.findall(r'<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>',html)
+    js_blocks=re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>',html)
     checked=0
     with tempfile.TemporaryDirectory() as d:
         from pathlib import Path as P
