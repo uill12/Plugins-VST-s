@@ -641,6 +641,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP33 3:2 host-fit regression' }
           python Albedo-JUCE-Native/tests/check_plugin_identity.py
           if ($LASTEXITCODE -ne 0) { throw 'Native plugin identity gate failed' }
+          python Albedo-JUCE-Native/tests/check_cp35_html_native_labels.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP35 HTML-native label fidelity contract failed' }
           python -c "from pathlib import Path; s=Path('Albedo-JUCE-Native/Source/AlbedoEditor.cpp').read_text(encoding='utf-8'); assert 'ArborView' in s and 'DynamicGraph' in s; assert 'WebBrowserComponent' not in s and 'WebView2' not in s; print('JUCE native animation/Atlas GUI contract OK')"
           if ($LASTEXITCODE -ne 0) { throw 'WebView2-free native source check failed' }
       - name: Fetch JUCE 8 and CLAP JUCE extensions
