@@ -108,9 +108,10 @@ if(BUILD_TESTING)
     "${CMAKE_CURRENT_SOURCE_DIR}/Source"
     "${ALBEDO_DSP_ROOT}/include")
   add_test(NAME cp32_factory_atlas_64_complete COMMAND AlbedoPresetTaxonomyTest)
+  file(TO_CMAKE_PATH "${ALBEDO_DSP_ROOT}" ALBEDO_CP36_DSP_ROOT)
   add_executable(AlbedoCP36HifiDspTest
     tests/cp36_hifi_quality.cpp
-    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp")
+    "${ALBEDO_CP36_DSP_ROOT}/src/vitriol_dsp.cpp")
   target_compile_features(AlbedoCP36HifiDspTest PRIVATE cxx_std_20)
   target_include_directories(AlbedoCP36HifiDspTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
   add_test(NAME cp36_hifi_double_precision_polyphony COMMAND AlbedoCP36HifiDspTest)
