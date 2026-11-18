@@ -7,6 +7,7 @@ const source=fs.readFileSync(path.join(root,'Assets/cp35_editor_geometry.js'),'u
 const html=fs.readFileSync(path.join(root,'../ui/Albedo_CP30_CP22_Landscape_3x2.html'),'utf8');
 const rotary=fs.readFileSync(path.join(root,'Assets/cp38_rotary_overlays.js'),'utf8');
 assert(!rotary.includes('cp38-visual'),'Unexpected floating control popup');
+assert(!rotary.includes('pop.hidden')&&!rotary.includes('drawSoon('),'Dangling overlay callback will break host automation');
 assert(!rotary.includes('document.addEventListener(\'pointerdown\''),'Unexpected contextual trigger');
 assert(html.includes("id='cp37AdsrPopup'"),'ADSR must remain');
 const properties=new Map(),listeners={};
