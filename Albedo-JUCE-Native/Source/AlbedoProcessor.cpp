@@ -1,5 +1,6 @@
 #include "AlbedoProcessor.h"
 #include "AlbedoEditor.h"
+#include "AlbedoWebViewEditor.h"
 #include <cmath>
 
 AlbedoProcessor::AlbedoProcessor()
@@ -135,5 +136,12 @@ void AlbedoProcessor::setStateInformation (const void* data, int size)
         if (auto* p = parameter (id)) p->setValueNotifyingHost (p->convertTo0to1 (v));
     }
 }
-juce::AudioProcessorEditor* AlbedoProcessor::createEditor() { return new AlbedoEditor (*this); }
+juce::AudioProcessorEditor* AlbedoProcessor::createEditor()
+{
+    // Fail over to the fully working JUCE-native 3:2 editor if WebView2 is not
+    // supported; never allow an IE fallback to run the live CP31 interface.
+    if(AlbedoWebViewEditor::isAvailable())
+        return new AlbedoWebViewEditor(*this);
+    return new AlbedoEditor(*this);
+}
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new AlbedoProcessor(); }
