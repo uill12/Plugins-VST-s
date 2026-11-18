@@ -2062,5 +2062,86 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
  window.ALBEDO_CP31_MOTION={get frames(){return frames}, get paths(){return streams.length},pause(){active=false},resume(){active=true;last=0}};
 })();
 </script>
-</body>
+<script id="cp37-cellular-and-gain">
+(()=>{'use strict';
+ const api=window.ALBEDO_CP04,backend=window.__JUCE__?.backend;
+ const knobs=[{id:9003,element:'cp37Gain',output:'cp37GainValue',min:-18,max:12},
+              {id:9000,element:'cp37Master',output:'cp37MasterValue',min:-36,max:12}];
+ const post=(type,id,value)=>{
+   const payload=value===undefined?type+'|'+id:type+'|'+id+'|'+Number(value).toFixed(4);
+   window.__JUCE__?.backend?.emitEvent?.('albedoMessage',{payload});
+ };
+ let localChanges=0;
+ function updateLevel(k,value,send=false){
+   const input=document.getElementById(k.element),out=document.getElementById(k.output);
+   if(!input||!out||!Number.isFinite(value))return;
+   const v=Math.max(k.min,Math.min(k.max,value));
+   input.value=String(v);
+   out.textContent=(v>0?'+':'')+v.toFixed(1)+' dB';
+   input.setAttribute('aria-valuetext',out.textContent);
+   if(send){localChanges++;post('param',k.id,v)}
+ }
+ knobs.forEach(k=>{
+   const el=document.getElementById(k.element);if(!el)return;
+   el.addEventListener('pointerdown',()=>post('begin',k.id));
+   el.addEventListener('pointerup',()=>post('end',k.id));
+   el.addEventListener('pointercancel',()=>post('end',k.id));
+   el.addEventListener('input',()=>updateLevel(k,Number(el.value),true));
+   el.addEventListener('wheel',event=>{
+     event.preventDefault();updateLevel(k,Number(el.value)+(event.deltaY<0?.5:-.5),true);
+   },{passive:false});
+   updateLevel(k,Number(el.value));
+ });
+ backend?.addEventListener?.('albedoUpdate',csv=>{
+   if(typeof csv!=='string')return;
+   for(const part of csv.split(',')){
+     const sep=part.indexOf(':');if(sep<0)continue;
+     const id=Number(part.slice(0,sep)),value=Number(part.slice(sep+1));
+     const k=knobs.find(k=>k.id===id);
+     if(k)updateLevel(k,value);
+   }
+ });
+ // The original Wolfram field rebuilt a static seven-row preview only
+ // when the rule changed. Advance the same grid in place at a rate derived
+ // from Motion Rate, without rebuilding the module or refreshing the page.
+ const grid=document.getElementById('cells');
+ let cells=Array(32).fill(false);cells[16]=true;
+ let rows=[],rule=NaN,first=null,last=0,frames=0,enabled=true;
+ function next(values,r){
+   return values.map((_,i)=>{
+     const bits=(values[(i+31)%32]?4:0)|(values[i]?2:0)|(values[(i+1)%32]?1:0);
+     return !!((r>>>bits)&1);
+   });
+ }
+ function paint(){
+   if(!grid)return;
+   const elements=grid.querySelectorAll('.cell');if(elements.length!==224)return;
+   for(let n=0;n<224;n++)elements[n].classList.toggle('alive',rows[(n/32)|0][n%32]);
+   frames++;
+ }
+ function reset(r){
+   cells=Array(32).fill(false);cells[16]=true;rows=[];
+   for(let i=0;i<7;i++){rows.push(cells.slice());cells=next(cells,r)}
+   rule=r;paint();
+ }
+ function run(now){
+   requestAnimationFrame(run);
+   if(!enabled||document.hidden||!grid||!api)return;
+   const selected=Number(api.state?.motionRule)||110;
+   if(grid.firstElementChild!==first||selected!==rule){
+     first=grid.firstElementChild;reset(selected);last=now;return;
+   }
+   const hz=Math.max(.2,Math.min(12,Number(api.state?.params?.motionRate)||1.25));
+   if(now-last<Math.max(85,1000/hz))return;
+   last=now;rows.shift();rows.push(cells.slice());cells=next(cells,rule);
+   paint();
+ }
+ requestAnimationFrame(run);
+ window.ALBEDO_CP37_GUI={
+   get frames(){return frames},get rule(){return rule},get gainUpdates(){return localChanges},
+   stop(){enabled=false},start(){enabled=true;last=0},
+   onHostParam:(id,value)=>{const k=knobs.find(k=>k.id===id);if(k)updateLevel(k,value)}
+ };
+})();
+</script></body>
 </html>
