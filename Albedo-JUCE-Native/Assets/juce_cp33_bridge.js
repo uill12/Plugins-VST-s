@@ -81,12 +81,12 @@
     .pb-juce-extra label{display:flex;flex-direction:column;min-width:0;
       gap:4px;font-size:11px;letter-spacing:.035em;color:var(--ink,#38504b)}
     .pb-juce-extra select{height:32px;min-width:0;width:100%;font-size:13px;
-      background:var(--ground,#e8e8d6);color:var(--ink,#28463b);
+      background:#f3f1e5;color:#24423b;
       border:1px solid rgba(53,88,80,.35);border-radius:3px;padding:4px 7px}
     .pb-item .pb-cp33-tags{display:block;font:10px/1.2 'Segoe UI',sans-serif;
       font-weight:500;opacity:.7;margin-top:2px;white-space:nowrap;
       overflow:hidden;text-overflow:ellipsis}
-    .pb-item.pb-cp33-no-match,.pb-matrix-cell.pb-cp33-no-match{display:none!important}
+    .pb-item.pb-cp33-no-match,.pb-matrix-cell.pb-cp33-no-match{visibility:hidden!important}
     .pb-matrix-cell.pb-cp33-no-match{pointer-events:none!important}
     @media(max-width:700px){.pb-juce-extra{grid-template-columns:1fr;gap:5px}}
   `;
