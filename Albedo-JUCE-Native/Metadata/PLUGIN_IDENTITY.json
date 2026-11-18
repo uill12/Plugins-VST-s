@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "project": "Albedo Quintessential Synth",
+  "variant_id": "juce-native-no-webview2",
+  "version": "1.0.32",
+  "checkpoint_origin": "CP32/CP33 JUCE native source",
+  "renderer": "JUCE 8 native C++ components",
+  "requires_webview2": false,
+  "embeds_html_runtime": false,
+  "juce_web_browser": false,
+  "target": "AlbedoNative",
+  "product_name": "Albedo Quintessential Synth - JUCE Native (No WebView2)",
+  "manufacturer": "Albedo",
+  "vst3": {
+    "manufacturer_code": "Albd",
+    "plugin_code": "AJNW",
+    "bundle_id": "org.vitriol.albedo.juce.native.noview2"
+  },
+  "clap": {
+    "plugin_id": "org.vitriol.albedo.juce.native.noview2",
+    "adapter": "clap-juce-extensions"
+  },
+  "distribution": {
+    "clap_filename": "Albedo_JUCE_Native_NoWebView2_v1.0.32_Windows_x64.clap",
+    "vst3_expected_bundle": "Albedo Quintessential Synth - JUCE Native (No WebView2).vst3",
+    "github_actions_artifact": "Albedo_JUCE_Native_NoWebView2_v1.0.32_Windows_x64_CLAP_VST3"
+  },
+  "compatibility": {
+    "existing_webview2_product_code": "AQ32",
+    "existing_webview2_clap_id": "org.vitriol.opussonorum.juce32",
+    "session_identity": "Separate plugin; existing DAW sessions must explicitly choose the new native variant"
+  },
+  "verification": {
+    "cmake_metadata": "configured",
+    "windows_clap_vst3_build": "pending fresh CI",
+    "bitwig_host_qa": "pending"
+  }
+}
