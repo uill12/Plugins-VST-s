@@ -35,12 +35,24 @@ child window (WebView2 HWND always appears above JUCE component overlays).
 
 ## Verification gates
 
-- Source contract `tests/check_cp35_render_window.py` and JS syntax check
-  execute in the Windows CI workflow.
-- Windows x64 CLAP/VST3 build and package validation: see latest workflow
-  attached to `albedo-cp35-render-window-match` branch.
-- Bitwig live GPU presentation, actual resize grip and DAW sample-rate QA
-  are **not** certified by CI and require host testing.
+- CP35 source and JS syntax contracts passed in GitHub Actions.
+- Headless Chromium was run on the exact exported HTML and JS resources:
+  five viewport/host-size pairs passed including a deliberately mismatched
+  browser viewport 1320×880 reporting host window 1152×768.
+  Entire 1320×880 main page and the proportional Preset Atlas were contained.
+- Resize controls emitted `resize|1224|816` and `resize|1320|880`.
+  Arbor animation: 4 particles, independent of pointer movement.
+  Atlas: 64 factory presets; category metadata loaded, modal open/close,
+  no browser JavaScript exceptions.
+- Windows CI run 44240548675 completed successfully, produced CLAP/VST3
+  packages, and passed binary export tests. Artifact SHA-256:
+  `e0d8eca7ce282bc46e16c2432988de9640e7b75b09d5bf1eb66a46a046fbc88f`.
+  VST3 binary SHA-256:
+  `d53254285d318cb0e029230b5206ce944f06a72ab065c907e4451613888cf228`.
+  CLAP binary SHA-256:
+  `94d6cad8af0a4ecaab36ab22bb7c416c16c9ef711cd0ed8792c317a4e3a9cd85`.
+- Bitwig live WebView2 GPU presentation, actual host resize negotiation and
+  48/88.2/96 kHz DAW sample-rate QA remain **pending**.
 
 ## Rollback
 
