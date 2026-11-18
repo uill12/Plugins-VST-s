@@ -50,6 +50,12 @@ class TestRgnesLearn(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate({**BASE, "source_ref": "token=ghp_abcd1234abcd1234"})
 
+    def test_assistant_history_is_candidate_only(self):
+        l = self.fresh()
+        hist = {**BASE, "event_id": "old-report", "source_kind": "assistant_history", "status": "reported"}
+        ingest(l, [hist])
+        self.assertFalse(report(l)["patterns"][0]["current_fix_tested"])
+
     def test_conflicting_reused_id_is_blocked(self):
         l = self.fresh()
         ingest(l, [BASE])
