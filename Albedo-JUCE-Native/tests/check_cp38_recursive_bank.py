@@ -12,11 +12,11 @@ web=(root/"Source/AlbedoWebViewEditor.cpp").read_text(encoding="utf-8")
 bridge=(root/"Assets/juce_cp33_bridge.js").read_text(encoding="utf-8")
 assert len(original)==64
 assert [x["index"] for x in original]==list(range(64))
-assert len(data)==24
-assert [x["index"] for x in data]==list(range(64,88))
-assert [sum(x["family"]==f for x in data) for f in ("Resynthesis Forms","Repetition Fields")]==[12,12]
-assert len(set(p["name"] for p in data))==24
-assert len({(p["family"],p["name"]) for p in data})==24
+assert len(data)==30
+assert [x["index"] for x in data]==list(range(64,94))
+assert [sum(x["family"]==f for x in data) for f in ("Resynthesis Forms","Repetition Fields","Phase Studies")]==[12,12,6]
+assert len(set(p["name"] for p in data))==30
+assert len({(p["family"],p["name"]) for p in data})==30
 assert {x["role"] for x in data}=={"Keys","Pad","Lead","Drone","Texture","Bass","Pluck","Percussion"}
 assert all(p["baseIndex"] in range(64) for p in data)
 for p in data:
@@ -32,9 +32,9 @@ for p in data:
 atlas=re.search(r'<script type="application/json" id="albedoCreativeCatalog">([^<]+)</script>',html)
 assert atlas,"new bank's Atlas catalog must be embedded and valid JSON"
 rows=json.loads(atlas.group(1))
-assert [p["id"] for p in rows]==list(range(64,88))
+assert [p["id"] for p in rows]==list(range(64,94))
 assert [(a["name"],a["family"],a["role"]) for a in rows]==[(p["name"],p["family"],p["role"]) for p in data]
-assert 'data-collection="Creative"' in html and 'id="pbCreativeCount">24' in html
+assert 'data-collection="Creative"' in html and 'id="pbCreativeCount">30' in html
 assert "state.collection==='Creative'?creative" in html
 assert "source==='Creative'?creative" in html
 assert "payload:'preset|'+p.id" in html

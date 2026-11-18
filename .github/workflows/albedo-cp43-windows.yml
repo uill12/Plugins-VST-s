@@ -1,0 +1,740 @@
+name: Albedo CP43 Phase Studies Windows CLAP VST3
+on:
+  push:
+    branches: [albedo/cp43-phase-studies]
+    paths:
+      - '.github/workflows/albedo-cp43-windows.yml'
+      - '.github/workflows/albedo-cp33-webview2-windows.yml'
+      - 'Albedo-JUCE-Native/**'
+      - 'patches/cp15_apply_part*.txt'
+      - 'patches/cp15_hotfix.py'
+      - 'patches/cp16_part*.txt'
+      - 'patches/cp16_native_smoke_fix.py'
+      - 'patches/cp17_part*.txt'
+      - 'patches/cp17_rng_reset_fix.py'
+      - 'patches/cp18_part*.txt'
+      - 'patches/cp18_msvc_fix.py'
+      - 'patches/cp18_output_fix.py'
+      - 'patches/cp18_perf_part*.txt'
+      - 'patches/cp18_perf_manifest.py'
+      - 'patches/cp18_release_meta_fix.py'
+      - 'patches/cp18r1_realtime_chunk*.txt'
+      - 'patches/cp18r2_part*.txt'
+      - 'patches/cp18r2_quality_contract.py'
+      - 'patches/cp18r3_spectral_sine_lut.txt'
+      - 'patches/cp18r4_part*.txt'
+      - 'patches/cp19r5_source_patch.b64'
+      - 'patches/cp19r5_win_cursor_fix.py'
+      - 'patches/cp19r5_r2_msvc_redraw.b64'
+      - 'patches/cp19r5_r3_visible_host_qa.py'
+      - 'patches/cp20_fhd_gui_readability.b64'
+      - 'patches/cp20_migrate_window_qa.py'
+      - 'patches/cp21_gui_scaling.b64'
+      - 'patches/cp22_native_flicker_graph.b64'
+      - 'patches/cp23_native_alignment.b64'
+      - 'patches/cp27_webview2_source.b64'
+      - 'patches/cp27_r1_webview_msvc_headers.py'
+      - 'patches/cp27_r2_win_resource_type.py'
+      - 'patches/cp27_r3_visual_viewport_contract.py'
+      - 'patches/cp28_black_screen_poly48.b64'
+      - 'patches/cp28_manifest_verify.py'
+      - 'patches/cp28_r1_highrate_voice_budget.py'
+      - 'patches/cp28_r2_fast_sine_hifi.py'
+      - 'patches/cp29_directcomposition_3x2.b64'
+      - 'patches/cp30_cp22_3x2_html.b64'
+      - 'patches/cp30_integrate.py'
+      - 'patches/cp31_layout_contract.py'
+      - 'ui/Albedo_CP30_CP22_Landscape_3x2.html'
+      - 'patches/cp29_r1_legacy_gdi_geometry.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-binaries:
+    runs-on: windows-2022
+    timeout-minutes: 75
+    steps:
+      - name: Check out exact Albedo sources
+        uses: actions/checkout@v4
+      - name: Prepare Python 3.12 for deterministic bank generation
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify archive and extract Albedo
+        shell: pwsh
+        run: |
+          $archive='build-sources/Albedo_CP13_CI_Source_NoBank.zip'
+          if (!(Test-Path $archive)) { throw 'Missing complete source archive' }
+          $hash=(Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne '5d5bceedcb6b0a4c78880dd6339d12250c51c9a543e80826c78189028d71d325') { throw "Source SHA256 mismatch: $hash" }
+          Expand-Archive -LiteralPath $archive -DestinationPath . -Force
+          if (!(Test-Path 'Albedo-Quintessential-Synth/Build_Windows_x64.ps1')) { throw 'Missing native Windows build entrypoint' }
+      - name: Regenerate original 32-material PCM bank
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check numpy scipy
+          python 'Albedo-Quintessential-Synth/resources/generate_soundbank.py' --output 'Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb'
+          if ($LASTEXITCODE -ne 0) { throw 'Material bank regeneration failed' }
+          $hash=(Get-FileHash 'Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb' -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne 'ee5e625a17833cd8d8640151a98ae8ae52038e0f830db1890a583eb98da0a838') { throw "Deterministic bank does not match original: $hash" }
+      - name: Verify original sources, graphics, presets and DSP before build
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          python tools/verify_source_assets.py
+          if ($LASTEXITCODE -ne 0) { throw 'Immutable source gate failed' }
+      - name: RGNES CP13 repair - CTest multi-config argument
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          $script='Build_Windows_x64.ps1'
+          $source=Get-Content -LiteralPath $script -Raw
+          $before='& ctest --test-dir $build --config $Configuration --output-on-failure'
+          $after='& ctest --test-dir $build -C $Configuration --output-on-failure'
+          if (!$source.Contains($before)) { throw 'Expected CTest command absent; refusing blind patch' }
+          $patched=$source.Replace($before,$after)
+          Set-Content -LiteralPath $script -Value $patched -NoNewline -Encoding utf8
+          if (!(Select-String -Path $script -SimpleMatch $after -Quiet)) { throw 'CTest CLI repair did not persist' }
+          Write-Host 'RGNES: use supported CTest -C multi-configuration argument'
+      - name: RGNES CP13 repair - Win64 DSP QA stack and UTF-8 source checker
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          # Synth contains ~6 MiB of per-voice physical-model buffers.
+          # Windows test executables have a smaller default main-thread stack.
+          # Fix only the five standalone QA/audition clients; plugins already use heap allocation.
+          $fixes=@(
+            @{path='tests/bank_integration.cpp';old=' vitriol::Synth s;';new=' auto heapSynth=std::make_unique<vitriol::Synth>(); vitriol::Synth& s=*heapSynth;'},
+            @{path='tests/cp06_quality.cpp';old=' Synth s;';new=' auto heapSynth=std::make_unique<Synth>(); Synth& s=*heapSynth;'},
+            @{path='tests/factory_qa.cpp';old=' Synth synth;';new=' auto heapSynth=std::make_unique<Synth>(); Synth& synth=*heapSynth;'},
+            @{path='tools/render_factory_audition.cpp';old=' Synth synth;constexpr int SR=48000;';new=' auto heapSynth=std::make_unique<Synth>(); Synth& synth=*heapSynth;constexpr int SR=48000;'},
+            @{path='tools/render_audition.cpp';old=' Synth s;if(!s.loadResourceBank';new=' auto heapSynth=std::make_unique<Synth>(); Synth& s=*heapSynth;if(!s.loadResourceBank'}
+          )
+          foreach ($fix in $fixes) {
+            $source=Get-Content -LiteralPath $fix.path -Raw -Encoding utf8
+            if (!$source.Contains($fix.old)) { throw "Stack fix anchor absent: $($fix.path)" }
+            $updated="#include <memory>`n"+$source.Replace($fix.old,$fix.new)
+            Set-Content -LiteralPath $fix.path -Value $updated -NoNewline -Encoding utf8
+            Write-Host "Win64 QA allocated on heap: $($fix.path)"
+          }
+          $check='tests/rgnes_cp10_source_gate.py'
+          $py=Get-Content -LiteralPath $check -Raw -Encoding utf8
+          if (!$py.Contains('.read_text()')) { throw 'UTF-8 source check anchor missing' }
+          $py=$py.Replace('.read_text()',".read_text(encoding='utf-8')")
+          Set-Content -LiteralPath $check -Value $py -NoNewline -Encoding utf8
+          Write-Host 'CP10 source checker uses explicit UTF-8 on Windows'
+      - name: RGNES CP13 repair - conform VST3 Win64 export gate to Steinberg specification
+        working-directory: Albedo-Quintessential-Synth
+        shell: pwsh
+        run: |
+          # Steinberg specifies InitDll and ExitDll are OPTIONAL on Windows,
+          # while GetPluginFactory is mandatory. SDK validator independently ran 47/47.
+          $buildScript='Build_Windows_x64.ps1'
+          $source=Get-Content -LiteralPath $buildScript -Raw -Encoding utf8
+          $before='--require GetPluginFactory InitDll ExitDll'
+          $after='--require GetPluginFactory'
+          if (!$source.Contains($before)) { throw 'Expected VST3 export gate anchor missing' }
+          Set-Content -LiteralPath $buildScript -Value $source.Replace($before,$after) -NoNewline -Encoding utf8
+          $validator='tools/validate_windows_release.py'
+          $py=Get-Content -LiteralPath $validator -Raw -Encoding utf8
+          $old="['GetPluginFactory','InitDll','ExitDll']"
+          $new="['GetPluginFactory']"
+          if (!$py.Contains($old)) { throw 'Expected independent VST3 validator anchor missing' }
+          Set-Content -LiteralPath $validator -Value $py.Replace($old,$new) -NoNewline -Encoding utf8
+          Write-Host 'VST3 Windows: mandatory GetPluginFactory, optional InitDll and ExitDll'
+      - name: Apply verified RGNES CP14 source changes
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/albedo_cp14_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,8)); assert len(s)==20676,'incomplete patch'; d=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(d).hexdigest()=='eae0e51f6fc9c42e2ecebf5fa02485ac1551a51d49e14feab03296a25a006340','unverified patch'; pathlib.Path('Albedo_CP14_Changes.patch').write_bytes(d); print('Verified RGNES CP14 source delta SHA256')"
+          if ($LASTEXITCODE -ne 0) { throw 'RGNES CP14 source patch decode/checksum failed' }
+          git apply --check 'Albedo_CP14_Changes.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'RGNES CP14 source delta cannot apply cleanly' }
+          git apply 'Albedo_CP14_Changes.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'RGNES CP14 source patch failed' }
+          # Git for Windows applies CRLF by default; CP14 uses canonical LF source
+          # signatures to preserve exact SHA-256 across platforms.
+          python -c "import json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP14_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in m['changed_source_sha256']]; print('Normalized CP14 source signatures to canonical LF')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP14 source line-ending normalization failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'RGNES CP14 source content checksum/compatibility failed' }
+          Write-Host 'RGNES CP14: verified source change set applied; previous CP13 release preserved'
+      - name: Apply verified RGNES CP15 native resize and 80-percent original startup
+        shell: pwsh
+        run: |
+          python -c "from pathlib import Path; import base64,gzip,hashlib; s=''.join(Path('patches/cp15_apply_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,4)); assert len(s)==6944,'CP15 source chunks incomplete'; d=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(d).hexdigest()=='faa927b2ce7c16092ef45f345a1921a6d300c7719be34e2e63ba447c81dda5aa','CP15 script checksum mismatch'; p=Path('Albedo-Quintessential-Synth/patches/cp15_apply.py'); p.parent.mkdir(parents=True,exist_ok=True); p.write_bytes(d); print('RGNES CP15 source script verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP15 script checksum or reconstruction failed' }
+          python 'Albedo-Quintessential-Synth/patches/cp15_apply.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP15 resize source changes failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP15 source checksum gate failed' }
+          python 'Albedo-Quintessential-Synth/tests/check_cp15_resize_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw '80-percent original startup/resize geometry test failed' }
+          Write-Host 'CP15 source gate: original 1600x1138 -> default 1280x910, CLAP+VST3'
+      - name: RGNES CP15 exact startup and min-size rounding regression repair
+        shell: pwsh
+        run: |
+          python 'patches/cp15_hotfix.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP15 deterministic viewport rounding hotfix failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP15 post-hotfix source SHA gate failed' }
+          Write-Host 'RGNES CP15: exact 1280x910 startup and minimum-size viewport corrected'
+      - name: CP18 preserve the original Albedo fonts and artwork before CP16 overlay
+        shell: pwsh
+        run: |
+          $assets=@('src/editor_native_win.cpp','resources/Albedo_CP07_Horizontal.html','resources/Albedo_Horizontal_Light.bmp','resources/Albedo_Horizontal_Nigredo.bmp')
+          foreach($rel in $assets){
+            $from=Join-Path 'Albedo-Quintessential-Synth' $rel
+            $to=Join-Path 'Albedo_CP15_Visuals' $rel
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $to) | Out-Null
+            if(!(Test-Path -LiteralPath $from -PathType Leaf)){throw "Original visual asset missing: $rel"}
+            Copy-Item -LiteralPath $from -Destination $to -Force
+          }
+          Write-Host 'RGNES CP18: original fonts, Albedo/Nigredo artwork preserved from CP15'
+      - name: Apply RGNES CP16 typography and 64-percent original startup
+        shell: pwsh
+        run: |
+          python -c "from pathlib import Path;import gzip,base64,hashlib; s=''.join(Path('patches/cp16_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,6));assert len(s)==14988,'Incomplete CP16 patch'; data=gzip.decompress(base64.b64decode(s,validate=True));assert hashlib.sha256(data).hexdigest()=='839df656fed6f3ec650500b084cb92ab809ba280bb798e420cff986ea29a3d5a','Incorrect CP16 SHA256';Path('Albedo_CP16_Changes.patch').write_bytes(data);print('CP16 source patch authenticated')"
+          if ($LASTEXITCODE -ne 0) { throw 'RGNES CP16 patch authentication failed' }
+          git apply --check 'Albedo_CP16_Changes.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP16 changes do not apply to verified CP15 source' }
+          git apply 'Albedo_CP16_Changes.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP16 source application failed' }
+          # Chrome/Edge only used at build time to bake typography into bitmaps.
+          # The distributed native editor does not depend on a browser.
+          python -m pip install --disable-pip-version-check pillow playwright
+          if ($LASTEXITCODE -ne 0) { throw 'CP16 design-time raster dependencies unavailable' }
+          python 'Albedo-Quintessential-Synth/tools/render_typography_cp16.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP16 light/Nigredo bitmap regeneration failed' }
+          # Git for Windows normalizes new source files to CRLF; source manifest
+          # contains canonical LF SHA-256 hashes. Rendered BMPs are unaffected.
+          python -c "import pathlib,json; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP16_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in m['changed_source_sha256']]; print('CP16 source files normalized to canonical LF')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP16 source line-ending normalization failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP16 source and artwork verification failed' }
+          python 'Albedo-Quintessential-Synth/tests/check_cp16_typography.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP16 native typography contract failed' }
+          Write-Host 'CP16: initial 1024x728, enlarged dynamic labels, regenerated static typography'
+      - name: RGNES CP16 Windows miniature-viewport click-smoke correction
+        shell: pwsh
+        run: |
+          python 'patches/cp16_native_smoke_fix.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP16 resized dial smoke alignment adjustment failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP16 post-alignment source QA failed' }
+      - name: RGNES CP17 apply verified MIDI and voice-safety fixes
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/cp17_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,8)); assert len(s)==18148,'CP17 source chunks incomplete'; p=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(p).hexdigest()=='83b382892052f3788590d591a94ceb963aa80170e73c4aea631428d4a15d70cf','CP17 source SHA mismatch'; pathlib.Path('Albedo_CP17_Changes.patch').write_bytes(p); print('Verified CP17 MIDI patch')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP17 patch authentication failed' }
+          git apply --check 'Albedo_CP17_Changes.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP17 source patch cannot apply to audited CP16' }
+          git apply 'Albedo_CP17_Changes.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP17 source patch failed' }
+          # Canonical LF source manifests are tested on Windows after git apply.
+          python -c "import json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP17_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in m['changed_source_sha256']]; print('CP17 source LF normalized')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP17 line-ending normalization failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP17 source and factory compatibility verification failed' }
+          Write-Host 'CP17: bounded voice allocation, CLAP/VST3 note IDs, sustain, note-off queue priority, Win64 QA'
+      - name: CP17 deterministic voice-reset regression hotfix
+        shell: pwsh
+        run: |
+          python 'patches/cp17_rng_reset_fix.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP17 deterministic reset hotfix failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP17 deterministic reset source verification failed' }
+      - name: CP18 restore original Albedo typography and material identity
+        shell: pwsh
+        run: |
+          $assets=@('src/editor_native_win.cpp','resources/Albedo_CP07_Horizontal.html','resources/Albedo_Horizontal_Light.bmp','resources/Albedo_Horizontal_Nigredo.bmp')
+          foreach($rel in $assets){
+            $from=Join-Path 'Albedo_CP15_Visuals' $rel
+            $to=Join-Path 'Albedo-Quintessential-Synth' $rel
+            if(!(Test-Path -LiteralPath $from -PathType Leaf)){throw "Original typography backup lost: $rel"}
+            Copy-Item -LiteralPath $from -Destination $to -Force
+          }
+      - name: CP18 apply verified chord and CLAP note lifecycle source
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/cp18_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,6)); assert len(s)==18344,'CP18 source chunks incomplete'; p=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(p).hexdigest()=='a9fd38ffe4d7b120e10acd6ef14fefa5baf3ec280a83e23c6e1ddd96f6df0971','CP18 source SHA mismatch'; pathlib.Path('Albedo_CP18_Source.patch').write_bytes(p); print('Verified CP18 chord DSP and CLAP NOTE_END source delta')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 source authentication failed' }
+          git apply --check 'Albedo_CP18_Source.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 cannot apply to verified CP17' }
+          git apply 'Albedo_CP18_Source.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 source application failed' }
+          python -c "import json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP18_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in m['changed_source_sha256'] if (r/k).suffix not in ('.bmp',)]; print('CP18 source normalized to canonical LF')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 source LF normalization failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 source/visual/preset audit failed' }
+          python 'Albedo-Quintessential-Synth/tests/check_cp18_visual_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 restored typography contract failed' }
+      - name: CP18 Windows MSVC note-end C3538 correction
+        shell: pwsh
+        run: |
+          python 'patches/cp18_msvc_fix.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 MSVC auto-type correction failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 source verification after C3538 correction failed' }
+      - name: CP18 correct native Windows build archive and runtime staging names
+        shell: pwsh
+        run: |
+          python 'patches/cp18_output_fix.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 output naming correction failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 output naming manifest verification failed' }
+      - name: CP18 enforce realtime budget with cached audio control rates
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/cp18_perf_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,4)); assert len(s)==5328,'CP18 performance patch chunks missing'; d=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(d).hexdigest()=='6b3205665c06e999b522e1c414911d7446f591555b85660463073c2bfdbc72cd','CP18 performance SHA mismatch'; pathlib.Path('CP18_Realtime_Optimization.patch').write_bytes(d); print('CP18 realtime optimization patch verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime source patch authentication failed' }
+          git apply --check 'CP18_Realtime_Optimization.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime patch cannot apply' }
+          git apply 'CP18_Realtime_Optimization.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime DSP optimization did not apply' }
+          python -c "from pathlib import Path; names=('include/vitriol_dsp.hpp','src/vitriol_dsp.cpp','tests/cp18_chords_realtime.cpp'); root=Path('Albedo-Quintessential-Synth'); [(root/k).write_bytes((root/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in names];print('CP18 runtime sources normalized to LF')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime LF normalization failed' }
+          python 'patches/cp18_perf_manifest.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime source signatures invalid' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 realtime source/asset verification failed' }
+          Write-Host 'CP18: 8-note chords must run at <=85 percent wall-clock realtime in Win64 CTest'
+      - name: CP18 align Windows launcher and package metadata
+        shell: pwsh
+        run: |
+          python 'patches/cp18_release_meta_fix.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 Windows launcher/manifest correction failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18 Windows release source SHA verification failed' }
+      - name: CP18R1 cache voice pitches and global stereo filter coefficients
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/cp18r1_realtime_chunk%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,4)); assert len(s)==5264,'CP18R1 patch chunks incomplete'; p=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(p).hexdigest()=='50b8a6d9f1ea693f3bc3ada3d57cc717ec6991cfd4729508f6bf378151e37c8b','CP18R1 patch SHA256 mismatch'; pathlib.Path('CP18R1_Realtime_Cache.patch').write_bytes(p); print('CP18R1 authenticated source patch')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R1 source checksum verification failed' }
+          git apply --check 'CP18R1_Realtime_Cache.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R1 patch cannot apply to verified CP18 source' }
+          git apply 'CP18R1_Realtime_Cache.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R1 DSP source patch failed' }
+          python -c "import hashlib,json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=r/'CP18_SOURCE_MANIFEST.json'; j=json.loads(m.read_text(encoding='utf-8')); expected={'include/vitriol_dsp.hpp':'fecf2942c2e060c70a8a2241982d7f384c13d344992c9f52ad927f44318e90ac','src/vitriol_dsp.cpp':'c163ca15392e0dddee5460e749e356fedcb8c70bf38e5bbee7c5048ca5a31dea'}; [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in expected]; assert all(hashlib.sha256((r/k).read_bytes()).hexdigest()==h for k,h in expected.items()),'CP18R1 source content integrity failure'; j['changed_source_sha256'].update(expected); j['realtime_optimization']='CP18R1: per-block voice MIDI tuning target, 8-internal-frame stereo global filter coefficients'; m.write_text(json.dumps(j,indent=2,ensure_ascii=False)+'\n',encoding='utf-8'); print('Verified CP18R1 exact source SHA256')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R1 updated manifest verification failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R1 post-opt source QA failed' }
+      - name: CP18R2 Hi-Fi AUTO oversampling and per-voice trig reduction
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/cp18r2_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,4)); assert len(s)==5152,'CP18R2 patch missing parts'; p=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(p).hexdigest()=='20efd330cbd2238d1b0939509e31cda00bd23e041a7034eb87528dc5ef7c42b7','CP18R2 SHA-256 mismatch'; pathlib.Path('CP18R2_DSP_Optimization.patch').write_bytes(p); print('CP18R2 authenticated source patch')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R2 source verification failed' }
+          git apply --check 'CP18R2_DSP_Optimization.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R2 patch cannot apply after CP18R1' }
+          git apply 'CP18R2_DSP_Optimization.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R2 DSP patch failed' }
+          python -c "import hashlib,json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); p=r/'CP18_SOURCE_MANIFEST.json'; j=json.loads(p.read_text(encoding='utf-8')); expected={'include/vitriol_dsp.hpp':'7d9481806f065482f73792017cfe2ba7fca695f66460728b5e4c7b511af87506','src/vitriol_dsp.cpp':'5418cd4c1014553639c3863d008958f79a45dd79d904a20e8c9dabfedd3ab84e'}; [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in expected]; assert all(hashlib.sha256((r/k).read_bytes()).hexdigest()==h for k,h in expected.items()),'CP18R2 source signature mismatch'; j['changed_source_sha256'].update(expected); j['realtime_optimization']='CP18R2: audio-chunk target cache, stereo SVF coefficients, 4096 sine LUT, 2049 pan LUT, shared LFO and velocity gain; AUTO 2x at 48k, 1x at 88.2k+'; p.write_text(json.dumps(j,indent=2,ensure_ascii=False)+'\n',encoding='utf-8'); print('CP18R2 DSP source hashes verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R2 source manifest update failed' }
+          python 'patches/cp18r2_quality_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R2 Hi-Fi sample rate contract failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R2 source/QA/presets/artwork SHA gate failed' }
+      - name: CP18R3 fast high-resolution spectral interpolation
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=pathlib.Path('patches/cp18r3_spectral_sine_lut.txt').read_text(encoding='ascii').strip(); assert len(s)==976; d=gzip.decompress(base64.b64decode(s,validate=True));assert hashlib.sha256(d).hexdigest()=='468a1312b59cfa15286af95954e5bb1840f8d22915f7076ee0140a865b72e252','CP18R3 patch SHA mismatch';pathlib.Path('CP18R3_Spectral_LUT.patch').write_bytes(d);print('CP18R3 spectral source SHA256 verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R3 spectral patch verification failed' }
+          git apply --check 'CP18R3_Spectral_LUT.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R3 spectral patch incompatible' }
+          git apply 'CP18R3_Spectral_LUT.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R3 spectral patch failed' }
+          python -c "import hashlib,json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); p=r/'src/vitriol_dsp.cpp'; p.write_bytes(p.read_bytes().replace(bytes([13,10]),bytes([10]))); h=hashlib.sha256(p.read_bytes()).hexdigest(); assert h=='e94d7a0f033210620e6268e7a7eec91b66f1faf3beaa675f53a05d0c2d3a262f','Unexpected CP18R3 DSP source'; mf=r/'CP18_SOURCE_MANIFEST.json'; j=json.loads(mf.read_text(encoding='utf-8')); j['changed_source_sha256']['src/vitriol_dsp.cpp']=h; j['spectral_accuracy']='20 spectral partials preserved, sine LUT linear 4096 points with maximum amplitude error about 2.94e-7'; mf.write_text(json.dumps(j,indent=2,ensure_ascii=False)+'\n',encoding='utf-8');print('CP18R3 spectra original 20 partials preserved')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R3 source integrity failed' }
+          python -c "import math; n=4096; err=max(abs(math.sin((k+.5)*2*math.pi/n)-.5*(math.sin(k*2*math.pi/n)+math.sin((k+1)*2*math.pi/n))) for k in range(n)); print('spectral LUT interpolation worst-case error = %.10f'%err);assert err<3e-7"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R3 spectral Hi-Fi interpolation tolerance failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R3 source and original GUI checksum validation failed' }
+      - name: CP18R4 reconstruct 176.4-384k native output at half-rate synthesis
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=''.join(pathlib.Path('patches/cp18r4_part%02d.txt'%i).read_text(encoding='ascii').strip() for i in range(1,3)); assert len(s)==4192,'CP18R4 source chunks incomplete'; p=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(p).hexdigest()=='ed3c5599e10300eafbe946f5bf3ad64296c7dd91bd797e3b2e1fb7e0275a5109','CP18R4 source patch checksum mismatch'; pathlib.Path('CP18R4_HighRate_Reconstruction.patch').write_bytes(p); print('CP18R4 native high-rate DSP patch SHA256 verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R4 source authentication failed' }
+          git apply --check 'CP18R4_HighRate_Reconstruction.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R4 source patch does not apply' }
+          git apply 'CP18R4_HighRate_Reconstruction.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R4 source application failed' }
+          python -c "import hashlib,json,pathlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=r/'CP18_SOURCE_MANIFEST.json'; j=json.loads(m.read_text(encoding='utf-8')); expected={'include/vitriol_dsp.hpp':'689f15b218451390d2fc32dc3ee76b80a378ac31b2dab2809554a695f42fe49e','src/vitriol_dsp.cpp':'347e72ceb61fffb718de913c8c71cb6e45e254664121e5e013e6ec1ea734c850'}; [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in expected]; assert all(hashlib.sha256((r/k).read_bytes()).hexdigest()==h for k,h in expected.items()),'CP18R4 source content integrity mismatch'; j['changed_source_sha256'].update(expected); j['realtime_optimization']='CP18R4 7th-order 8-tap high-rate interpolation: 192k host / 96k synth, 176.4k host / 88.2k synth; all voices and 4 engines intact'; j['high_rate_reconstruction_delay_samples']=7; m.write_text(json.dumps(j,indent=2,ensure_ascii=False)+'\n',encoding='utf-8'); print('CP18R4 restored source exact hash verification')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R4 source and manifest QA failed' }
+          python -c "import math; w=(-5,49,-245,1225,1225,-245,49,-5); assert sum(w)==2048; print('CP18R4 midpoint 8-tap Lagrange DC unity'); omega=2*math.pi*20000/96000; a=sum(w[i]*math.cos(omega*i) for i in range(8))/2048; b=sum(w[i]*math.sin(omega*i) for i in range(8))/2048; db=20*math.log10(math.hypot(a,b)); print('CP18R4 20kHz gain dB: %.5f'%db); assert abs(db)<.06"
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R4 8-tap reconstruction QA failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP18R4 original GUI, sound-bank and parameter SHA gate failed' }
+      - name: CP19R5 apply verified native preset atlas and partial repaint source
+        shell: pwsh
+        run: |
+          python -c "import pathlib,gzip,base64,hashlib; s=pathlib.Path('patches/cp19r5_source_patch.b64').read_text(encoding='ascii').strip(); assert len(s)==86768,'Incomplete CP19 source patch'; p=gzip.decompress(base64.b64decode(s,validate=True));assert hashlib.sha256(p).hexdigest()=='2b94bf73effdb563a7c4990c2c339d7d1600f77284087c4b1c7b86f6d2800ace','Incorrect CP19 source SHA256'; pathlib.Path('CP19R5_Native_HTML.patch').write_bytes(p); print('Authenticated CP19R5 native UI patch')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5 patch authentication failed' }
+          git apply --check 'CP19R5_Native_HTML.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5 patch does not apply to CP18R4' }
+          git apply 'CP19R5_Native_HTML.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5 patch application failed' }
+          python -c "import pathlib,json; r=pathlib.Path('Albedo-Quintessential-Synth'); j=json.loads((r/'CP19_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in j['changed_source_sha256']]; print('Canonical CP19 LF source restored')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP19 source normalization failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19 source/visual/DSP SHA verification failed' }
+          python 'Albedo-Quintessential-Synth/tools/sync_cp19_preset_atlas.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19 HTML-native catalog verification failed' }
+          python 'Albedo-Quintessential-Synth/tests/check_cp18_visual_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19 restored art source contract failed' }
+      - name: CP19R5 MSVC Unicode cursor resource correction
+        shell: pwsh
+        run: |
+          python 'patches/cp19r5_win_cursor_fix.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5 Unicode Win32 resource correction failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5 post-resource source SHA audit failed' }
+      - name: CP19R5-R2 safe Win32 preset search and focused mouse-up redraw
+        shell: pwsh
+        run: |
+          python -c "import pathlib,hashlib,base64,gzip; s=pathlib.Path('patches/cp19r5_r2_msvc_redraw.b64').read_text(encoding='ascii').strip(); assert len(s)==4368,'CP19R5-R2 delta incomplete'; p=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(p).hexdigest()=='8bf3e352de84fc242973c913ec4b098ea967756788ac3d924afdde8057e17ec2','CP19R5-R2 source patch hash incorrect'; pathlib.Path('CP19R5_R2.patch').write_bytes(p); print('Authenticated CP19R5-R2 patch')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 source validation failed' }
+          git apply --check 'CP19R5_R2.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 patch incompatible with audited CP19' }
+          git apply 'CP19R5_R2.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 source application failed' }
+          python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); names=('src/albedo_preset_browser_win.cpp','src/editor_native_win.cpp','tests/cp19_partial_redraw_win.cpp'); [(r/k).write_bytes((r/k).read_bytes().replace(bytes([13,10]),bytes([10]))) for k in names]; print('CP19R5-R2 canonical LF normalized on MSVC runner')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 text normalization failed' }
+          python -c "import json,pathlib,hashlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP19_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); expected={'src/albedo_preset_browser_win.cpp':'85d2c0c037af0b062765ed41a7b4e82484ddbc82a1fb59642ba11fec1803f17b','src/editor_native_win.cpp':'f82ce0cd6815b457258fe6f0a87b79534050fd7830edd4bd6c294613107d8a4a','tests/cp19_partial_redraw_win.cpp':'de21f87cb38e43c5a086a6969861f5b1773f53c0fe01a64d3cb24d8c6644e268'}; assert all(hashlib.sha256((r/k).read_bytes()).hexdigest()==h and m['changed_source_sha256'][k]==h for k,h in expected.items()),'CP19R5-R2 SHA verification failed'; print('CP19R5-R2 C++ and test hashes verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 source integrity gate failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R2 source/art visual parity gate failed' }
+      - name: CP19R5-R3 visible host HWND repaint regression setup
+        shell: pwsh
+        run: |
+          python 'patches/cp19r5_r3_visible_host_qa.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R3 Win32 test fixture correction failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP19R5-R3 Win32 test source hash verification failed' }
+      - name: RGNES CP19R5 preserve current native GUI source for readability checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP22_FHD_Native_GUI_Source
+          path: |
+            Albedo-Quintessential-Synth/src/
+            Albedo-Quintessential-Synth/include/
+            Albedo-Quintessential-Synth/tests/
+            Albedo-Quintessential-Synth/tools/
+            Albedo-Quintessential-Synth/CP19_SOURCE_MANIFEST.json
+            Albedo-Quintessential-Synth/CMakeLists.txt
+          if-no-files-found: error
+          retention-days: 14
+      - name: CP20 apply 15.6in FHD pixel-native typography and larger initialization
+        shell: pwsh
+        run: |
+          python -c "import gzip,base64,pathlib,hashlib; s=pathlib.Path('patches/cp20_fhd_gui_readability.b64').read_text(encoding='ascii').strip(); assert len(s)==5784, 'Incomplete CP20 patch'; p=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(p).hexdigest()=='40f79ec1a2b1c713a68a7dec4786c81465c3a93c6794882c6400f1a884c180cd','CP20 patch SHA mismatch'; pathlib.Path('CP20_GUI_READABILITY.patch').write_bytes(p); print('CP20 source patch verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 source authentication failed' }
+          git apply --check 'CP20_GUI_READABILITY.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 patch incompatible with CP19R5-R3' }
+          git apply 'CP20_GUI_READABILITY.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 GUI patch application failed' }
+          # Git for Windows may keep CRLF after applying the POSIX-format delta.
+          # Normalize only audited CP20 text files before comparing exact SHA256.
+          python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); names=('src/editor_native_win.cpp','src/albedo_preset_browser_win.cpp','include/vitriol_native_layout.hpp','CP19_SOURCE_MANIFEST.json'); [(r/n).write_bytes((r/n).read_bytes().replace(bytes([13,10]),bytes([10]))) for n in names]; print('CP20 Win32 LF source normalized')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 Win32 source normalization failed' }
+          python -c "import pathlib,hashlib,json; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP19_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); names=('src/editor_native_win.cpp','src/albedo_preset_browser_win.cpp'); assert all(hashlib.sha256((r/n).read_bytes()).hexdigest()==m['changed_source_sha256'][n] for n in names), 'CP20 native source checksum'; t=(r/'include/vitriol_native_layout.hpp').read_text(encoding='utf-8'); assert 'kDefaultEditorWidth=1265, kDefaultEditorHeight=900' in t, 'CP20 startup dimensions'; assert 'TextCaptureScope capture(liveText)' in (r/'src/editor_native_win.cpp').read_text(encoding='utf-8'); print('CP20 FHD GUI source integrity and canvas text checks passed')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 source contract failure' }
+          # Preserve the strict CP12 SHA gate: explicitly migrate ONLY the known GUI
+          # layout-header digest to the CP20 audited value. No DSP, bank, art,
+          # parameter or preset signatures may be changed.
+          python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); old='1a39b1c2a84a82a9dd5950d9f4dbb73bc7fc5d866fb38e3d595d0e45c36f589d'; new='15531abff019a101a8bbaf43cac00d34033735907da282dc2312f2d0545a0dda'; matches=[p for p in r.rglob('*.json') if old in p.read_text(encoding='utf-8')]; print('CP20 layout-only manifest targets:',[str(p) for p in matches]); assert matches,'No original GUI layout manifest SHA found'; [(p.write_text(p.read_text(encoding='utf-8').replace(old,new),encoding='utf-8')) for p in matches]; assert all(old not in p.read_text(encoding='utf-8') for p in matches); print('CP20 manifest strict header checksum migrated')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 layout-only source manifest migration failed' }
+          # CP12 viewport regression statically encodes the old 900x640
+          # launch defaults. Update that test expectation to CP20's approved
+          # 1265x900 target, retaining the resize hitbox/geometry assertions.
+          python -c "from pathlib import Path; import re; p=Path('Albedo-Quintessential-Synth/tests/native_viewport_parity.cpp'); s=p.read_text(encoding='utf-8'); a,n1=re.subn(r'(kDefaultEditorWidth\s*==\s*)900',r'\g<1>1265',s); b,n2=re.subn(r'(kDefaultEditorHeight\s*==\s*)640',r'\g<1>900',a); assert n1>=1 and n2>=1,('CP20 viewport source contract',n1,n2); p.write_text(b,encoding='utf-8'); print('CP20 native viewport startup assertions updated')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 native viewport test migration failed' }
+          # Retain exact source QA for the changed CP12 viewport fixture:
+          # replace only its known, formerly approved SHA, not other assets.
+          python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); old='b50ffd501f9831ddec5f5d3d38a91eb56a28357288a21d7766017643cfb0ea06'; new='b9b940bdc47f26f109a6351817103bf4ff800394f2f0f021b6b3c1bdfbb5cd0f'; matches=[p for p in r.rglob('*.json') if old in p.read_text(encoding='utf-8')]; print('CP20 viewport test manifest targets:',[str(p) for p in matches]); assert matches,'Prior native viewport QA digest missing'; [(p.write_text(p.read_text(encoding='utf-8').replace(old,new),encoding='utf-8')) for p in matches]; print('CP20 viewport test SHA migrated')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 viewport regression manifest integrity failed' }
+          python 'patches/cp20_migrate_window_qa.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 exact viewport QA fixture migration failed' }
+          python 'Albedo-Quintessential-Synth/tests/check_cp15_resize_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 startup/resizing regression source test failed' }
+          python 'Albedo-Quintessential-Synth/tests/check_cp18_visual_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 original visual identity check failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP20 immutable DSP/artwork/64 presets check failed' }
+      - name: CP21 scale vector controls and preserve the verified CP20 audio build
+        shell: pwsh
+        run: |
+          python -c "import pathlib,hashlib,base64,gzip; p=pathlib.Path('patches/cp21_gui_scaling.b64'); s=p.read_text(encoding='ascii').strip(); assert len(s)==13260,'CP21 source patch incomplete'; d=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(d).hexdigest()=='a70d28cc955bfa76656bfed28d5e9a15b2a32aeb27e0db47caa8944f473f3918','CP21 source SHA mismatch'; pathlib.Path('CP21_GUI_SCALING.patch').write_bytes(d);print('CP21 source authenticated')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP21 patch authentication failed' }
+          git apply --check --exclude=Albedo-Quintessential-Synth/CP19_SOURCE_MANIFEST.json 'CP21_GUI_SCALING.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP21 incompatible with verified CP20 source' }
+          git apply --exclude=Albedo-Quintessential-Synth/CP19_SOURCE_MANIFEST.json 'CP21_GUI_SCALING.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP21 GUI patch application failed' }
+          python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); names=('src/editor_native_win.cpp','src/albedo_preset_browser_win.cpp','include/vitriol_native_layout.hpp','CP19_SOURCE_MANIFEST.json');[(r/n).write_bytes((r/n).read_bytes().replace(bytes([13,10]),bytes([10]))) for n in names];print('CP21 LF source normalized for MSVC')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP21 Win32 normalization failed' }
+          python -c "import pathlib,hashlib,json; r=pathlib.Path('Albedo-Quintessential-Synth'); m=r/'CP19_SOURCE_MANIFEST.json'; j=json.loads(m.read_text(encoding='utf-8')); expected={'src/editor_native_win.cpp':'1b80363828991ac6f11f8259242d0af63572f45e213afa3c5daa6f7e34821ae4','src/albedo_preset_browser_win.cpp':'0edb0ed1871830d0d83914cac80057bdaefaac67419b66c2b25d50eb67788cda','include/vitriol_native_layout.hpp':'78857aa7b0fff8f15e306247421668a114c7ba21f9afb9a783b7805760337b23'}; assert all(hashlib.sha256((r/n).read_bytes()).hexdigest()==h for n,h in expected.items()),'CP21 GUI source mismatch'; j['changed_source_sha256'].update(expected);j['cp21_scaling']='CP21 pixels-native controls; upscaled preset atlas; stable CP20 DSP unchanged';m.write_text(json.dumps(j,ensure_ascii=False,indent=2)+'\n',encoding='utf-8'); assert all(j['changed_source_sha256'][n]==h for n,h in expected.items());assert 'kDefaultEditorWidth=1265, kDefaultEditorHeight=900' in (r/'include/vitriol_native_layout.hpp').read_text(encoding='utf-8'); print('CP21 GUI exact digests, host QA history and startup preserved')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP21 GUI source integrity gate failed' }
+          python -c "from pathlib import Path;r=Path('Albedo-Quintessential-Synth');old='15531abff019a101a8bbaf43cac00d34033735907da282dc2312f2d0545a0dda';new='78857aa7b0fff8f15e306247421668a114c7ba21f9afb9a783b7805760337b23';matches=[p for p in r.rglob('*.json') if old in p.read_text(encoding='utf-8')];print('CP21 audited layout manifest targets:',[str(p) for p in matches]); assert matches,'Prior CP20 layout SHA absent';[(p.write_text(p.read_text(encoding='utf-8').replace(old,new),encoding='utf-8')) for p in matches]; print('CP21 strict layout digest migrated')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP21 layout SHA migration failed' }
+          python 'Albedo-Quintessential-Synth/tests/check_cp15_resize_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP21 window sizing or resize contract changed' }
+          python 'Albedo-Quintessential-Synth/tests/check_cp18_visual_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP21 visual identity contract changed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP21 audio/preset/original artwork integrity failed' }
+      - name: CP22 enlarge native response graphs and use atomic buffered Win32 repaint
+        shell: pwsh
+        run: |
+          python -c "import pathlib,gzip,base64,hashlib; s=pathlib.Path('patches/cp22_native_flicker_graph.b64').read_text(encoding='ascii').strip(); assert len(s)==9956,'CP22 source delta incomplete'; d=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(d).hexdigest()=='30600a0910373f7284edf7ecba1ea9991e89e291bb9c9cdd9be28e7b0a74ac92','CP22 source SHA-256 mismatch'; pathlib.Path('CP22_NATIVE_FLICKER_GRAPH.patch').write_bytes(d); print('Authenticated CP22 Win32 source patch')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP22 source authentication failed' }
+          git apply --check 'CP22_NATIVE_FLICKER_GRAPH.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP22 patch incompatible with audited CP21 sources' }
+          git apply 'CP22_NATIVE_FLICKER_GRAPH.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP22 native GUI patch failed' }
+          python -c "import pathlib,json,hashlib; r=pathlib.Path('Albedo-Quintessential-Synth'); m=json.loads((r/'CP19_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); expected={'include/editor_native_win.hpp':'5868f271f23a7b16e159f60926961940fb2dfbcf43a9cb68ec4f136fcc8df683','src/editor_native_win.cpp':'855af7c0a3f09ad157b48372187d424481c89e0fca91496e0e1969dbb1410ebc','tests/cp19_partial_redraw_win.cpp':'1a0be8d86b4658fa898b6c994bc8e3daa99848aff4f38e9126bb0fde79518791'}; [(r/p).write_bytes((r/p).read_bytes().replace(bytes([13,10]),bytes([10]))) for p in expected]; assert all(hashlib.sha256((r/p).read_bytes()).hexdigest()==h and m['changed_source_sha256'][p]==h for p,h in expected.items()), 'CP22 strict source integrity failed'; print('CP22 changed source digests and manifest passed')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP22 Windows source integrity gate failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP22 preserved artwork/DSP/presets gate failed' }
+      - name: CP22 explicit Win32 LONG dimension conversion for MSVC
+        shell: pwsh
+        run: |
+          python -c "from pathlib import Path;import hashlib,json; r=Path('Albedo-Quintessential-Synth'); p=r/'src/editor_native_win.cpp'; s=p.read_text(encoding='utf-8'); a='int actualW=std::max(1,rect.right),actualH=std::max(1,rect.bottom);'; b='int actualW=std::max(1,int(rect.right)),actualH=std::max(1,int(rect.bottom));'; assert s.count(a)==1, 'CP22 MSVC anchor absent'; p.write_text(s.replace(a,b),encoding='utf-8',newline='\n'); h=hashlib.sha256(p.read_bytes()).hexdigest(); assert h=='aef25bcd532c66f1aa19294fc42a356cf291d3bd6a71e6c56cc77144b47b53a4','CP22 MSVC source hash mismatch'; mf=r/'CP19_SOURCE_MANIFEST.json'; m=json.loads(mf.read_text(encoding='utf-8'));m['changed_source_sha256']['src/editor_native_win.cpp']=h; m['changes']=str(m.get('changes',''))+'; CP22 explicit LONG-to-int in Win32 paint size'; mf.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n'); print('CP22 MSVC dimensions corrected: '+h)"
+          if ($LASTEXITCODE -ne 0) { throw 'CP22 Win64 explicit dimension conversion failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP22 MSVC hotfix source integrity failed' }
+      - name: CP23 native text containment and control-grid alignment
+        shell: pwsh
+        run: |
+          python -c "import pathlib,hashlib,gzip,base64; p=pathlib.Path('patches/cp23_native_alignment.b64'); s=p.read_text(encoding='ascii').strip(); assert len(s)==8280,'CP23 encoded patch incomplete'; d=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(d).hexdigest()=='1ee6c0c24b887e655e913be98310c2e6d8c2053eacc3d61e9c2703743e77e8e3','CP23 patch authentication failed'; pathlib.Path('CP23_NATIVE_ALIGNMENT.patch').write_bytes(d); print('Authenticated CP23 native GUI alignment delta')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP23 authenticated source patch gate failed' }
+          git apply --check 'CP23_NATIVE_ALIGNMENT.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP23 GUI delta incompatible with verified CP22 MSVC source' }
+          git apply 'CP23_NATIVE_ALIGNMENT.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP23 native GUI source application failed' }
+          python -c "from pathlib import Path; import hashlib,json; r=Path('Albedo-Quintessential-Synth'); p=r/'src/editor_native_win.cpp'; p.write_bytes(p.read_bytes().replace(bytes([13,10]),bytes([10]))); h=hashlib.sha256(p.read_bytes()).hexdigest(); assert h=='9ea9c5ac546ce1d8c1863bd9597084c812b183181fe027bccd28cd69d8d29826','CP23 changed GUI source digest mismatch'; m=json.loads((r/'CP19_SOURCE_MANIFEST.json').read_text(encoding='utf-8')); assert m['changed_source_sha256']['src/editor_native_win.cpp']==h,'CP23 manifest not synchronized'; print('CP23 native alignment CPP exact SHA256 verified')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP23 native GUI source integrity gate failed' }
+          python 'Albedo-Quintessential-Synth/tests/cp23_alignment_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP23 spacing and typography geometry QA failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP23 DSP, artwork and factory preset regression gate failed' }
+      - name: CP27 authenticate and apply live 5:3 WebView2 HTML and native UI bridge
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=pathlib.Path('patches/cp27_webview2_source.b64').read_text(encoding='ascii').strip(); assert len(s)==96224, 'CP27 source patch truncated'; d=gzip.decompress(base64.b64decode(s,validate=True)); expected='bde18aec1891ca0e78e3a7464d8128a0366fef0c5b39adf15d11005813e3d24b'; assert hashlib.sha256(d).hexdigest()==expected, 'CP27 source patch SHA256 mismatch'; pathlib.Path('CP27_WEBVIEW2.patch').write_bytes(d); print('Authenticated CP27 source patch')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP27 source integrity failure' }
+          python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); names=('CMakeLists.txt','include/editor_native_win.hpp','include/vitriol_native_layout.hpp','resources/albedo_native_win.rc.in','src/editor_native_win.cpp'); [(r/n).write_bytes((r/n).read_bytes().replace(bytes([13,10]),bytes([10]))) for n in names]; print('CP27 source LF normalized for Git/MSVC')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP27 source normalization failed' }
+          git apply --check 'CP27_WEBVIEW2.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27 source incompatible with verified CP23' }
+          git apply 'CP27_WEBVIEW2.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27 source application failed' }
+          python 'Albedo-Quintessential-Synth/tools/cp27_migrate_source.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27 audited layout/manifest migration failed' }
+          python 'Albedo-Quintessential-Synth/tests/cp27_webview_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27 HTML-native bridge contract failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27 original factory/DSP/artwork invariant failed' }
+      - name: CP27-R1 fix MSVC generated WebView2 COM header definitions
+        shell: pwsh
+        run: |
+          python 'patches/cp27_r1_webview_msvc_headers.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27-R1 WebView2 COM header ordering failed' }
+          python 'Albedo-Quintessential-Synth/tests/cp27_webview_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27-R1 native/HTML contract failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27-R1 strict DSP, preset and art integrity failed' }
+      - name: CP27-R2 use Unicode Win32 resource type for embedded HTML
+        shell: pwsh
+        run: |
+          python 'patches/cp27_r2_win_resource_type.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27-R2 Unicode resource source patch failed' }
+          python 'Albedo-Quintessential-Synth/tests/cp27_webview_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27-R2 HTML-native contract failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27-R2 DSP/preset/visual source integrity failed' }
+      - name: CP27-R3 migrate historical CP18 GUI viewport regression to 5:3
+        shell: pwsh
+        run: |
+          python 'patches/cp27_r3_visual_viewport_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27-R3 CP18 viewport expectation could not migrate' }
+          python 'Albedo-Quintessential-Synth/tests/check_cp18_visual_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27-R3 legacy visual identity check failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP27-R3 original artwork/DSP/factory source integrity failed' }
+      - name: CP28 repair renderer failures and guarantee 12-note polyphony at 48k
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=pathlib.Path('patches/cp28_black_screen_poly48.b64').read_text(encoding='ascii').strip(); assert len(s)==26036,'CP28 patch truncated'; p=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(p).hexdigest()=='12cdc8b6e2dec3dc211883a48c3211e222ce397cd4afb600782878928e70c676','CP28 patch SHA mismatch';pathlib.Path('CP28_BlackScreen_Poly48.patch').write_bytes(p);print('CP28 Win32/DSP source authenticated')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP28 delta authentication failed' }
+          git apply --check CP28_BlackScreen_Poly48.patch
+          if ($LASTEXITCODE -ne 0) { throw 'CP28 delta does not apply to CP27 audited build' }
+          git apply CP28_BlackScreen_Poly48.patch
+          if ($LASTEXITCODE -ne 0) { throw 'CP28 delta application failed' }
+          python 'patches/cp28_manifest_verify.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP28 source checksum verification failed' }
+          python Albedo-Quintessential-Synth/tests/cp28_recovery_polyphony_contract.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP28 renderer recovery and polyphony contract failed' }
+          python Albedo-Quintessential-Synth/tests/cp27_webview_contract.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP28 embedded WebView2 source contract failed' }
+          python Albedo-Quintessential-Synth/tools/verify_source_assets.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP28 original artwork/bank/parameter integrity failed' }
+      - name: CP28-R1 high-rate bounded voice safety with 48k polyphony
+        shell: pwsh
+        run: |
+          python patches/cp28_r1_highrate_voice_budget.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP28-R1 high-rate voice budget patch failed' }
+          python Albedo-Quintessential-Synth/tests/cp28_recovery_polyphony_contract.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP28-R1 source contract failed' }
+          python Albedo-Quintessential-Synth/tools/verify_source_assets.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP28-R1 source integrity gate failed' }
+      - name: CP28-R2 optimize 48k polyphonic sine with exact hi-fi LUT
+        shell: pwsh
+        run: |
+          python patches/cp28_r2_fast_sine_hifi.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP28-R2 sine LUT DSP optimization failed' }
+          python Albedo-Quintessential-Synth/tests/cp28_recovery_polyphony_contract.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP28-R2 12-note source contract failed' }
+          python Albedo-Quintessential-Synth/tools/verify_source_assets.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP28-R2 audio/artwork source integrity gate failed' }
+      - name: CP29 attach live HTML to DirectComposition and retain original GDI 3-to-2 fallback
+        shell: pwsh
+        run: |
+          python -c "import pathlib,base64,gzip,hashlib; s=pathlib.Path('patches/cp29_directcomposition_3x2.b64').read_text(encoding='ascii').strip(); assert len(s)==12104,'CP29 patch incomplete'; b=gzip.decompress(base64.b64decode(s,validate=True)); assert hashlib.sha256(b).hexdigest()=='e89838091f36c510f04cd4de02dee0ff2d748ca52d290c2719bf68ee9a8dee5c','CP29 patch digest mismatch';pathlib.Path('CP29_DirectComposition_HTML.patch').write_bytes(b);print('CP29 DirectComposition source authenticated')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 source authentication failed' }
+          git apply --directory=Albedo-Quintessential-Synth --check 'CP29_DirectComposition_HTML.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 is incompatible with the verified CP28 R2 source' }
+          git apply --directory=Albedo-Quintessential-Synth 'CP29_DirectComposition_HTML.patch'
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 DirectComposition native source patch failed' }
+          python -c "from pathlib import Path; r=Path('Albedo-Quintessential-Synth'); names=('src/albedo_webview_win.cpp','include/albedo_webview_win.hpp','src/editor_native_win.cpp','CP19_SOURCE_MANIFEST.json','tests/cp29_directcomposition_contract.py'); [(r/n).write_bytes((r/n).read_bytes().replace(bytes([13,10]),bytes([10]))) for n in names]; print('CP29 Windows LF canonical source normalized')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 CRLF normalization failed' }
+          python -c "from pathlib import Path;import hashlib,json; r=Path('Albedo-Quintessential-Synth'); p=r/'CMakeLists.txt'; p.write_bytes(p.read_bytes().replace(bytes([13,10]),bytes([10]))); h=hashlib.sha256(p.read_bytes()).hexdigest(); assert h=='eadaa6763837429555390839296d4a540338fef7006b84ac9fc05d3e75cd092c','Unexpected CP29 CMake content'; mf=r/'CP19_SOURCE_MANIFEST.json'; j=json.loads(mf.read_text(encoding='utf-8'));j['changed_source_sha256']['CMakeLists.txt']=h;mf.write_text(json.dumps(j,indent=2,ensure_ascii=False)+'\n',encoding='utf-8');print('CP29 authenticated DirectComposition linker manifest: '+h)"
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 CMake SHA migration rejected' }
+          python 'patches/cp29_r1_legacy_gdi_geometry.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 R1 preserved-native-GDI geometry failed' }
+          python 'Albedo-Quintessential-Synth/tests/cp29_directcomposition_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 DirectComposition, fallback and HTML contract failed' }
+          python 'Albedo-Quintessential-Synth/tests/cp27_webview_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 original HTML/64 factory preset contract failed' }
+          python 'Albedo-Quintessential-Synth/tests/cp28_recovery_polyphony_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 48k polyphonic recovery source regression' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP29 original DSP, factory, and artwork source integrity regression' }
+      - name: CP31 integrate readable 3:2 HTML with moving Arbor and native parameter bridge
+        shell: pwsh
+        run: |
+          python 'patches/cp30_integrate.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP31 HTML source integration failed' }
+          python 'patches/cp31_layout_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP31 moving Arbor and responsive layout resource contract failed' }
+          python 'Albedo-Quintessential-Synth/tests/cp27_webview_contract.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP30 native WebView2 parameter bridge contract failed' }
+          python 'Albedo-Quintessential-Synth/tools/verify_source_assets.py'
+          if ($LASTEXITCODE -ne 0) { throw 'CP30 original DSP/presets/artwork SHA regression' }
+      - name: CP36 high-resolution DSP patch after original-source verification
+        shell: pwsh
+        run: |
+          python patches/cp36_hifi_math.py --root Albedo-Quintessential-Synth
+          if ($LASTEXITCODE -ne 0) { throw 'CP36 high-resolution audio patch failed' }
+          python patches/cp37_gain_stage.py --root Albedo-Quintessential-Synth
+          if ($LASTEXITCODE -ne 0) { throw 'CP37 native gain stage patch failed' }
+          python Albedo-JUCE-Native/tools/generate_recursive_forms.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP38 24 creative preset header generation failed' }
+      - name: Verify 64-preset taxonomy and source
+        shell: pwsh
+        run: |
+          python Albedo-JUCE-Native/tools/generate_preset_taxonomy.py
+          if ($LASTEXITCODE -ne 0) { throw 'Taxonomy regeneration failed' }
+          python Albedo-JUCE-Native/tests/check_preset_taxonomy.py
+          if ($LASTEXITCODE -ne 0) { throw 'Taxonomy check failed' }
+          python Albedo-JUCE-Native/tests/check_cp32_native_geometry.py
+          if ($LASTEXITCODE -ne 0) { throw 'Native 3:2 layout clipping contract failed' }
+          python Albedo-JUCE-Native/tests/check_cp33_webview2.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP33 WebView2 integration contract failed' }
+          node --check Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+          if ($LASTEXITCODE -ne 0) { throw 'CP33 WebView2 frontend script syntax failed' }
+          python Albedo-JUCE-Native/tests/check_cp38_recursive_bank.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP38 new 24-program library / original 64 stability regression' }
+          node --check Albedo-JUCE-Native/Assets/cp38_rotary_overlays.js
+          if ($LASTEXITCODE -ne 0) { throw 'CP38 rotary and popups JavaScript syntax failed' }
+          python Albedo-JUCE-Native/tests/check_cp37_alignment.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP37 source graphs, filter controls, gain, or animated ADSR failed' }
+          python Albedo-JUCE-Native/tests/check_cp36_quality.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP36 quantitative HiFi and Preset Atlas quality regression' }
+          python Albedo-JUCE-Native/tests/check_cp35_render_window.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP35 host editor/render geometry contract failed' }
+          python Albedo-JUCE-Native/tests/check_cp39_layout.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP39 gain/master, filter alignment and resize regression' }
+          node Albedo-JUCE-Native/tests/check_cp40_viewport.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'CP40 CSS viewport/overlays/ADSR regression' }
+          python Albedo-JUCE-Native/tests/check_cp41_atlas.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP41 single window, labels, button APPLY, 88 voices or inline syntax regression' }
+          node --check Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
+          node --check Albedo-JUCE-Native/Assets/cp38_rotary_overlays.js
+          node --check Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
+          if ($LASTEXITCODE -ne 0) { throw 'CP35 WebView2 resize controller syntax failed' }
+      - name: Fetch JUCE 8 and CLAP JUCE extensions
+        shell: pwsh
+        run: |
+          git clone --depth 1 --branch 8.0.17-security https://github.com/juce-framework/JUCE.git Albedo-JUCE-Native/ext/JUCE
+          if ($LASTEXITCODE -ne 0) { throw 'JUCE 8 checkout failed' }
+          git clone --depth 1 --recurse-submodules https://github.com/free-audio/clap-juce-extensions.git Albedo-JUCE-Native/ext/clap-juce-extensions
+          if ($LASTEXITCODE -ne 0) { throw 'CLAP JUCE adapter checkout failed' }
+          if (!(Test-Path 'Albedo-JUCE-Native/ext/clap-juce-extensions/clap-libs/clap/CMakeLists.txt')) { throw 'CLAP dependency submodule missing' }
+      - name: Install pinned Microsoft WebView2 SDK for JUCE static loader
+        shell: pwsh
+        run: |
+          $v='1.0.4258.31'
+          New-Item -ItemType Directory -Path 'cp33-webview2-sdk' -Force | Out-Null
+          $uri="https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/$v/microsoft.web.webview2.$v.nupkg"
+          Invoke-WebRequest -Uri $uri -OutFile 'cp33-webview2-sdk.zip'
+          $pkgDir="cp33-webview2-sdk/Microsoft.Web.WebView2.$v"
+          New-Item -ItemType Directory -Path $pkgDir -Force | Out-Null
+          Expand-Archive -LiteralPath 'cp33-webview2-sdk.zip' -DestinationPath $pkgDir -Force
+          if (!(Test-Path 'cp33-webview2-sdk/Microsoft.Web.WebView2.1.0.4258.31/build/native/include/WebView2.h')) { throw 'WebView2 NuGet SDK header missing' }
+          if (!(Test-Path 'cp33-webview2-sdk/Microsoft.Web.WebView2.1.0.4258.31/build/native/x64/WebView2LoaderStatic.lib')) { throw 'WebView2 SDK x64 static loader missing' }
+      - name: Configure JUCE native audio plugins x64
+        shell: pwsh
+        run: |
+          $albedoSourceDir=("$PWD/Albedo-Quintessential-Synth").Replace([char]92, [char]47)
+          cmake -S Albedo-JUCE-Native -B build-cp38-juce -G "Visual Studio 17 2022" -A x64 -DALBEDO_BUILD_CLAP=ON -DBUILD_TESTING=ON -DALBEDO_DSP_ROOT="$albedoSourceDir" -DJUCE_WEBVIEW2_PACKAGE_LOCATION="$PWD/cp33-webview2-sdk"
+          if ($LASTEXITCODE -ne 0) { throw 'JUCE Windows CMake configuration failed' }
+      - name: Build JUCE VST3 and CLAP plugins
+        shell: pwsh
+        run: |
+          cmake --build build-cp38-juce --config Release --target AlbedoNative_VST3 AlbedoNative_CLAP AlbedoPresetTaxonomyTest AlbedoCP36HifiDspTest AlbedoCP38CreativeAudioTest --parallel 4
+          if ($LASTEXITCODE -ne 0) { throw 'Native VST3/CLAP compile failed' }
+      - name: Test native plugin and verify binary exports
+        shell: pwsh
+        run: |
+          ctest --test-dir build-cp38-juce -C Release --output-on-failure
+          if ($LASTEXITCODE -ne 0) { throw 'Native JUCE CTest failed' }
+          $clap=Get-ChildItem -Path build-cp38-juce -Recurse -File -Filter '*.clap' | Select-Object -First 1
+          $vst=Get-ChildItem -Path build-cp38-juce -Recurse -File -Filter '*.vst3' | Select-Object -First 1
+          if (!$clap -or !$vst) { throw 'Compiled native binaries missing' }
+          python Albedo-Quintessential-Synth/tools/verify_pe_exports.py $clap.FullName --require clap_entry
+          if ($LASTEXITCODE -ne 0) { throw 'CLAP export missing' }
+          python Albedo-Quintessential-Synth/tools/verify_pe_exports.py $vst.FullName --require GetPluginFactory
+          if ($LASTEXITCODE -ne 0) { throw 'VST3 export missing' }
+          python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB1'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in CLAP'; print('CLAP PCM24 32-material bank present')" $clap.FullName
+          if ($LASTEXITCODE -ne 0) { throw 'CLAP sound bank resource missing' }
+          python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB1'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in VST3'; print('VST3 PCM24 32-material bank present')" $vst.FullName
+          if ($LASTEXITCODE -ne 0) { throw 'VST3 sound bank resource missing' }
+          New-Item -ItemType Directory -Path 'dist-cp38' -Force | Out-Null
+          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP43_JUCE_WebView2.clap'
+          $bundle=Get-ChildItem -Path build-cp38-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
+          if (!$bundle) { throw 'VST3 bundle directory missing' }
+          Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
+          Get-ChildItem 'dist-cp38' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
+      - name: Publish native JUCE VST3 and CLAP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP43_PhaseStudies_94_Windows_x64_CLAP_VST3
+          path: dist-cp38/*
+          if-no-files-found: error
+      - name: Preserve JUCE compiler logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP43_PhaseStudies_94_Compiler_Log
+          path: |
+            build-cp38-juce/CMakeCache.txt
+            build-cp38-juce/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
