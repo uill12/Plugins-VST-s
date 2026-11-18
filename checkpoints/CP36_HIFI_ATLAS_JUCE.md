@@ -75,3 +75,23 @@ with 12 voices. Audio 'Hi-Fi' remains a goal until measurable anti-alias,
 harmonic, gain and CPU benchmarks plus listening are approved. If Windows
 build fails, preserve CP35 runtime rather than promoting this source-only
 checkpoint.
+
+## Verified CP36 R1 distribution
+
+- Windows Actions run `44245872403` finished successfully.
+- CTest: **2/2** (`cp32_factory_atlas_64_complete`,
+  `cp36_hifi_double_precision_polyphony`).
+- PE32+ AMD64 exports: `clap_entry` and `GetPluginFactory`.
+- Embedded original PCM bank: found in both audio binaries.
+- Release ZIP: `Albedo_CP36_R1_HiFi_LongAtlas_Windows_x64_CLAP_VST3.zip`.
+- R1 is **packaging-only** compared with the CI binary: its VST3
+  `Contents/Resources/moduleinfo.json` trailing commas were normalized to
+  strict JSON; CLAP/VST3 PE binary SHA-256 hashes are unchanged. Reproducible
+  helper: `standards/tools/rgnes_vst3_moduleinfo_strict_json.py`.
+- R1 Google Drive runtime: https://drive.google.com/file/d/1-CcARggTBSLYu-81mdwHheRJZCabxceK/view
+- SHA-256 for both binaries and ZIP: delivered in
+  `Albedo_CP36_R1_Runtime_SHA256.json`; independent ZIP CRC succeeded.
+- Installed private RGNES Full DAW Engineer plugin version: **2.3.0**,
+  including the new `juce8-native-daw` skill. Source standard:
+  `standards/RGNES_JUCE8_STANDARD_CP36.md`.
+- **Bitwig host audio/GUI confirmation remains pending**. CP35 retained.
