@@ -1,0 +1,31 @@
+name: Albedo CP35 WebView Host-Size Browser QA Bundle
+on:
+  push:
+    branches: [albedo-cp35-render-window-match]
+    paths: ['.github/workflows/albedo-cp35-ui-qa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sources:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate size resources and upload browser harness sources
+        run: |
+          test -s Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
+          test -s Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+          test -s ui/Albedo_CP30_CP22_Landscape_3x2.html
+          node --check Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
+          node --check Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+          python Albedo-JUCE-Native/tests/check_cp35_render_window.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP35_Embedded_Browser_Source_QA
+          path: |
+            ui/Albedo_CP30_CP22_Landscape_3x2.html
+            Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
+            Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+            Albedo-JUCE-Native/Metadata/factory_preset_taxonomy.json
+          retention-days: 10
+          if-no-files-found: error
