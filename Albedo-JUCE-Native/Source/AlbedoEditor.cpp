@@ -734,9 +734,9 @@ AlbedoEditor::AlbedoEditor(AlbedoProcessor& p):juce::AudioProcessorEditor(&p),pr
         advancedControls.push_back(ctrl);
     }
     constrainer.setFixedAspectRatio(1.5);
-    constrainer.setSizeLimits(1260,840,1920,1280);
+    constrainer.setSizeLimits(1050,700,1800,1200);
     setResizable(true,true);setConstrainer(&constrainer);
-    setSize(1290,860);
+    setSize(1110,740);
     startTimerHz(24); // animated regions 24 Hz; host parameter sync 12 Hz
 }
 AlbedoEditor::~AlbedoEditor(){stopTimer();setLookAndFeel(nullptr);}
@@ -781,10 +781,10 @@ void AlbedoEditor::resized()
     const auto W=getWidth(),H=getHeight();
     atlasButton.setBounds(W-150,20,130,36);
     allControlsButton.setBounds(W-295,20,133,36);
-    auto r=juce::Rectangle<int>(10,82,W-20,H-120);
+    auto r=juce::Rectangle<int>(10,78,juce::jmax(0,W-20),juce::jmax(0,H-102));
     const int gap=8;
-    const int engineH=juce::jmax(118,(int)(r.getHeight()*.15f));
-    const int lowerH=juce::jmax(200,(int)(r.getHeight()*.265f));
+    const int engineH=juce::jlimit(93,135,(int)(r.getHeight()*.16f));
+    const int lowerH=juce::jlimit(155,275,(int)(r.getHeight()*.27f));
     auto engine=r.removeFromTop(engineH);r.removeFromTop(gap);
     auto lower=r.removeFromBottom(lowerH);r.removeFromBottom(gap);
     auto upper=r;
@@ -826,28 +826,29 @@ void AlbedoEditor::resized()
     layoutControls(macroControls,central.removeFromTop(macroH),7);
     layoutControls(couplingControls,central,3);
     auto filt=moduleRects[3].reduced(8).withTrimmedTop(45);
-    const auto filterSectionH=juce::jmax(103,int(filt.getHeight()*.285f));
+    const auto filterSectionH=juce::jlimit(76,126,int(filt.getHeight()*.27f));
     for(int i=0;i<2;i++)
     {
         auto part=filt.removeFromTop(filterSectionH);
-        filterPlots[i]->setBounds(part.removeFromTop(46).reduced(3,1));
+        const int graphH=juce::jlimit(30,46,part.getHeight()/2);
+        filterPlots[i]->setBounds(part.removeFromTop(graphH).reduced(3,1));
         layoutControls(std::vector<ParamControl*>{filterControls[(size_t)i*3],filterControls[(size_t)i*3+1],filterControls[(size_t)i*3+2]},part,3);
-        filt.removeFromTop(5);
+        filt.removeFromTop(3);
     }
-    envelopePlot->setBounds(filt.removeFromTop(49).reduced(3,1));
+    envelopePlot->setBounds(filt.removeFromTop(juce::jlimit(31,46,filt.getHeight()/3)).reduced(3,1));
     layoutControls(envelopeControls,filt,4);
     const auto lowerContent=[](juce::Rectangle<int>b){return b.reduced(8).withTrimmedTop(47);};
     layoutControls(routingControls,lowerContent(moduleRects[4]),1);
     auto cellular=lowerContent(moduleRects[5]);
-    cellularPlot->setBounds(cellular.removeFromTop(72).reduced(2,2));
+    cellularPlot->setBounds(cellular.removeFromTop(juce::jmin(72,juce::jmax(40,cellular.getHeight()/2))).reduced(2,2));
     cellular.removeFromTop(3);
     layoutControls(cellularControls,cellular,4);
     auto effects=lowerContent(moduleRects[6]);
-    effectsPlot->setBounds(effects.removeFromTop(46).reduced(2,1));
+    effectsPlot->setBounds(effects.removeFromTop(juce::jmin(46,juce::jmax(30,effects.getHeight()/3))).reduced(2,1));
     effects.removeFromTop(4);
     layoutControls(fxControls,effects,2);
     auto pulse=lowerContent(moduleRects[7]);
-    pulsePlot->setBounds(pulse.removeFromTop(58).reduced(2,2));
+    pulsePlot->setBounds(pulse.removeFromTop(juce::jmin(58,juce::jmax(35,pulse.getHeight()/2))).reduced(2,2));
     pulse.removeFromTop(3);
     layoutControls(stepControls,pulse,8);
     // Constrain floating Atlas overlay to the editor with generous source typography.
