@@ -34,10 +34,10 @@
    root.style.setProperty('--albedo-viewport-h',h+'px');
    root.style.setProperty('--albedo-center-x',Math.floor(w/2)+'px');
    root.style.setProperty('--albedo-center-y',Math.floor(h/2)+'px');
-   // CSS calc multiplication is not equally supported by all WebView2
-   // runtimes; calculate the Atlas 1.618 ratio explicitly in JavaScript.
-   const atlasW=Math.min(1016,Math.floor(w*.77));
-   const atlasH=Math.min(628,Math.floor(h*.76),Math.floor(atlasW/1.618));
+   // CP36: the Atlas uses most of the available editor area. Removing the
+   // secondary filter row adds room for readable factory-patch list entries.
+   const atlasW=Math.min(1200,Math.floor(w*.94),Math.max(320,w-24));
+   const atlasH=Math.min(795,Math.floor(h*.92),Math.max(330,h-24));
    root.style.setProperty('--albedo-atlas-width',atlasW+'px');
    root.style.setProperty('--albedo-atlas-height',atlasH+'px');
    root.style.setProperty('--fit-scale',String(scale));
@@ -66,9 +66,9 @@
  }
  html.albedo-fit .preset-browser-backdrop[hidden]{display:none!important}
  html.albedo-fit .preset-browser-panel{
-   width:var(--albedo-atlas-width,1016px)!important;
+   width:var(--albedo-atlas-width,1200px)!important;
    max-width:calc(var(--albedo-viewport-w,1320px) - 20px)!important;
-   height:var(--albedo-atlas-height,628px)!important;
+   height:var(--albedo-atlas-height,795px)!important;
    max-height:calc(var(--albedo-viewport-h,880px) - 20px)!important;
    min-height:0!important;
    box-sizing:border-box!important;
@@ -98,19 +98,10 @@
  html.albedo-fit .preset-browser-toolbar label{min-width:0!important;gap:3px!important}
  html.albedo-fit .preset-browser-toolbar input,
  html.albedo-fit .preset-browser-toolbar select{
-   height:31px!important;min-height:31px!important;
-   font-size:11px!important;padding:4px 7px!important;
+   height:35px!important;min-height:35px!important;
+   font-size:12px!important;padding:5px 8px!important;
  }
  html.albedo-fit .preset-browser-toolbar label span{font-size:9px!important;letter-spacing:.07em!important}
- html.albedo-fit .pb-juce-extra{
-   display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
-   margin:4px 12px 7px!important;gap:7px!important;min-width:0!important;flex:0 0 auto!important;
- }
- html.albedo-fit .pb-juce-extra select{
-   height:31px!important;min-width:0!important;width:100%!important;
-   font-size:11px!important;padding:4px 6px!important;
- }
- html.albedo-fit .pb-juce-extra label{gap:3px!important;font-size:9px!important}
  html.albedo-fit .preset-browser-summary{
    flex:0 0 auto!important;padding:5px 12px!important;gap:6px!important;
    min-height:30px!important;
@@ -124,11 +115,10 @@
    gap:8px!important;
  }
  html.albedo-fit .pb-item{
-   min-height:39px!important;margin-bottom:4px!important;padding:5px 8px!important;
+   min-height:43px!important;margin-bottom:4px!important;padding:7px 10px!important;
  }
- html.albedo-fit .pb-item-name{font-size:12px!important}
- html.albedo-fit .pb-item-family,html.albedo-fit .pb-item-role{font-size:10px!important}
- html.albedo-fit .pb-item .pb-cp33-tags{font-size:9px!important}
+ html.albedo-fit .pb-item-name{font-size:14px!important;line-height:1.2!important}
+ html.albedo-fit .pb-item-family,html.albedo-fit .pb-item-role{font-size:12px!important}
  html.albedo-fit .preset-browser-footer{
    flex:0 0 auto!important;min-height:34px!important;
    padding:6px 12px!important;flex-wrap:nowrap!important;gap:8px!important;overflow:hidden!important;
@@ -159,7 +149,6 @@
  body:has(.preset-browser-backdrop:not([hidden])) #albedo-cp35-controls{display:none}
  @media(max-width:760px){
    html.albedo-fit .preset-browser-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-   html.albedo-fit .pb-juce-extra{grid-template-columns:repeat(3,minmax(0,1fr))!important}
    html.albedo-fit .preset-browser-footer{flex-wrap:wrap!important}
  }
  @media(max-height:640px){
