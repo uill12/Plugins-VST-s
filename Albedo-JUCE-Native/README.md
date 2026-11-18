@@ -1,4 +1,28 @@
-# Albedo CP32 — JUCE 8 Native Graphics Migration
+# Albedo Quintessential Synth — JUCE Native (No WebView2)
+
+**Identidade desta variante:** `juce-native-no-webview2`. **Versão de projeto:** `1.0.32`.
+Este ramo contém a GUI JUCE/C++ independente do navegador, e **não** a variante JUCE com HTML/WebView2.
+A nomenclatura explícita identifica uma instalação separada no Bitwig e evita a colisão com os IDs anteriores.
+
+| Metadado | JUCE Native (esta variante) | JUCE WebView2 (anterior) |
+|---|---|---|
+| GUI | JUCE 8 C++ nativo | JUCE + HTML/WebView2 |
+| Dependência WebView2 | **Não** | **Sim** |
+| Nome no DAW | Albedo Quintessential Synth - JUCE Native (No WebView2) | Albedo Quintessential Synth JUCE |
+| VST3 `PLUGIN_CODE` | `AJNW` | `AQ32` |
+| VST3 `BUNDLE_ID` | `org.vitriol.albedo.juce.native.noview2` | `org.vitriol.albedo.juce32` |
+| CLAP `CLAP_ID` | `org.vitriol.albedo.juce.native.noview2` | `org.vitriol.opussonorum.juce32` |
+
+**Arquivos identificáveis:** `Albedo_JUCE_Native_NoWebView2_v1.0.32_Windows_x64.clap` e bundle VST3 esperado `Albedo Quintessential Synth - JUCE Native (No WebView2).vst3`. O artefato de CI será `Albedo_JUCE_Native_NoWebView2_v1.0.32_Windows_x64_CLAP_VST3` **apenas após compilação bem-sucedida**.
+
+A identificação é formalizada em [`Metadata/PLUGIN_IDENTITY.json`](Metadata/PLUGIN_IDENTITY.json) e validada por `tests/check_plugin_identity.py`.
+**Atenção:** alterar os IDs cria uma instância de plugin diferente, deliberadamente. Sessões anteriores do Bitwig não migram automaticamente. O último binário verificado permanece preservado; esta revisão de identificação requer nova compilação Windows e QA no host.
+
+**Fidelidade visual:** a interface nativa em C++ usa o HTML CP22/CP31 como referência, mas não o executa. Paridade de labels, efeitos, tipografia e microinterações continua exigindo comparação visual com o HTML de origem. Não alegar paridade pixel-a-pixel sem testes.
+
+---
+
+## Arquitetura e histórico — CP32 JUCE 8 Native Graphics Migration
 
 This is an isolated native JUCE implementation, not an embedded HTML browser.
 It uses the original CP22/CP31 landscape HTML as a design and behavior reference.
