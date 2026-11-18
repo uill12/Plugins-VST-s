@@ -1555,6 +1555,95 @@ html.albedo-fit #page .lower .motion-controls .param-label{min-height:12px!impor
 html.albedo-fit #page .lower .motion-controls .param-value{min-height:12px!important;font-size:10px!important;margin:0!important;text-align:center!important}
 html.albedo-fit #page .lower .lfo-small{height:13px!important;min-height:13px!important}
 html.albedo-fit #page .lower .automata .cell{transition:background-color .14s ease,opacity .14s ease}
+</style>
+<style id="cp37-r1-source-bounds-adsr">
+/* The earlier height:100% source cards used content-box, which pushed their
+   content beyond Prima Materia. Include padding and border in the 100% height. */
+html.albedo-fit #page .engine-rack .rack-body {
+  min-height:0!important;box-sizing:border-box!important;overflow:hidden!important;
+}
+html.albedo-fit #page .engine-rack .sources {
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  align-items:stretch!important;justify-items:stretch!important;
+  box-sizing:border-box!important;height:100%!important;min-height:0!important;
+  width:100%!important;max-width:100%!important;gap:8px!important;
+}
+html.albedo-fit #page .engine-rack .sources>.source-card {
+  display:grid!important;grid-template-rows:minmax(0,22px) minmax(0,26px)!important;
+  align-content:center!important;align-items:center!important;row-gap:2px!important;
+  box-sizing:border-box!important;height:100%!important;max-height:100%!important;
+  min-height:0!important;min-width:0!important;max-width:100%!important;width:100%!important;
+  padding:4px 7px!important;margin:0!important;overflow:hidden!important;
+}
+html.albedo-fit #page .engine-rack .source-card>.source-top {
+  display:grid!important;grid-template-columns:17px minmax(0,1fr) 22px!important;
+  gap:4px!important;align-items:center!important;justify-items:stretch!important;
+  width:100%!important;min-width:0!important;min-height:0!important;
+  max-height:22px!important;height:22px!important;margin:0!important;
+  box-sizing:border-box!important;
+}
+html.albedo-fit #page .engine-rack .source-card>.source-bottom {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(42px,52px) 28px!important;
+  column-gap:5px!important;align-items:center!important;justify-items:center!important;
+  box-sizing:border-box!important;min-width:0!important;max-width:100%!important;
+  width:100%!important;height:26px!important;min-height:0!important;
+  margin:0!important;padding:0!important;
+}
+html.albedo-fit #page .engine-rack .source-card>.source-bottom>.wave {
+  display:block!important;box-sizing:border-box!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  height:24px!important;max-height:24px!important;min-height:24px!important;
+  margin:0 auto!important;align-self:center!important;justify-self:center!important;
+}
+html.albedo-fit #page .engine-rack .source-card>.source-bottom>.mini-track {
+  box-sizing:border-box!important;display:flex!important;align-items:center!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  height:22px!important;margin:0!important;justify-self:center!important;
+}
+html.albedo-fit #page .engine-rack .source-card>.source-bottom>.mini-track>input {
+  box-sizing:border-box!important;width:100%!important;min-width:0!important;
+  max-width:100%!important;margin:0!important;align-self:center!important;
+}
+html.albedo-fit #page .engine-rack .source-card>.source-bottom>.numeric {
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  text-align:center!important;justify-self:center!important;white-space:nowrap!important;
+  overflow:hidden!important;margin:0!important;
+}
+html.albedo-fit #page .engine-rack .source-card .engine-text {
+  min-width:0!important;max-width:100%!important;overflow:hidden!important;
+}
+html.albedo-fit #page .engine-rack .source-card .engine-text strong {
+  max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;
+}
+/* The ADSR visual is an actual, translucent SVG popup over the editor,
+   not a second bitmap typography layer. It doesn't capture mouse gestures. */
+#cp37AdsrPopup[hidden]{display:none!important}
+#cp37AdsrPopup{
+  position:fixed;z-index:13000;box-sizing:border-box;pointer-events:none;
+  width:344px;max-width:calc(100vw - 16px);height:145px;max-height:calc(100vh - 16px);
+  padding:9px 11px 8px;border:1px solid rgba(216,177,110,.82);border-radius:8px;
+  background:linear-gradient(155deg,rgba(229,242,224,.90),rgba(201,225,216,.79));
+  color:#214c43;box-shadow:0 9px 26px rgba(11,43,34,.32),inset 0 1px 0 #ffffff8a;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  transition:opacity .12s ease;opacity:1;
+}
+#cp37AdsrPopup .cp37-adsr-heading {
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font:700 12px 'Segoe UI',Arial,sans-serif;letter-spacing:.035em;
+}
+#cp37AdsrPopup .cp37-adsr-hint {
+  font:500 10px Georgia,serif;color:#607968;white-space:nowrap;
+}
+#cp37AdsrPopup .cp37-adsr-graph {
+  width:100%;height:85px;display:block;margin-top:3px;overflow:visible;
+}
+#cp37AdsrPopup .cp37-adsr-values {
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:3px;font:600 10px 'Segoe UI',Arial,sans-serif;text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+#cp37AdsrPopup .cp37-adsr-values span[data-active=true] {color:#a36f3a}
 </style></head>
 <body>
 <div class="page" id="page">
