@@ -35,8 +35,8 @@
    root.style.setProperty('--albedo-center-y',Math.floor(h/2)+'px');
    // CP36: the Atlas uses most of the available editor area. Removing the
    // secondary filter row adds room for readable factory-patch list entries.
-   const atlasW=Math.min(1200,Math.floor(w*.94),Math.max(320,w-24));
-   const atlasH=Math.min(795,Math.floor(h*.92),Math.max(330,h-24));
+   const atlasW=Math.min(960,Math.floor(w*.96),Math.max(320,w-22));
+   const atlasH=Math.min(642,Math.floor(h*.96),Math.max(260,h-18));
    root.style.setProperty('--albedo-atlas-width',atlasW+'px');
    root.style.setProperty('--albedo-atlas-height',atlasH+'px');
    root.style.setProperty('--fit-scale',String(scale));
