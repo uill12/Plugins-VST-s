@@ -68,13 +68,13 @@ target_compile_definitions(AlbedoNative PUBLIC JUCE_WEB_BROWSER=1 JUCE_USE_WIN_W
 # amalgamated juce_gui_extra.cpp compilation in a plugin's shared-code target.
 # Include and link the pinned SDK explicitly (in addition to NEEDS_WEBVIEW2).
 if(WIN32)
-  if(NOT EXISTS "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/build/native/include/WebView2.h")
+  if(NOT EXISTS "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/Microsoft.Web.WebView2.1.0.4258.31/build/native/include/WebView2.h")
     message(FATAL_ERROR "CP33: JUCE_WEBVIEW2_PACKAGE_LOCATION must point to the extracted NuGet SDK")
   endif()
   target_include_directories(AlbedoNative PRIVATE
-    "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/build/native/include")
+    "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/Microsoft.Web.WebView2.1.0.4258.31/build/native/include")
   target_link_libraries(AlbedoNative PRIVATE
-    "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/build/native/x64/WebView2LoaderStatic.lib")
+    "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/Microsoft.Web.WebView2.1.0.4258.31/build/native/x64/WebView2LoaderStatic.lib")
 endif()
 
 
