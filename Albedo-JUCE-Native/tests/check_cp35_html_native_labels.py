@@ -22,11 +22,11 @@ def body(source: str, pattern: str) -> str:
 
 
 def js_array(key: str):
-    return ast.literal_eval(body(html, rf"const {key}=(\[[^\n]+?\]);"))
+    return ast.literal_eval(body(html, rf"const {key}=(.*?)(?:;|,(?=[A-Z_]+=))"))
 
 
 def cpp_array(key: str, count: int):
-    raw = body(cpp, rf"{re.escape(key)}\[{count}\]\s*=\s*\{{(.*?)\}};")
+    raw = body(cpp, rf"{re.escape(key)}\[{count}\](?:\[\d+\])?\s*=\s*\{{(.*?)\}};")
     return ast.literal_eval("[" + raw.replace("{", "[").replace("}", "]") + "]")
 
 
