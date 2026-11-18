@@ -45,7 +45,7 @@ required=[
     "root.style.setProperty('--fit-scale'",
     "--albedo-center-x","--albedo-center-y",
     "--albedo-atlas-width","--albedo-atlas-height",
-    "Math.floor(h*.92)",
+    "Math.floor(h*.96)",
     ".preset-browser-panel",
     "min-height:0!important","overflow-y:auto!important",
     "albedo-cp35-resize-grip","setPointerCapture",
