@@ -52,6 +52,7 @@ assert "cp38_rotary_overlays.js" in cmake
 assert "input.dispatchEvent(new Event('input',{bubbles:true}))" in rotary
 assert "role','slider" in rotary and "MutationObserver(records" in rotary
 assert "window.ALBEDO_CP38_KNOBS" in rotary
-assert "cp38-visual" in rotary and "backdrop-filter:blur(12px)" in rotary
+assert "cp38-visual" not in rotary, "CP40 removes contextual popups"
+assert "get visible(){return false}" in rotary, "Only CP37 ADSR may float"
 assert "input[type=range]" in rotary
 print("CP38 source and Atlas PASS: 64 immutable factory voices + 24 native polyphonic studies, 88 total")
