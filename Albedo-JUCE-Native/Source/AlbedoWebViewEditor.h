@@ -37,7 +37,7 @@ private:
     Browser browser;
     std::unique_ptr<AlbedoEditor> nativeFallback;
     std::vector<float> lastValues;
-    bool pageReady=false, fullSyncPending=true;
+    bool pageReady=false, browserHasLoaded=false, fullSyncPending=true;
     int pendingTicks=0;
     int lastProgram=-1;
     uint32_t currentGesture=UINT32_MAX;
