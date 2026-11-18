@@ -177,22 +177,35 @@
  });
  controls.querySelector('#albedo-cp35-reset').addEventListener('click',()=>ask(1320));
  const grip=controls.querySelector('#albedo-cp35-resize-grip');
- let start=null,pending=0;
+ let start=null;
  grip.addEventListener('pointerdown',event=>{
+   if(event.button!==0)return;
    event.preventDefault();
-   start={x:event.clientX,y:event.clientY,w:nativeW||measured().w};
+   const w=nativeW||measured().w;
+   start={x:event.clientX,y:event.clientY,w,requested:w,pointerId:event.pointerId};
    grip.setPointerCapture?.(event.pointerId);
  });
  grip.addEventListener('pointermove',event=>{
-   if(!start)return;
+   if(!start || event.pointerId!==start.pointerId)return;
    const dx=event.clientX-start.x,dy=(event.clientY-start.y)*1.5;
    const delta=Math.abs(dx)>=Math.abs(dy)?dx:dy;
-   if(pending)cancelAnimationFrame(pending);
-   pending=requestAnimationFrame(()=>{pending=0;ask(start.w+delta)});
+   start.requested=clampWidth(start.w+delta);
+   const sizeDisplay=document.getElementById('albedo-cp35-size-value');
+   if(sizeDisplay)sizeDisplay.textContent=start.requested+'×'+(start.requested*2/3);
+   // Do not move the host's HWND while its WebView2 pointer capture is active.
+   // A single request on release survives Bitwig's native window negotiation.
  });
- const finish=()=>{start=null;if(pending){cancelAnimationFrame(pending);pending=0}};
- grip.addEventListener('pointerup',finish);
- grip.addEventListener('pointercancel',finish);
+ grip.addEventListener('pointerup',event=>{
+   if(!start || event.pointerId!==start.pointerId)return;
+   const width=start.requested;
+   start=null;
+   if(grip.hasPointerCapture?.(event.pointerId))grip.releasePointerCapture(event.pointerId);
+   ask(width);
+ });
+ grip.addEventListener('pointercancel',event=>{
+   if(!start || event.pointerId!==start.pointerId)return;
+   start=null;fit();
+ });
  if(window.__JUCE__?.backend?.addEventListener){
    window.__JUCE__.backend.addEventListener('albedoViewport',payload=>{
      const [w,h]=String(payload).split(',').map(Number);
