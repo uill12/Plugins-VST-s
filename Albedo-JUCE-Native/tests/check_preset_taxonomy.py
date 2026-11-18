@@ -4,7 +4,10 @@ from pathlib import Path
 import json, re, subprocess, sys
 
 r=Path(__file__).resolve().parents[1]
-factory=r.parent/'base/include/albedo_factory_patches.hpp'
+# Compare the categories with the genuine factory patch header in CI or local staging.
+candidates=[r.parent/'Albedo-Quintessential-Synth/include/albedo_factory_patches.hpp',r.parent/'base/include/albedo_factory_patches.hpp']
+factory=next((candidate for candidate in candidates if candidate.is_file()),None)
+assert factory is not None,'Original factory patch header missing'
 metadata=r/'Metadata/factory_preset_taxonomy.json'
 header=r/'Source/AlbedoPresetTaxonomy.hpp'
 editor=r/'Source/AlbedoEditor.cpp'
