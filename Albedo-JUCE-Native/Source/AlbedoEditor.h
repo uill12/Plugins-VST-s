@@ -1,6 +1,7 @@
 #pragma once
 #include "AlbedoProcessor.h"
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <array>
 #include <map>
 #include <vector>
 
@@ -26,6 +27,8 @@ private:
     juce::TextButton atlasButton {"PRESET ATLAS"}, allControlsButton {"ALL CONTROLS"};
     juce::TextButton closeAdvanced {"CLOSE"};
     juce::ComboBox sourceSelector;
+    std::array<juce::Label,4> engineMethodLabels;
+    int inspectorMethodIndex=-1;
     std::unique_ptr<Atlas> atlas;
     std::unique_ptr<ArborView> arbor;
     juce::OwnedArray<DynamicGraph> graphs;
