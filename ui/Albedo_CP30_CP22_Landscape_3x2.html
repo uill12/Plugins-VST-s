@@ -2042,7 +2042,7 @@ document.getElementById('graphClose').addEventListener('click',close);overlay.ad
 /* CP31 only scales the complete single-page canvas on actual viewport changes;
    pointer movements and parameter changes never modify frame geometry. */
 (()=>{
- const BASE_W=1320,BASE_H=880,root=document.documentElement;
+ const BASE_W=1500,BASE_H=1000,root=document.documentElement;
  function fit(){
    const w=Math.max(1,document.documentElement.clientWidth),h=Math.max(1,document.documentElement.clientHeight);
    const scale=Math.min(w/BASE_W,h/BASE_H);
