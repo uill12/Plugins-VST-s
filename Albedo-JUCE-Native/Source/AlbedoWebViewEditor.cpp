@@ -112,7 +112,7 @@ AlbedoWebViewEditor::resource(const juce::String& path) const
             "('albedoMessage',{payload:String(payload)})};";
         if(!html.contains(oldHost)) return std::nullopt; // fail closed on mismatched HTML
         html=html.replace(oldHost,juceHost);
-        html=html.replace("</body>","<script src=\"juce_cp33_bridge.js\"></script></body>");
+        html=html.replace("</body>","<script src=\"juce_cp33_bridge.js\"></script><script src=\"cp34_window_fit.js\"></script></body>");
         return htmlResource(html);
     }
 
@@ -120,6 +120,8 @@ AlbedoWebViewEditor::resource(const juce::String& path) const
     const char* mime=nullptr;
     if(path=="/juce_cp33_bridge.js")
     { name="juce_cp33_bridge_js"; mime="text/javascript"; }
+    else if(path=="/cp34_window_fit.js")
+    { name="cp34_window_fit_js"; mime="text/javascript"; }
     else if(path=="/factory_preset_taxonomy.json")
     { name="factory_preset_taxonomy_json"; mime="application/json"; }
     else return std::nullopt;
