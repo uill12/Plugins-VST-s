@@ -27,4 +27,38 @@ assert dsp.index("x*=preFxGainSmooth_;y*=preFxGainSmooth_;")<dsp.index("processE
 assert "const double targetOutputGain=db(get(9000));" in dsp
 assert html.count('id="presetBrowser"')==1
 assert "window.ALBEDO_CP31_MOTION" in html
+
+# CP37 R1 — containment is real box geometry, not only equal graph widths.
+assert 'id="cp37-r1-source-bounds-adsr"' in html
+assert '.sources>.source-card' in html
+assert 'box-sizing:border-box!important;height:100%!important;max-height:100%!important;' in html
+assert 'overflow:hidden!important;' in html
+assert 'grid-template-rows:minmax(0,22px) minmax(0,26px)' in html
+assert '.source-card>.source-bottom>.wave' in html
+assert 'width:100%!important;max-width:100%!important;min-width:0!important' in html
+assert html.count('id="cp37-r1-adsr-live"')==1
+assert "id='cp37AdsrPopup'" in html and "popup.hidden=true" in html
+assert "pointer-events:none" in html and "backdrop-filter:blur(12px)" in html
+assert "const [a,d,s,r]=values();" in html
+assert "area.setAttribute('d',poly+' L8 76 Z')" in html
+assert "path.setAttribute('d',poly)" in html
+assert "grid.innerHTML" not in html.split('<script id="cp37-r1-adsr-live">')[1]
+assert "show(dial.dataset.key)" in html
+assert "window.ALBEDO_CP37_ADSR" in html
+assert "window.__JUCE__?.backend?.addEventListener?.('albedoUpdate'" in html
+# Compile all inline JS blocks individually with node in CI to detect syntax errors.
+if __name__=='__main__':
+    import re, subprocess, tempfile
+    js_blocks=re.findall(r'<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>',html)
+    checked=0
+    with tempfile.TemporaryDirectory() as d:
+        from pathlib import Path as P
+        for i,block in enumerate(js_blocks):
+            if not block.strip():continue
+            dest=P(d)/f'inline_{i}.js'
+            dest.write_text(block,encoding='utf-8')
+            subprocess.run(['node','--check',str(dest)],capture_output=True,check=True)
+            checked+=1
+    print(f'CP37 R1 JS syntax: {checked} inline scripts passed')
+
 print("CP37 PASS: 4 wave/2 filter/3 cellular alignments; 2 native gains; animated Wolfram; original Atlas/Arbor")
