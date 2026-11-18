@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <vitriol_dsp.hpp>
 #include <albedo_factory_patches.hpp>
+#include "AlbedoCreativeBank.hpp"
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -24,7 +25,7 @@ public:
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
     double getTailLengthSeconds() const override { return 18.0; }
-    int getNumPrograms() override { return 64; }
+    int getNumPrograms() override { return 64 + (int) albedo_creative::patches.size(); }
     int getCurrentProgram() override { return currentProgram.load(); }
     void setCurrentProgram (int index) override;
     const juce::String getProgramName (int index) override;
