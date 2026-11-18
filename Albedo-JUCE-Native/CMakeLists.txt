@@ -42,6 +42,7 @@ juce_generate_juce_header(AlbedoNative)
 juce_add_binary_data(AlbedoArtwork SOURCES
   Assets/albedo_logo.svg
   Assets/juce_cp33_bridge.js
+  Assets/cp34_window_fit.js
   Metadata/factory_preset_taxonomy.json
   "${CMAKE_CURRENT_SOURCE_DIR}/../ui/Albedo_CP30_CP22_Landscape_3x2.html"
 )
