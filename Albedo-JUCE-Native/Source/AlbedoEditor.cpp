@@ -15,6 +15,73 @@ const auto teal    = juce::Colour::fromRGB (31, 89, 84);
 const auto air     = juce::Colour::fromRGB (95, 145, 165);
 const auto terra   = juce::Colour::fromRGB (110, 149, 107);
 const auto colours = std::array<juce::Colour,4> {accent, gold, air, terra};
+// CP35 native UI parity: canonical names transcribed from the verified CP31 HTML.
+// These are display strings only; VST3/CLAP parameter IDs and DSP values do not change.
+constexpr const char* kEngineMatter[4] = {"IGNIS", "AER", "AQUA", "TERRA"};
+constexpr const char* kSynthesisMethods[10] = {
+    "Analog / Subtractive", "Wavetable / Vector", "Harmonic / Additive",
+    "Granular / Cloud", "Spectral / Resynthesis", "Physical / Modal",
+    "Noise / Stochastic", "Sample / Time Warp", "Phase Distortion",
+    "Generative / Cellular"
+};
+constexpr const char* kMethodKnobs[10][4] = {
+    {"Shape", "Detune", "Pulse", "Sub"},
+    {"Position", "Warp", "Fold", "Spread"},
+    {"Harmonics", "Spectrum", "Odd/Even", "Air"},
+    {"Grain", "Density", "Spray", "Scatter"},
+    {"Freeze", "Smear", "Tilt", "Blur"},
+    {"Excite", "Decay", "Material", "Body"},
+    {"Color", "Chaos", "Band", "Transient"},
+    {"Start", "Stretch", "Formant", "Scatter"},
+    {"Bend", "Warp", "Fold", "Symmetry"},
+    {"Rule", "Density", "Drift", "Texture"}
+};
+constexpr const char* kMacroNames[7] = {
+    "Brilliance", "Exchange", "Contour", "Impact", "Width", "Growth", "Memory"
+};
+constexpr const char* kPairNames[6] = {
+    "A ↔ B", "A ↔ C", "A ↔ D", "B ↔ C", "B ↔ D", "C ↔ D"
+};
+int sourceMethod(const AlbedoProcessor& processor, int source)
+{
+    const auto base = 1000u + 32u * (uint32_t)juce::jlimit(0, 3, source);
+    return juce::jlimit(0, 9, (int)std::lround(processor.paramValue(base)));
+}
+juce::String originalHtmlLabel(uint32_t id, const juce::String& fallback,
+                               const AlbedoProcessor& processor)
+{
+    if (id >= 1000 && id < 1128)
+    {
+        const int src = int((id - 1000) / 32), slot = int((id - 1000) % 32);
+        if (src < 4 && slot >= 6 && slot <= 9)
+            return juce::String::fromUTF8(kMethodKnobs[sourceMethod(processor, src)][slot - 6]).toUpperCase();
+        if (slot == 2) return "LEVEL";
+        if (slot == 3) return "TUNE";
+        if (slot == 4) return "PAN";
+    }
+    if (id >= 2000 && id <= 2006)
+        return juce::String(kMacroNames[id - 2000]).toUpperCase();
+    if (id >= 2200 && id <= 2205)
+        return juce::String::fromUTF8(kPairNames[id - 2200]);
+    switch(id)
+    {
+        case 3000: case 3003: return "CUTOFF";
+        case 3001: case 3004: return "RESO";
+        case 3002: case 3005: return "DRIVE";
+        case 3100: return "ATTACK";
+        case 3101: return "DECAY";
+        case 3102: return "SUSTAIN";
+        case 3103: return "RELEASE";
+        case 4000: return "RATE";
+        case 4001: return "DEPTH";
+        case 4002: return "SLEW";
+        case 4003: return "RULE";
+        default: break;
+    }
+    if (id >= 5000 && id <= 5006 && (id % 2) == 0) return "MIX";
+    if (id >= 8002 && id <= 8023 && (id - 8002) % 3 == 0) return "ROUTE DEPTH";
+    return fallback;
+}
 void label (juce::Graphics& g, juce::String s, juce::Rectangle<float> b, float pt, bool serif=false, bool bold=false,
             juce::Justification j=juce::Justification::centredLeft, juce::Colour c=text)
 {
@@ -111,7 +178,8 @@ struct AlbedoEditor::ParamControl final : juce::Component
             auto range=p->range;
             slider.setRange(range.start,range.end,range.interval);
             slider.setValue(p->get(),juce::dontSendNotification);
-            name=p->getName(100);
+            name=originalHtmlLabel(id, p->getName(100), processor);
+            slider.setTooltip(name + " · " + p->getName(100));
             last=p->get();
         }
     }
@@ -120,6 +188,13 @@ struct AlbedoEditor::ParamControl final : juce::Component
         if(auto* p=processor.parameter(id))
         {
             const float v=p->get();
+            const auto displayName=originalHtmlLabel(id, p->getName(100), processor);
+            if (displayName != name)
+            {
+                name=displayName;
+                slider.setTooltip(name + " · " + p->getName(100));
+                repaint();
+            }
             if(v!=last){last=v;slider.setValue(v,juce::dontSendNotification);repaint();}
         }
     }
@@ -134,7 +209,13 @@ struct AlbedoEditor::ParamControl final : juce::Component
         if(dial)
         {
             label(g,name,{0.f,(float)getHeight()-33,(float)getWidth(),17},12.f,false,true,juce::Justification::centred);
-            label(g,juce::String(slider.getValue(),slider.getInterval()>=1?0:2),
+            auto valueText=juce::String(slider.getValue(),slider.getInterval()>=1?0:2);
+            if (const auto* parameter=processor.parameter(id))
+            {
+                const auto unit=parameter->getLabel();
+                if (unit.isNotEmpty()) valueText += " " + unit;
+            }
+            label(g,valueText,
                     {0.f,(float)getHeight()-18,(float)getWidth(),16},12.f,true,false,juce::Justification::centred,muted);
         }
         else label(g,name,{0,0,83.f,(float)getHeight()},11.f,false,true);
@@ -636,13 +717,13 @@ AlbedoEditor::ParamControl* AlbedoEditor::makeControl(uint32_t id,bool dial,bool
 void AlbedoEditor::setupModules()
 {
     const std::pair<juce::String,juce::String> names[] = {
-      {"Prima Materia","FOUR PRIMARY SOUND SOURCES"},
-      {"Source Inspector","CHARACTER / REFINEMENT / SOURCE FILTER"},
-      {"Arbor Resonantia","RECIPROCAL PATHS"},
-      {"Corpus & Character","SPECTRAL SHAPING / ENVELOPE"},
-      {"Correspondentiae","SYMBOLIC MODULATION"},
-      {"Motus & Cellular","ORGANIC MODULATION"},
-      {"Spatium & Transform","POST-SYNTHESIS PROCESSING"},
+      {"Prima Materia","01 / FOUR-ENGINE OSCILLATOR RACK"},
+      {"Source Inspector","02 / SELECTED SOURCE · DETAIL EDITOR"},
+      {"Arbor Resonantia","RECIPROCAL COUPLING · QUINTESSENTIA"},
+      {"Corpus & Character","HARMONIC MATERIAL · ARTICULATION & FORM"},
+      {"Correspondentiae","SYMBOLIC MODULATION · ROUTES"},
+      {"Motus & Cellular","MOTION · CELLULAR RULES"},
+      {"Spatium & Transform","SPATIAL PROCESSING · EFFECTS"},
       {"Pulsus","16-STEP AMPLITUDE RHYTHM"}
     };
     for(int i=0;i<8;i++) {auto*m=modules.add(new Module(i,names[i].first,names[i].second));addAndMakeVisible(m);}
@@ -650,6 +731,16 @@ void AlbedoEditor::setupModules()
     {
         auto* b=engineButtons.add(new juce::TextButton(juce::String::charToString("ABCD"[i])));
         addAndMakeVisible(b);
+        auto& sourceLabel=engineMethodLabels[(size_t)i];
+        sourceLabel.setText(juce::String::fromUTF8(kEngineMatter[i]) + " · " +
+                            juce::String(kSynthesisMethods[sourceMethod(processor, i)]),
+                            juce::dontSendNotification);
+        sourceLabel.setFont(juce::Font(juce::FontOptions("Segoe UI", 11.f, juce::Font::bold)));
+        sourceLabel.setColour(juce::Label::textColourId, colours[(size_t)i]);
+        sourceLabel.setJustificationType(juce::Justification::centredLeft);
+        sourceLabel.setInterceptsMouseClicks(false, false);
+        addAndMakeVisible(sourceLabel);
+        b->setTooltip(juce::String::fromUTF8(kEngineMatter[i]) + " · Toggle source");
         b->onClick=[this,i]
         {
             const auto id=1001u+(uint32_t)i*32;
@@ -712,6 +803,7 @@ AlbedoEditor::AlbedoEditor(AlbedoProcessor& p):juce::AudioProcessorEditor(&p),pr
     {
         activeSource=sourceSelector.getSelectedId()-1;
         if(activeSource<0||activeSource>3)return;
+        inspectorMethodIndex=-1;
         const auto base=1000u+(uint32_t)activeSource*32;
         for(int j=0;j<4;j++)inspectorControls[(size_t)j]->bind(base+6u+(uint32_t)j);
         for(int j=0;j<3;j++)inspectorControls[(size_t)j+4]->bind(base+2u+(uint32_t)j);
@@ -752,6 +844,20 @@ void AlbedoEditor::timerCallback()
     {
         for(auto*c:controls)c->sync();
         for(auto*c:advancedControls)c->sync();
+        for(int i=0;i<4;i++)
+        {
+            const auto newLabel=juce::String::fromUTF8(kEngineMatter[i]) + " · " +
+                                juce::String(kSynthesisMethods[sourceMethod(processor, i)]);
+            if(engineMethodLabels[(size_t)i].getText()!=newLabel)
+                engineMethodLabels[(size_t)i].setText(newLabel, juce::dontSendNotification);
+        }
+        const auto currentMethod=sourceMethod(processor, activeSource);
+        if (currentMethod != inspectorMethodIndex)
+        {
+            inspectorMethodIndex=currentMethod;
+            const auto base=1000u+(uint32_t)activeSource*32;
+            for(int j=0;j<4;j++)inspectorControls[(size_t)j]->bind(base+6u+(uint32_t)j);
+        }
         if(atlas && atlas->isVisible())atlas->syncHostSelection();
     }
     for(auto* graph:graphs)graph->advance(1.f/24.f);
@@ -766,8 +872,8 @@ void AlbedoEditor::paint(juce::Graphics&g)
     g.setColour(teal.withAlpha(.25f));g.fillRect(0,72,getWidth(),1);
     if(logo)logo->drawWithin(g,juce::Rectangle<float>(16,12,48,48),juce::RectanglePlacement::centred,1.f);
     label(g,"ALBEDO",{76,13,240,29},29.f,true,true);
-    label(g,"QUINTESSENTIAL SYNTH  ·  NATIVE TONAL ARCHITECTURE",{77,46,450,17},10,false,true,juce::Justification::centredLeft,muted);
-    label(g,"JUCE 8 · DIRECT2D · 3:2",{bounds.getWidth()*.68f,33,bounds.getWidth()*.21f,20},12,false,true,juce::Justification::centredRight,muted);
+    label(g,"VISITA INTERIORA TERRAE · STRUCTURE BECOMES SOUND",{77,46,450,17},10,false,true,juce::Justification::centredLeft,muted);
+    label(g,"JUCE NATIVE · NO WEBVIEW2 · 3:2",{bounds.getWidth()*.67f,33,bounds.getWidth()*.22f,20},10.5f,false,true,juce::Justification::centredRight,muted);
     label(g,"HI-FI  ·  64 FACTORY PATCHES  ·  12-NOTE KEYBOARD POLYPHONY",{16,bounds.getBottom()-22,bounds.getWidth()-32,16},10,false,true,juce::Justification::centredLeft,muted);
     if(showAdvanced)
     {
@@ -809,6 +915,7 @@ void AlbedoEditor::resized()
         auto part=rack.withX(rack.getX()+cellW*i).withWidth(cellW).reduced(3);
         const auto buttonW=juce::jmax(40,int(cellW*.20f));
         engineButtons[i]->setBounds(part.removeFromLeft(buttonW).withHeight(42));
+        engineMethodLabels[(size_t)i].setBounds(part.removeFromTop(18).reduced(4,0));
         auto visual=part.reduced(5,1);
         const int graphHeight=juce::jlimit(24,32,visual.getHeight()/2);
         enginePlots[i]->setBounds(visual.withHeight(graphHeight));
