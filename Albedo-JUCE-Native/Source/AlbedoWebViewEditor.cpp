@@ -201,19 +201,31 @@ void AlbedoWebViewEditor::handleAction(const juce::String& action)
 {
     if(action=="mutate")
     {
-        // Real DAW parameter changes, not a visual-only morphology.
+        // Match the original CP22 action: four source morphologies,
+        // sixteen source-shape controls, seven macros, and XY form/material.
+        // All changes are JUCE host parameters, never visual-only patches.
         juce::Random rng;
-        for(uint32_t id=2000;id<=2006;++id)
+        const auto write=[this](uint32_t id,float value)
+        {
             if(auto* p=processor.parameter(id))
             {
-                const auto lo=p->range.start,hi=p->range.end;
-                const float proposed=juce::jlimit(lo,hi,p->get()+(rng.nextFloat()-.5f)*(hi-lo)*.4f);
+                const auto scaled=juce::jlimit(p->range.start,p->range.end,value);
                 p->beginChangeGesture();
-                p->setValueNotifyingHost(p->convertTo0to1(proposed));
+                p->setValueNotifyingHost(p->convertTo0to1(scaled));
                 p->endChangeGesture();
             }
-        fullSyncPending=true;
-        postActionStatus("New audio morphology: seven macro parameters mutated");
+        };
+        for(uint32_t engine=0;engine<4;++engine)
+        {
+            const auto base=1000u+32u*engine;
+            write(base,static_cast<float>(rng.nextInt(10)));
+            for(uint32_t k=6;k<=9;++k)write(base+k,rng.nextFloat()*100.0f);
+        }
+        for(uint32_t id=2000;id<=2006;++id)write(id,rng.nextFloat()*100.0f);
+        write(2100,10.0f+rng.nextFloat()*80.0f);
+        write(2101,10.0f+rng.nextFloat()*80.0f);
+        fullSyncPending=true; // one coherent host->WebView2 visual update
+        postActionStatus("Audio morphology mutated: 4 sources, 7 macros, XY");
         return;
     }
     if(patchDialogOpen || (action!="import" && action!="export"))return;
