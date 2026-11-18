@@ -17,13 +17,15 @@ assert "maxHeight=g.maxWidth*2/3" in fit
 assert "initialHeight=g.initialWidth*2/3" in fit
 assert "getDisplays()" in fit
 assert '#include "AlbedoWindowFit.h"' in web
-assert '#include "AlbedoWindowFit.h"' in native
 assert "aspect.setSizeLimits(fit.minWidth,fit.minHeight,fit.maxWidth,fit.maxHeight)" in web
-assert "constrainer.setSizeLimits(fit.minWidth,fit.minHeight,fit.maxWidth,fit.maxHeight)" in native
 assert "setSize(fit.initialWidth,fit.initialHeight)" in web
-assert "setSize(fit.initialWidth,fit.initialHeight)" in native
-for s in (web,native):
-    assert "setSize(1440,960)" not in s and "setSize(1290,860)" not in s
+assert "setSize(1440,960)" not in web
+# Preserve the original native fallback layout (its envelope needs >=1260x840)
+# and uniformly shrink it when the WebView host window is smaller.
+assert "setSize(1290,860)" in native
+assert "constrainer.setSizeLimits(1260,840,1920,1280)" in native
+assert "nativeFallback->setTransform(juce::AffineTransform::scale(fit).translated(ox,oy))" in web
+assert "nativeFallback->setBounds(0,0,(int)logicalW,(int)logicalH)" in web
 for token in ["cp34_window_fit.js","cp34_window_fit_js"]:
     assert token in web or token in cmake,token
 assert "const BASE_W=1320,BASE_H=880" in html
