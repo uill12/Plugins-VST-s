@@ -1,0 +1,151 @@
+name: Rubedo CP12R3 CLAP Preset Sync Gate
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rubedo-cp12r3-presets-ci.yml'
+      - 'Rubedo-Atlas-Drumkit/checkpoints/CP12R3_CLAP_PresetSync/**'
+permissions:
+  contents: read
+jobs:
+  clap-params-linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assemble CP12R3 sources, retaining CP12 engine and GUI assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build-rubedo-cp12r3/source build-rubedo-cp12r3/qa
+          r='Rubedo-Atlas-Drumkit'
+          cp "$r/checkpoints/CP12R3_CLAP_PresetSync/source/"{rubedo_clap.c,rubedo_gui.c,clap_abi_min.h} build-rubedo-cp12r3/source/
+          cp "$r/checkpoints/CP12R1_Pad_Maps/source/"{rubedo_engine.c,rubedo_engine.h,rubedo_gui.h} build-rubedo-cp12r3/source/
+          cp "$r/checkpoints/CP11_SkinSync/rubedo_blank_card.inc" build-rubedo-cp12r3/source/
+          cp "$r/source/"{clap_gui_abi.h,win_imports.h,rubedo_names.inc} build-rubedo-cp12r3/source/
+          cp "$r/checkpoints/CP12R3_CLAP_PresetSync/qa/test_kit_presets.c" build-rubedo-cp12r3/qa/
+          python -m pip install --disable-pip-version-check numpy
+          python "$r/generate_sinc_coeffs.py"
+          cp "$r/source/rubedo_sinc_coeffs.inc" build-rubedo-cp12r3/source/
+      - name: Run CLAP host parameter and v3 state regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd build-rubedo-cp12r3/qa
+          clang -std=c11 -O2 -I../source test_kit_presets.c ../source/rubedo_engine.c ../source/rubedo_gui.c -lm -o test_kit_presets
+          ./test_kit_presets
+  windows-clap-loadlibrary:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assemble CP12R3 source-only Windows core
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $r = 'Rubedo-Atlas-Drumkit'
+          New-Item -ItemType Directory -Path build-rubedo-cp12r3 -Force | Out-Null
+          $source = @{
+           "$r/checkpoints/CP12R3_CLAP_PresetSync/source/rubedo_clap.c" = 'rubedo_clap.c'
+           "$r/checkpoints/CP12R3_CLAP_PresetSync/source/rubedo_gui.c" = 'rubedo_gui.c'
+           "$r/checkpoints/CP12R3_CLAP_PresetSync/source/clap_abi_min.h" = 'clap_abi_min.h'
+           "$r/checkpoints/CP12R1_Pad_Maps/source/rubedo_engine.c" = 'rubedo_engine.c'
+           "$r/checkpoints/CP12R1_Pad_Maps/source/rubedo_engine.h" = 'rubedo_engine.h'
+           "$r/checkpoints/CP12R1_Pad_Maps/source/rubedo_gui.h" = 'rubedo_gui.h'
+           "$r/checkpoints/CP11_SkinSync/rubedo_blank_card.inc" = 'rubedo_blank_card.inc'
+           "$r/source/clap_gui_abi.h" = 'clap_gui_abi.h'
+           "$r/source/win_imports.h" = 'win_imports.h'
+           "$r/source/rubedo_names.inc" = 'rubedo_names.inc'
+          }
+          foreach($x in $source.GetEnumerator()) {
+           if(!(Test-Path -LiteralPath $x.Key)) {throw "Missing source: $($x.Key)"}
+           Copy-Item $x.Key "build-rubedo-cp12r3/$($x.Value)"
+          }
+          python -m pip install --disable-pip-version-check numpy
+          python "$r/generate_sinc_coeffs.py"
+          Copy-Item "$r/source/rubedo_sinc_coeffs.inc" build-rubedo-cp12r3/rubedo_sinc_coeffs.inc
+      - name: Explicit Win32 import libraries; no erroneous kernel32 MessageBoxA
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $dlls = @{
+           'kernel32' = @('CloseHandle','CreateFileA','DeleteFileA','FlushFileBuffers','GetFileAttributesA','GetModuleFileNameA','GetTickCount','MoveFileExA','ReadFile','SetFilePointer','VirtualAlloc','VirtualFree','WriteFile')
+           'user32' = @('AppendMenuA','BeginPaint','ClientToScreen','CreatePopupMenu','CreateWindowExA','DefWindowProcA','DestroyMenu','DestroyWindow','EndPaint','GetClientRect','GetWindowLongPtrA','InvalidateRect','KillTimer','MessageBoxA','RegisterClassExA','ReleaseCapture','ScreenToClient','SetCapture','SetFocus','SetTimer','SetWindowLongPtrA','SetWindowPos','ShowWindow','TrackPopupMenu')
+           'gdi32' = @('CreateFontA','CreatePen','CreateSolidBrush','DeleteObject','Ellipse','GetStockObject','Rectangle','SelectObject','SetBkMode','SetTextColor','StretchDIBits','TextOutA')
+           'comdlg32' = @('CommDlgExtendedError','GetOpenFileNameA','GetSaveFileNameA')
+          }
+          Push-Location build-rubedo-cp12r3
+          try {
+           foreach($dll in $dlls.Keys){
+            $lines = @("LIBRARY $($dll.ToUpper()).dll",'EXPORTS') + ($dlls[$dll] | ForEach-Object {"  $_"})
+            Set-Content -LiteralPath "$dll.def" -Value $lines -Encoding Ascii
+            & lld-link /lib "/def:$dll.def" /machine:x64 "/out:$dll.lib"
+            if($LASTEXITCODE -ne 0){throw "Failed import library $dll"}
+           }
+          } finally {Pop-Location}
+      - name: Compile, check imports, and require Windows loader success
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          @(
+           '#include <stddef.h>'
+           'int _fltused=0;'
+           'void *memset(void *p,int v,size_t n){volatile unsigned char*d=p;for(size_t i=0;i<n;i++)d[i]=(unsigned char)v;return p;}'
+          ) | Set-Content build-rubedo-cp12r3/fltused.c -Encoding Ascii
+          Push-Location build-rubedo-cp12r3
+          try {
+           foreach($name in @('rubedo_clap','rubedo_engine','rubedo_gui','fltused')){
+            & clang -target x86_64-pc-windows-msvc -D_WIN32 -std=c11 -O2 -fno-stack-protector -ffreestanding -c "$name.c" -o "$name.obj"
+            if($LASTEXITCODE -ne 0){throw "Compile failed: $name"}
+           }
+           & lld-link /dll /machine:x64 /entry:DllMain /subsystem:windows /out:Rubedo_CP12R3_CORE_ONLY.clap rubedo_clap.obj rubedo_engine.obj rubedo_gui.obj fltused.obj kernel32.lib user32.lib gdi32.lib comdlg32.lib /opt:ref /opt:icf
+           if($LASTEXITCODE -ne 0){throw 'Win64 core link failed'}
+           & dumpbin /imports Rubedo_CP12R3_CORE_ONLY.clap | Out-File -Encoding utf8 imports.txt
+           & dumpbin /exports Rubedo_CP12R3_CORE_ONLY.clap | Out-File -Encoding utf8 exports.txt
+           $dump = Get-Content imports.txt -Raw
+           if(!(Select-String -Path exports.txt -Pattern '\bclap_entry\b' -Quiet)){throw 'Missing clap_entry'}
+           $kernel = ($dump -split '(?im)^\s*KERNEL32\.dll\s*$')[1] -split '(?im)^\s*USER32\.dll\s*$'
+           if($kernel[0] -match '\bMessageBoxA\b'){throw 'ERROR 127 regression: MessageBoxA imported from KERNEL32'}
+           $user = ($dump -split '(?im)^\s*USER32\.dll\s*$')[1] -split '(?im)^\s*GDI32\.dll\s*$'
+           if($user[0] -notmatch '\bMessageBoxA\b'){throw 'MessageBoxA not imported from USER32'}
+           if($user[0] -notmatch '\bTrackPopupMenu\b'){throw 'Preset popup not in USER32 imports'}
+          } finally {Pop-Location}
+          Add-Type -TypeDefinition @'
+          using System;
+          using System.Runtime.InteropServices;
+          public static class RubedoLoaderCp12r3 {
+            [DllImport("kernel32.dll", EntryPoint="LoadLibraryW", SetLastError=true, CharSet=CharSet.Unicode)]
+            public static extern IntPtr LoadLibrary(string s);
+            [DllImport("kernel32.dll", EntryPoint="GetProcAddress", SetLastError=true, CharSet=CharSet.Ansi)]
+            public static extern IntPtr GetProcAddress(IntPtr m, string name);
+            [DllImport("kernel32.dll", EntryPoint="FreeLibrary", SetLastError=true)]
+            public static extern bool FreeLibrary(IntPtr m);
+          }
+          '@
+          $file=(Resolve-Path 'build-rubedo-cp12r3/Rubedo_CP12R3_CORE_ONLY.clap').Path
+          $h=[RubedoLoaderCp12r3]::LoadLibrary($file)
+          if($h -eq [IntPtr]::Zero){throw "LoadLibrary Win32 error $([Runtime.InteropServices.Marshal]::GetLastWin32Error())"}
+          try {
+           $entry=[RubedoLoaderCp12r3]::GetProcAddress($h,'clap_entry')
+           if($entry -eq [IntPtr]::Zero){throw 'Missing exported clap_entry in loaded module'}
+           'PASS: Windows x64 LoadLibrary + GetProcAddress(clap_entry)' | Out-File -Encoding utf8 build-rubedo-cp12r3/loadlibrary-smoke.txt
+          } finally { [RubedoLoaderCp12r3]::FreeLibrary($h) | Out-Null }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rubedo_CP12R3_CLAP_SourceOnly_WindowsSmoke_NotInstallable
+          path: |
+            build-rubedo-cp12r3/Rubedo_CP12R3_CORE_ONLY.clap
+            build-rubedo-cp12r3/loadlibrary-smoke.txt
+            build-rubedo-cp12r3/imports.txt
+            build-rubedo-cp12r3/exports.txt
+          if-no-files-found: error
