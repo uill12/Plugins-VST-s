@@ -100,3 +100,29 @@ ranges and translucent contextual signal graphs. It retains the original
 HTML `input` elements and their host parameter callbacks, while menus,
 toggles, the XY plane and step buttons keep their natural interactions.
 The CP37 translucent ADSR editor stays separate and intact.
+
+
+## CP38 R1 verified release candidate
+
+- GitHub Actions run **44281871832**: successful Windows x64 JUCE CLAP/VST3 build,
+  3/3 CTest passes including `cp38_recursive_forms_24_presets_polyphony`,
+  native binary export checks and artifact publication.
+- Visual/browser test: 1320×880, 1152×768 and 1024×683, zero JS errors;
+  64 original factory rows + 24 new Recursive Forms rows;
+  both 12-preset families correctly filtered and native message
+  `preset|64` emitted. All 16 continuous HTML range inputs
+  were replaced by accessible rotary surfaces; existing synth knobs remain.
+- Translucent CP38 overlay rendered on knob adjustment and retained the
+  independent CP37 translucent ADSR overlay.
+- Package `Albedo_CP38_R1_Recursive_Forms_Windows_x64_CLAP_VST3.zip`:
+  ZIP CRC passed, PE32+ x86-64 CLAP/VST3, 24 original preset
+  names and rotary asset found embedded; JUCE version 1.0.38.
+  VST3 `moduleinfo.json` normalized to strict JSON; CLAP zip entry
+  renamed to CP38. Neither compiled PE binary changed versus CI.
+- Verified Drive link:
+  https://drive.google.com/file/d/1dJ3P_H-3-mm9iuTs65wbFy52yutYv2H7/view
+- Final ZIP SHA256:
+  `1298f0be113c30472b5eb6dda47db8a41c59b9521ce778803be1b60f307101e4`.
+- User-approved **CP37 R1 remains the last Bitwig-confirmed stable rollback**.
+  CP38 R1 is **CI-compiled and browser-tested**; real Bitwig
+  audition, tonal evaluation and host resize remain unverified.
