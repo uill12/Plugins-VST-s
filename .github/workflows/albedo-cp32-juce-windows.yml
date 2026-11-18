@@ -1,4 +1,4 @@
-name: Albedo JUCE Native No WebView2 Windows x64 CLAP VST3
+name: Albedo CP35 JUCE Native No WebView2 Windows x64 CLAP VST3
 on:
   push:
     branches: [albedo-cp32-juce-native, albedo-juce-native-no-webview2]
@@ -680,7 +680,7 @@ jobs:
           python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB1'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in VST3'; print('VST3 PCM24 32-material bank present')" $vst.FullName
           if ($LASTEXITCODE -ne 0) { throw 'VST3 sound bank resource missing' }
           New-Item -ItemType Directory -Path 'dist-cp32' -Force | Out-Null
-          Copy-Item $clap.FullName 'dist-cp32/Albedo_JUCE_Native_NoWebView2_v1.0.32_Windows_x64.clap'
+          Copy-Item $clap.FullName 'dist-cp32/Albedo_JUCE_Native_NoWebView2_v1.0.35_Windows_x64.clap'
           $bundle=Get-ChildItem -Path build-cp32-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp32/' -Recurse -Force
@@ -695,7 +695,7 @@ jobs:
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_JUCE_Native_NoWebView2_v1.0.32_Windows_x64_CLAP_VST3
+          name: Albedo_JUCE_Native_NoWebView2_v1.0.35_Windows_x64_CLAP_VST3
           path: dist-cp32/*
           if-no-files-found: error
       - name: Preserve JUCE compiler logs on failure
