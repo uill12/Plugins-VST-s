@@ -1,7 +1,7 @@
-name: Albedo CP37 HiFi JUCE Graph Alignment Animated ADSR CLAP VST3
+name: Albedo CP38 Recursive Forms JUCE 88 Presets CLAP VST3
 on:
   push:
-    branches: [albedo-cp37-gui-grid-master-cellular]
+    branches: [albedo-cp38-knobs-contextual-overlays]
     paths:
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
       - 'Albedo-JUCE-Native/**'
@@ -634,6 +634,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP36 high-resolution audio patch failed' }
           python patches/cp37_gain_stage.py --root Albedo-Quintessential-Synth
           if ($LASTEXITCODE -ne 0) { throw 'CP37 native gain stage patch failed' }
+          python Albedo-JUCE-Native/tools/generate_recursive_forms.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP38 24 creative preset header generation failed' }
       - name: Verify 64-preset taxonomy and source
         shell: pwsh
         run: |
@@ -647,6 +649,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP33 WebView2 integration contract failed' }
           node --check Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
           if ($LASTEXITCODE -ne 0) { throw 'CP33 WebView2 frontend script syntax failed' }
+          python Albedo-JUCE-Native/tests/check_cp38_recursive_bank.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP38 new 24-program library / original 64 stability regression' }
           python Albedo-JUCE-Native/tests/check_cp37_alignment.py
           if ($LASTEXITCODE -ne 0) { throw 'CP37 source graphs, filter controls, gain, or animated ADSR failed' }
           python Albedo-JUCE-Native/tests/check_cp36_quality.py
@@ -679,20 +683,20 @@ jobs:
         shell: pwsh
         run: |
           $albedoSourceDir=("$PWD/Albedo-Quintessential-Synth").Replace([char]92, [char]47)
-          cmake -S Albedo-JUCE-Native -B build-cp37-juce -G "Visual Studio 17 2022" -A x64 -DALBEDO_BUILD_CLAP=ON -DBUILD_TESTING=ON -DALBEDO_DSP_ROOT="$albedoSourceDir" -DJUCE_WEBVIEW2_PACKAGE_LOCATION="$PWD/cp33-webview2-sdk"
+          cmake -S Albedo-JUCE-Native -B build-cp38-juce -G "Visual Studio 17 2022" -A x64 -DALBEDO_BUILD_CLAP=ON -DBUILD_TESTING=ON -DALBEDO_DSP_ROOT="$albedoSourceDir" -DJUCE_WEBVIEW2_PACKAGE_LOCATION="$PWD/cp33-webview2-sdk"
           if ($LASTEXITCODE -ne 0) { throw 'JUCE Windows CMake configuration failed' }
       - name: Build JUCE VST3 and CLAP plugins
         shell: pwsh
         run: |
-          cmake --build build-cp37-juce --config Release --target AlbedoNative_VST3 AlbedoNative_CLAP AlbedoPresetTaxonomyTest AlbedoCP36HifiDspTest --parallel 4
+          cmake --build build-cp38-juce --config Release --target AlbedoNative_VST3 AlbedoNative_CLAP AlbedoPresetTaxonomyTest AlbedoCP36HifiDspTest AlbedoCP38CreativeAudioTest --parallel 4
           if ($LASTEXITCODE -ne 0) { throw 'Native VST3/CLAP compile failed' }
       - name: Test native plugin and verify binary exports
         shell: pwsh
         run: |
-          ctest --test-dir build-cp37-juce -C Release --output-on-failure
+          ctest --test-dir build-cp38-juce -C Release --output-on-failure
           if ($LASTEXITCODE -ne 0) { throw 'Native JUCE CTest failed' }
-          $clap=Get-ChildItem -Path build-cp37-juce -Recurse -File -Filter '*.clap' | Select-Object -First 1
-          $vst=Get-ChildItem -Path build-cp37-juce -Recurse -File -Filter '*.vst3' | Select-Object -First 1
+          $clap=Get-ChildItem -Path build-cp38-juce -Recurse -File -Filter '*.clap' | Select-Object -First 1
+          $vst=Get-ChildItem -Path build-cp38-juce -Recurse -File -Filter '*.vst3' | Select-Object -First 1
           if (!$clap -or !$vst) { throw 'Compiled native binaries missing' }
           python Albedo-Quintessential-Synth/tools/verify_pe_exports.py $clap.FullName --require clap_entry
           if ($LASTEXITCODE -ne 0) { throw 'CLAP export missing' }
@@ -702,24 +706,24 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CLAP sound bank resource missing' }
           python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB1'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in VST3'; print('VST3 PCM24 32-material bank present')" $vst.FullName
           if ($LASTEXITCODE -ne 0) { throw 'VST3 sound bank resource missing' }
-          New-Item -ItemType Directory -Path 'dist-cp37' -Force | Out-Null
-          Copy-Item $clap.FullName 'dist-cp37/Albedo_CP37_JUCE_WebView2.clap'
-          $bundle=Get-ChildItem -Path build-cp37-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
+          New-Item -ItemType Directory -Path 'dist-cp38' -Force | Out-Null
+          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP37_JUCE_WebView2.clap'
+          $bundle=Get-ChildItem -Path build-cp38-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
-          Copy-Item -Path $bundle.FullName -Destination 'dist-cp37/' -Recurse -Force
-          Get-ChildItem 'dist-cp37' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
+          Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
+          Get-ChildItem 'dist-cp38' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP37_JUCE_WebView2_ADSR_Gain_Windows_x64_CLAP_VST3
-          path: dist-cp37/*
+          name: Albedo_CP38_Recursive_Forms_88_Windows_x64_CLAP_VST3
+          path: dist-cp38/*
           if-no-files-found: error
       - name: Preserve JUCE compiler logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP37_JUCE_WebView2_ADSR_Gain_Compiler_Log
+          name: Albedo_CP38_Recursive_Forms_88_Compiler_Log
           path: |
-            build-cp37-juce/CMakeCache.txt
-            build-cp37-juce/Testing/Temporary/LastTest.log
+            build-cp38-juce/CMakeCache.txt
+            build-cp38-juce/Testing/Temporary/LastTest.log
           if-no-files-found: ignore
