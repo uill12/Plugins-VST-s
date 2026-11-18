@@ -38,8 +38,10 @@ four Arbor animated signal particles still present.
 
 GitHub Actions workflow: `.github/workflows/albedo-cp33-webview2-windows.yml`
 in this CP34 branch, with dedicated `check_cp34_screen_fit.py`.
-The current build status must be read from that workflow; this checkpoint
-document does **not** declare Bitwig GPU/UI host validation complete.
+GitHub Actions run 44237440292 completed successfully with VST3 and CLAP
+outputs and native binary-export tests. The published artifact was retrieved,
+its ZIP CRC verified, and both PE binaries confirmed to include CP34's
+WebView2 window-fit script. Bitwig GPU/UI host validation remains pending.
 
 ## Release/rollback
 
