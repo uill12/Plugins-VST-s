@@ -187,6 +187,7 @@ void AlbedoWebViewEditor::receive(const juce::var& value)
 
 void AlbedoWebViewEditor::onBrowserPageLoaded()
 {
+    browserHasLoaded=true;
     pendingTicks=0;
     // Wait for the original HTML to send the explicit 'ready' bridge event.
 }
@@ -221,7 +222,9 @@ void AlbedoWebViewEditor::sendDelta(bool full)
 void AlbedoWebViewEditor::timerCallback()
 {
     if(nativeFallback) return;
-    if(!pageReady)
+    // Never call JUCE WebView emitEvent before pageFinishedLoading: it can
+    // freeze DAWs with multiple editor instances.
+    if(!pageReady || !browserHasLoaded)
     {
         if(++pendingTicks>120)
             activateFallback("WebView2 startup timed out; reverted to native JUCE editor");
