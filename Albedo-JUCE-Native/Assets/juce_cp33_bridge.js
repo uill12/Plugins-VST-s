@@ -55,76 +55,35 @@
     return;
   }
   const byIndex=new Map(metadata.map(m=>[m.index,m]));
-  const extra=document.createElement('div');
-  extra.className='pb-juce-extra';
-  const selectors={};
-  for(const [field,title] of [['character','SOUND CHARACTER'],
-                              ['motion','MOVEMENT'],['context','MUSICAL CONTEXT']]){
-    const label=document.createElement('label');
-    const heading=document.createElement('span');heading.textContent=title;
-    const select=document.createElement('select');
-    select.id='pbJuce'+field[0].toUpperCase()+field.slice(1);
-    select.setAttribute('aria-label','Filter by '+title.toLowerCase());
-    const none=new Option('ALL '+title+'S','');
-    select.appendChild(none);
-    for(const value of [...new Set(metadata.map(m=>m[field]))].sort())
-      select.appendChild(new Option(value,value));
-    label.append(heading,select);
-    extra.appendChild(label);
-    selectors[field]=select;
-  }
-  toolbar.insertAdjacentElement('afterend',extra);
+  // CP36: complete taxonomy remains for factory IDs, but character,
+  // movement and context are no longer selectable filters.
   const css=document.createElement('style');
   css.textContent=`
-    .pb-juce-extra{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:10px;margin:8px 12px 10px;}
-    .pb-juce-extra label{display:flex;flex-direction:column;min-width:0;
-      gap:4px;font-size:11px;letter-spacing:.035em;color:var(--ink,#38504b)}
-    .pb-juce-extra select{height:32px;min-width:0;width:100%;font-size:13px;
-      background:#f3f1e5;color:#24423b;
-      border:1px solid rgba(53,88,80,.35);border-radius:3px;padding:4px 7px}
-    .pb-item .pb-cp33-tags{display:block;font:10px/1.2 'Segoe UI',sans-serif;
-      font-weight:500;opacity:.7;margin-top:2px;white-space:nowrap;
-      overflow:hidden;text-overflow:ellipsis}
-    .pb-item.pb-cp33-no-match,.pb-matrix-cell.pb-cp33-no-match{visibility:hidden!important}
-    .pb-matrix-cell.pb-cp33-no-match{pointer-events:none!important}
-    @media(max-width:700px){.pb-juce-extra{grid-template-columns:1fr;gap:5px}}
+    .pb-item.pb-cp33-no-match {display:none!important}
+    .pb-matrix-cell.pb-cp33-no-match {visibility:hidden!important;pointer-events:none!important}
   `;
   document.head.appendChild(css);
-  const hasExtraFilter=()=>Object.values(selectors).some(s=>s.value);
-  function matches(m){
-    return !!m && Object.entries(selectors).every(([key,element])=>
-      !element.value || element.value===m[key]);
-  }
   // Original factory filters/search/matrix remain authoritative. CP33 narrows
   // their result set without changing any indexed factory patch or DOM owner.
   function apply(){
     if(dialog.hidden)return;
     const factory=window.ALBEDO_PRESET_ATLAS.collection==='Factory';
-    extra.hidden=!factory;
     const base=new Set(window.ALBEDO_PRESET_ATLAS.filtered.map(p=>p.id));
     let shown=0;
     for(const item of list.querySelectorAll('[data-pb-choose]')){
       const match=item.dataset.pbChoose.match(/^Factory:(\d+)$/);
       if(!factory || !match){item.classList.remove('pb-cp33-no-match');continue;}
       const id=Number(match[1]),m=byIndex.get(id);
-      const show=base.has(id) && matches(m);
+      const show=base.has(id);
       item.classList.toggle('pb-cp33-no-match',!show);
       if(show)shown++;
-      const name=item.querySelector('.pb-item-name');
-      if(name && m && !name.querySelector('.pb-cp33-tags')){
-        const tag=document.createElement('small');
-        tag.className='pb-cp33-tags';
-        tag.textContent=m.character+' · '+m.motion+' · '+m.context;
-        name.appendChild(tag);
-      }
       if(m)item.title=m.name+' · '+m.character+' · '+m.motion+' · '+m.context;
     }
     for(const button of matrix.querySelectorAll('.pb-matrix-cell[data-pb-choose]')){
       const match=button.dataset.pbChoose.match(/^Factory:(\d+)$/);
       if(!match)continue;
       const id=Number(match[1]),m=byIndex.get(id);
-      const show=base.has(id)&&matches(m);
+      const show=base.has(id);
       button.classList.toggle('pb-cp33-no-match',!show);
       button.disabled=!show;
       if(m)button.title=m.name+' · '+m.character+' · '+m.motion+' · '+m.context;
@@ -133,7 +92,7 @@
       const count=document.getElementById('pbCount');
       const summary=document.getElementById('pbSummary');
       if(count)count.textContent=shown+' / 64';
-      if(summary)summary.textContent='Name × Material × Role × Character × Motion × Context';
+      if(summary)summary.textContent='Name × Material × Role';
     }
   }
   let queued=false;
@@ -142,20 +101,17 @@
     queued=true;
     requestAnimationFrame(()=>{queued=false;apply()});
   }
-  for(const select of Object.values(selectors))
-    select.addEventListener('change',requestApply);
   for(const field of ['pbSearch','pbFamily','pbRole','pbSort'])
     document.getElementById(field)?.addEventListener('input',requestApply);
   dialog.addEventListener('click',requestApply);
   document.getElementById('pbClear')?.addEventListener('click',()=>{
-    Object.values(selectors).forEach(s=>{s.value=''});
     requestApply();
   });
   new MutationObserver(requestApply).observe(list,{childList:true});
   new MutationObserver(requestApply).observe(matrix,{childList:true});
   // A visible Atlas is synchronized from host program IDs via its original API.
-  window.ALBEDO_CP33_ATLAS={count:64,fields:['family','role','character','motion','context'],
-    apply:requestApply,get filtered(){return metadata.filter(matches).map(x=>x.index)},
+  window.ALBEDO_CP33_ATLAS={count:64,fields:['family','role'],
+    apply:requestApply,get filtered(){return window.ALBEDO_PRESET_ATLAS.filtered.map(p=>p.id)},
     get metadata(){return metadata.map(x=>({...x}))}};
   requestApply();
 })();
