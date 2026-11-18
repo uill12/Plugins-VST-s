@@ -1,5 +1,13 @@
 # Plugins-VST-s
 
+## Albedo Quintessential Synth — variants (Windows CLAP/VST3)
+
+- **JUCE Native — No WebView2:** [source, metadata, build instructions](Albedo-JUCE-Native/README.md), [plugin identity manifest](Albedo-JUCE-Native/Metadata/PLUGIN_IDENTITY.json). GitHub branch: `albedo-juce-native-no-webview2`. This is the **C++-drawn native GUI** and uses unique VST3 / CLAP IDs. Artefatos previstos: `Albedo_JUCE_Native_NoWebView2_v1.0.32_Windows_x64_*`.
+- **JUCE + WebView2:** previous CP33/CP34 branch `albedo-cp34-window-fit-3x2`, with a WebBrowserComponent rendering HTML and independent source history. **Do not name this variant NoWebView2.** This branch preserves its previous plugin identity and compiled artifacts.
+
+**Build status:** native variant metadata changed on this branch. It is **not** considered Windows-verified or Bitwig-certified until the new CI job and host test are checked. Do not overwrite the previous functional release or mix the binaries from these two variants.
+
+
 Repositório de projetos de instrumentos e efeitos de áudio.
 
 ## Rubedo Atlas Drumkit
