@@ -20,11 +20,11 @@
       "project": "Albedo",
       "rule_id": "build.ps-ctest-syntax",
       "area": "build",
-      "source_kind": "user_feedback",
+      "source_kind": "assistant_history",
       "status": "reported",
       "observed_at": "2026-11-15",
       "symptom": "PowerShell CTest config arguments were previously reported to cause repeated CI failures",
-      "source_ref": "historical Albedo CP13 development account",
+      "source_ref": "historical assistant Albedo CP13 build report; no direct log examined",
       "corrective_action": "Use CTest's supported configuration argument and test it before a Windows job",
       "acceptance_test": "Windows CTest completes and reports results separately from compilation",
       "severity": "medium"
