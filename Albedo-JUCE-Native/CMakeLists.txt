@@ -3,7 +3,8 @@ project(AlbedoJUCE VERSION 1.0.32 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Native JUCE GUI only. No WebBrowserComponent, WebView2 or embedded HTML.
+# CP33 uses JUCE 8 WebBrowserComponent/WebView2 to render the canonical CP31 HTML.
+# JUCE-native editor remains compiled as a full fallback.
 if(NOT DEFINED ALBEDO_DSP_ROOT)
   set(ALBEDO_DSP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../Albedo-Quintessential-Synth")
 endif()
@@ -22,6 +23,7 @@ if(NOT TARGET juce::juce_audio_processors)
 endif()
 
 juce_add_plugin(AlbedoNative
+  NEEDS_WEBVIEW2 TRUE
   COMPANY_NAME "Albedo"
   BUNDLE_ID "org.vitriol.albedo.juce32"
   PLUGIN_MANUFACTURER_CODE Albd
@@ -37,11 +39,17 @@ juce_add_plugin(AlbedoNative
   VST3_CATEGORIES Instrument Synth
 )
 juce_generate_juce_header(AlbedoNative)
-juce_add_binary_data(AlbedoArtwork SOURCES Assets/albedo_logo.svg)
+juce_add_binary_data(AlbedoArtwork SOURCES
+  Assets/albedo_logo.svg
+  Assets/juce_cp33_bridge.js
+  Metadata/factory_preset_taxonomy.json
+  "${CMAKE_CURRENT_SOURCE_DIR}/../ui/Albedo_CP30_CP22_Landscape_3x2.html"
+)
 
 target_sources(AlbedoNative PRIVATE
   Source/AlbedoProcessor.cpp
   Source/AlbedoEditor.cpp
+  Source/AlbedoWebViewEditor.cpp
   "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp"
 )
 target_include_directories(AlbedoNative PRIVATE "${ALBEDO_DSP_ROOT}/include")
@@ -49,12 +57,13 @@ target_link_libraries(AlbedoNative PRIVATE
   AlbedoArtwork
   juce::juce_audio_processors
   juce::juce_gui_basics
+  juce::juce_gui_extra
   juce::juce_dsp
   juce::juce_recommended_config_flags
   juce::juce_recommended_lto_flags
   juce::juce_recommended_warning_flags
 )
-target_compile_definitions(AlbedoNative PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0)
+target_compile_definitions(AlbedoNative PUBLIC JUCE_WEB_BROWSER=1 JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0)
 
 # Keep all 32 original materials. The MIDI engine loads this exact bank from
 # Windows resource 102 as it does in the existing non-JUCE Windows plugins.
