@@ -45,7 +45,7 @@ assert "window.ALBEDO_CP31_MOTION" in html
 assert html.count('id="presetBrowser"')==1
 assert html.count('id="cp04Lab"')==1
 assert "const host=window.chrome && window.chrome.webview;" in html
-for name in ["albedoUpdate","albedoProgram","pbJuce","pb-cp33-tags",
+for name in ["albedoUpdate","albedoProgram","Name × Material × Role",
              "factory_preset_taxonomy.json","MutationObserver(requestApply)"]:
  assert name in script,name
 assert "document.body.innerHTML=" not in script
