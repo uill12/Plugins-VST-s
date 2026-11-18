@@ -1,7 +1,7 @@
-name: Albedo CP33 JUCE Native Bitwig 3x2 Host Fit Windows CLAP VST3
+name: Albedo JUCE Native No WebView2 Windows x64 CLAP VST3
 on:
   push:
-    branches: [albedo-cp32-juce-native]
+    branches: [albedo-cp32-juce-native, albedo-juce-native-no-webview2]
     paths:
       - '.github/workflows/albedo-cp32-juce-windows.yml'
       - 'Albedo-JUCE-Native/**'
@@ -639,6 +639,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Native 3:2 layout clipping contract failed' }
           python Albedo-JUCE-Native/tests/check_cp33_host_fit.py
           if ($LASTEXITCODE -ne 0) { throw 'CP33 3:2 host-fit regression' }
+          python Albedo-JUCE-Native/tests/check_plugin_identity.py
+          if ($LASTEXITCODE -ne 0) { throw 'Native plugin identity gate failed' }
           python -c "from pathlib import Path; s=Path('Albedo-JUCE-Native/Source/AlbedoEditor.cpp').read_text(encoding='utf-8'); assert 'ArborView' in s and 'DynamicGraph' in s; assert 'WebBrowserComponent' not in s and 'WebView2' not in s; print('JUCE native animation/Atlas GUI contract OK')"
           if ($LASTEXITCODE -ne 0) { throw 'WebView2-free native source check failed' }
       - name: Fetch JUCE 8 and CLAP JUCE extensions
@@ -676,7 +678,7 @@ jobs:
           python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB1'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in VST3'; print('VST3 PCM24 32-material bank present')" $vst.FullName
           if ($LASTEXITCODE -ne 0) { throw 'VST3 sound bank resource missing' }
           New-Item -ItemType Directory -Path 'dist-cp32' -Force | Out-Null
-          Copy-Item $clap.FullName 'dist-cp32/Albedo_CP32_JUCE_Native.clap'
+          Copy-Item $clap.FullName 'dist-cp32/Albedo_JUCE_Native_NoWebView2_v1.0.32_Windows_x64.clap'
           $bundle=Get-ChildItem -Path build-cp32-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp32/' -Recurse -Force
@@ -684,14 +686,14 @@ jobs:
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP32_JUCE_Windows_x64_CLAP_VST3
+          name: Albedo_JUCE_Native_NoWebView2_v1.0.32_Windows_x64_CLAP_VST3
           path: dist-cp32/*
           if-no-files-found: error
       - name: Preserve JUCE compiler logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP32_JUCE_Compiler_Log
+          name: Albedo_JUCE_Native_NoWebView2_Compiler_Log
           path: |
             build-cp32-juce/CMakeCache.txt
             build-cp32-juce/Testing/Temporary/LastTest.log
