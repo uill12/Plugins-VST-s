@@ -38,6 +38,6 @@ scan(document.getElementById('page'));scan(document.getElementById('cp04Lab'));
 const observer=new MutationObserver(records=>{for(const r of records)for(const n of r.addedNodes)scan(n)});
 for(const id of ['page','cp04Lab']){const el=document.getElementById(id);if(el)observer.observe(el,{subtree:true,childList:true})}
 window.__ALBEDO_CP38_KNOB_OBSERVER=observer;
-window.__JUCE__?.backend?.addEventListener?.('albedoUpdate',()=>{document.querySelectorAll('input.cp38-native').forEach(reflect);if(!pop.hidden)drawSoon()});
+window.__JUCE__?.backend?.addEventListener?.('albedoUpdate',()=>{document.querySelectorAll('input.cp38-native').forEach(reflect)});
 window.ALBEDO_CP38_KNOBS={get converted(){return count},get redraws(){return 0},get visible(){return false},get fullyRotary(){return document.querySelectorAll('input[type=range]:not(.cp38-native)').length===0}};
 })();
