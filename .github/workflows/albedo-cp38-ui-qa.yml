@@ -1,0 +1,30 @@
+name: Albedo CP38 Creative Bank and Knob Browser QA
+on:
+  push:
+    branches: [albedo-cp38-knobs-contextual-overlays]
+    paths: ['.github/workflows/albedo-cp38-ui-qa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate embedded interface, creative bank and controls
+        run: |
+          python3 Albedo-JUCE-Native/tests/check_cp38_recursive_bank.py
+          node --check Albedo-JUCE-Native/Assets/cp38_rotary_overlays.js
+          node --check Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP38_Recursive_Forms_Exact_Browser_Sources
+          path: |
+            ui/Albedo_CP30_CP22_Landscape_3x2.html
+            Albedo-JUCE-Native/Assets/cp38_rotary_overlays.js
+            Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+            Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
+            Albedo-JUCE-Native/Metadata/recursive_forms_bank.json
+            Albedo-JUCE-Native/Metadata/factory_preset_taxonomy.json
+          retention-days: 14
+          if-no-files-found: error
