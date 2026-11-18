@@ -2,21 +2,20 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <algorithm>
 
-// CP34: display-aware 3:2 editor dimensions, expressed in JUCE logical pixels.
-// The Bitwig title bar and Windows taskbar need real headroom; starting at
-// 1440x960 previously pushed the WebView2 editor below the physical screen.
+// CP35 — the HTML's original logical canvas is 1320x880 (exact 3:2).
+// Prefer a host editor with these exact dimensions; only shrink on smaller
+// displays. Leave space for Bitwig's title bar and the Windows taskbar.
 namespace albedo_window_fit
 {
 struct Geometry
 {
-    int initialWidth=1152;
-    int initialHeight=768;
-    int minWidth=840;
-    int minHeight=560;
-    int maxWidth=1416;
-    int maxHeight=944;
+    int initialWidth=1320;
+    int initialHeight=880;
+    int minWidth=960;
+    int minHeight=640;
+    int maxWidth=1458;
+    int maxHeight=972;
 };
-
 inline Geometry calculate()
 {
     Geometry g;
@@ -26,16 +25,15 @@ inline Geometry calculate()
         availableW=display->userArea.getWidth();
         availableH=display->userArea.getHeight();
     }
-    // Keep 96 logical pixels laterally and 130 vertically for the host
-    // decorations, taskbar and docking on a 15.6-inch laptop.
-    const int byW=std::max(480,availableW-96);
-    const int byH=std::max(480,(std::max(320,availableH-130)*3)/2);
-    const int upper=std::min({1800,byW,byH});
-    g.maxWidth=std::max(480,(upper/6)*6);
+    const int byW=std::max(480,availableW-80);
+    const int byH=std::max(320,availableH-95);
+    // Restrict 3:2 editor dimensions together, never independently.
+    const int allowed=std::min({1500,byW,(byH*3)/2});
+    g.maxWidth=std::max(480,(allowed/6)*6);
     g.maxHeight=g.maxWidth*2/3;
-    g.minWidth=std::min(840,g.maxWidth);
+    g.minWidth=std::min(960,g.maxWidth);
     g.minHeight=g.minWidth*2/3;
-    g.initialWidth=std::min(1152,g.maxWidth);
+    g.initialWidth=std::min(1320,g.maxWidth);
     g.initialWidth=(g.initialWidth/6)*6;
     g.initialHeight=g.initialWidth*2/3;
     return g;
