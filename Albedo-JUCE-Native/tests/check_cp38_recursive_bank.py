@@ -44,4 +44,14 @@ assert "if (creative)" in cpp and "const auto baseIndex = creative ? extra->base
 assert "currentProgram.store (juce::jlimit (0, getNumPrograms()-1, in.readInt()));" in cpp
 assert "if(id64>=0 && id64<processor.getNumPrograms())" in web
 assert "...window.ALBEDO_PRESET_ATLAS.creative" in bridge
+rotary=(root/"Assets/cp38_rotary_overlays.js").read_text(encoding="utf-8")
+editor=(root/"Source/AlbedoWebViewEditor.cpp").read_text(encoding="utf-8")
+cmake=(root/"CMakeLists.txt").read_text(encoding="utf-8")
+assert "cp38_rotary_overlays_js" in editor
+assert "cp38_rotary_overlays.js" in cmake
+assert "input.dispatchEvent(new Event('input',{bubbles:true}))" in rotary
+assert "role','slider" in rotary and "MutationObserver(records" in rotary
+assert "window.ALBEDO_CP38_KNOBS" in rotary
+assert "cp38-visual" in rotary and "backdrop-filter:blur(12px)" in rotary
+assert "input[type=range]" in rotary
 print("CP38 source and Atlas PASS: 64 immutable factory voices + 24 native polyphonic studies, 88 total")
