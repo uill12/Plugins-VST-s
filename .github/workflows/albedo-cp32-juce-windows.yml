@@ -634,6 +634,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Taxonomy regeneration failed' }
           python Albedo-JUCE-Native/tests/check_preset_taxonomy.py
           if ($LASTEXITCODE -ne 0) { throw 'Taxonomy check failed' }
+          python Albedo-JUCE-Native/tests/check_cp32_native_geometry.py
+          if ($LASTEXITCODE -ne 0) { throw 'Native 3:2 layout clipping contract failed' }
           python -c "from pathlib import Path; s=Path('Albedo-JUCE-Native/Source/AlbedoEditor.cpp').read_text(encoding='utf-8'); assert 'ArborView' in s and 'DynamicGraph' in s; assert 'WebBrowserComponent' not in s and 'WebView2' not in s; print('JUCE native animation/Atlas GUI contract OK')"
           if ($LASTEXITCODE -ne 0) { throw 'WebView2-free native source check failed' }
       - name: Fetch JUCE 8 and CLAP JUCE extensions
@@ -652,7 +654,7 @@ jobs:
       - name: Build JUCE VST3 and CLAP plugins
         shell: pwsh
         run: |
-          cmake --build build-cp32-juce --config Release --target AlbedoNative_VST3 AlbedoNative_CLAP --parallel 4
+          cmake --build build-cp32-juce --config Release --target AlbedoNative_VST3 AlbedoNative_CLAP AlbedoPresetTaxonomyTest --parallel 4
           if ($LASTEXITCODE -ne 0) { throw 'Native VST3/CLAP compile failed' }
       - name: Test native plugin and verify binary exports
         shell: pwsh
@@ -666,6 +668,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CLAP export missing' }
           python tools/verify_pe_exports.py $vst.FullName --require GetPluginFactory
           if ($LASTEXITCODE -ne 0) { throw 'VST3 export missing' }
+          python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB1'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in CLAP'; print('CLAP PCM24 32-material bank present')" $clap.FullName
+          if ($LASTEXITCODE -ne 0) { throw 'CLAP sound bank resource missing' }
+          python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB1'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in VST3'; print('VST3 PCM24 32-material bank present')" $vst.FullName
+          if ($LASTEXITCODE -ne 0) { throw 'VST3 sound bank resource missing' }
           New-Item -ItemType Directory -Path 'dist-cp32' -Force | Out-Null
           Copy-Item $clap.FullName 'dist-cp32/Albedo_CP32_JUCE_Native.clap'
           $bundle=Get-ChildItem -Path build-cp32-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1

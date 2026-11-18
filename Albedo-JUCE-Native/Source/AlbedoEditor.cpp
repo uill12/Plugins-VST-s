@@ -810,8 +810,10 @@ void AlbedoEditor::resized()
         const auto buttonW=juce::jmax(40,int(cellW*.20f));
         engineButtons[i]->setBounds(part.removeFromLeft(buttonW).withHeight(42));
         auto visual=part.reduced(5,1);
-        enginePlots[i]->setBounds(visual.withHeight(33));
-        sourceRackControls[(size_t)i]->setBounds(visual.withTrimmedTop(37).withHeight(39));
+        const int graphHeight=juce::jlimit(24,32,visual.getHeight()/2);
+        enginePlots[i]->setBounds(visual.withHeight(graphHeight));
+        sourceRackControls[(size_t)i]->setBounds(visual.withTrimmedTop(graphHeight+3)
+            .withHeight(juce::jmax(18,visual.getHeight()-graphHeight-3)));
     }
     auto ins=moduleRects[1].reduced(8).withTrimmedTop(54);
     sourceSelector.setBounds(ins.getX(),ins.getY(),ins.getWidth(),30);ins.removeFromTop(38);
@@ -824,7 +826,7 @@ void AlbedoEditor::resized()
     layoutControls(macroControls,central.removeFromTop(macroH),7);
     layoutControls(couplingControls,central,3);
     auto filt=moduleRects[3].reduced(8).withTrimmedTop(45);
-    const auto filterSectionH=juce::jmax(115,int(filt.getHeight()*.31f));
+    const auto filterSectionH=juce::jmax(103,int(filt.getHeight()*.285f));
     for(int i=0;i<2;i++)
     {
         auto part=filt.removeFromTop(filterSectionH);
