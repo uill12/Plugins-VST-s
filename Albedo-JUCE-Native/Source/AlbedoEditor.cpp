@@ -5,15 +5,17 @@
 #include <cmath>
 
 namespace {
-const auto canvas  = juce::Colour::fromRGB (232, 232, 218);
-const auto surface = juce::Colour::fromRGB (239, 239, 225);
-const auto text    = juce::Colour::fromRGB (28, 71, 64);
-const auto accent  = juce::Colour::fromRGB (177, 118, 67);
-const auto gold    = juce::Colour::fromRGB (209, 164, 100);
-const auto muted   = juce::Colour::fromRGB (91, 119, 108);
-const auto teal    = juce::Colour::fromRGB (31, 89, 84);
-const auto air     = juce::Colour::fromRGB (95, 145, 165);
-const auto terra   = juce::Colour::fromRGB (110, 149, 107);
+// Exact CP31 HTML palette: --paper, --panel, --ink, --e0..e3, --muted, --teal.
+// No generic JUCE theme overrides or font substitution.
+const auto canvas  = juce::Colour::fromRGB (240, 233, 216); // #f0e9d8
+const auto surface = juce::Colour::fromRGB (229, 230, 216); // #e5e6d8
+const auto text    = juce::Colour::fromRGB (38, 51, 47);   // #26332f
+const auto accent  = juce::Colour::fromRGB (201, 128, 109); // #c9806d, Ignis
+const auto gold    = juce::Colour::fromRGB (213, 173, 103); // #d5ad67, Aer
+const auto muted   = juce::Colour::fromRGB (104, 123, 117); // #687b75
+const auto teal    = juce::Colour::fromRGB (73, 108, 105);  // #496c69
+const auto air     = juce::Colour::fromRGB (117, 168, 190); // #75a8be, Aqua
+const auto terra   = juce::Colour::fromRGB (140, 174, 131); // #8cae83, Terra
 const auto colours = std::array<juce::Colour,4> {accent, gold, air, terra};
 // CP35 native UI parity: canonical names transcribed from the verified CP31 HTML.
 // These are display strings only; VST3/CLAP parameter IDs and DSP values do not change.
