@@ -298,10 +298,17 @@ void AlbedoWebViewEditor::requestHostResize(int width)
     clipped=juce::jmax(fit.minWidth,(clipped/6)*6);
     const int height=clipped*2/3;
     if(getWidth()==clipped && getHeight()==height) return;
-    // JUCE requests the new VST3/CLAP host window size. The WebView2 page
-    // also receives the *actual* resulting dimensions, even if Bitwig refuses.
-    setSize(clipped,height);
-    sendViewportSize(true);
+    // Request on the next JUCE message-loop turn, outside WebView2's native
+    // event callback. VST3/CLAP hosts may synchronously negotiate view size.
+    juce::Component::SafePointer<AlbedoWebViewEditor> safe(this);
+    juce::MessageManager::callAsync([safe,clipped,height]
+    {
+        if(safe==nullptr)return;
+        if(safe->getWidth()!=clipped || safe->getHeight()!=height)
+            safe->setSize(clipped,height);
+        // Report the result the host actually granted, not the requested size.
+        safe->sendViewportSize(true);
+    });
 }
 void AlbedoWebViewEditor::sendViewportSize(bool force)
 {
