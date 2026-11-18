@@ -1,0 +1,35 @@
+name: Albedo CP38 Corpus/Pulsus Browser Source QA
+on:
+  push:
+    branches: [albedo-cp38-corpus-filter-alignment]
+    paths:
+      - '.github/workflows/albedo-cp38-visual-qa.yml'
+      - 'ui/Albedo_CP30_CP22_Landscape_3x2.html'
+      - 'Albedo-JUCE-Native/Assets/**'
+      - 'Albedo-JUCE-Native/tests/check_cp38_*.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-resources:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check original HTML and 64-patch taxonomy resources
+        run: |
+          test -s ui/Albedo_CP30_CP22_Landscape_3x2.html
+          test -s Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+          test -s Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
+          node --check Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+          node --check Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
+          test -s Albedo-JUCE-Native/Metadata/factory_preset_taxonomy.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP38_Pulsus_AB_Exact_Embedded_HTML_Assets
+          path: |
+            ui/Albedo_CP30_CP22_Landscape_3x2.html
+            Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+            Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
+            Albedo-JUCE-Native/Metadata/factory_preset_taxonomy.json
+          retention-days: 10
+          if-no-files-found: error
