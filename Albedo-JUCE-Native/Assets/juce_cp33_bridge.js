@@ -8,8 +8,19 @@
   // Keep the original CP27/CP31 receiving logic: it updates only affected
   // controls, and suppresses host-bound echo while replaying a host snapshot.
   backend.addEventListener('albedoUpdate', message=>{
-    if(typeof message==='string')
-      window.ALBEDO_NATIVE_CP27?.receiveBatch?.(message);
+    if(typeof message!=='string')return;
+    const bridge=window.ALBEDO_NATIVE_CP27;
+    if(!bridge)return;
+    const changes=message.split(',').filter(Boolean);
+    // Atomic initial snapshots and preset swaps; incremental automation otherwise.
+    // The original receiveBatch calls renderAll and recreates hundreds of nodes.
+    if(changes.length>24){bridge.receiveBatch?.(message);return;}
+    for(const pair of changes){
+      const sep=pair.indexOf(':');
+      if(sep<1)continue;
+      const id=Number(pair.slice(0,sep)),v=Number(pair.slice(sep+1));
+      if(Number.isSafeInteger(id)&&Number.isFinite(v))bridge.receive?.(id,v);
+    }
   });
   backend.addEventListener('albedoProgram', index=>{
     const n=Number(index);
