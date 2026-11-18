@@ -11,8 +11,8 @@ struct Geometry
 {
     int initialWidth=1320;
     int initialHeight=880;
-    int minWidth=960;
-    int minHeight=640;
+    int minWidth=720;
+    int minHeight=480;
     int maxWidth=1458;
     int maxHeight=972;
 };
@@ -31,7 +31,7 @@ inline Geometry calculate()
     const int allowed=std::min({1500,byW,(byH*3)/2});
     g.maxWidth=std::max(480,(allowed/6)*6);
     g.maxHeight=g.maxWidth*2/3;
-    g.minWidth=std::min(960,g.maxWidth);
+    g.minWidth=std::min(720,g.maxWidth);
     g.minHeight=g.minWidth*2/3;
     g.initialWidth=std::min(1320,g.maxWidth);
     g.initialWidth=(g.initialWidth/6)*6;
