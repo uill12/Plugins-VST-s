@@ -10,10 +10,10 @@ assert 'juce::jlimit(76,126,int(filt.getHeight()*.27f))' in s
 for w,h in [(1050,700),(1110,740),(1200,800),(1290,860),(1440,960),(1800,1200)]:
  assert w*2==h*3
  rw,rh=w-20,h-102
- engine=max(93,min(135,int(rh*.16)))
+ engine=max(100,min(135,int(rh*.16)))
  lower=max(155,min(275,int(rh*.27)))
  upper=rh-engine-lower-16
- assert engine>77 and lower>146 and upper>250,(w,h,engine,lower,upper)
+ assert engine>=100 and lower>146 and upper>250,(w,h,engine,lower,upper)
  filt=upper-16-45
  section=max(76,min(126,int(filt*.27)))
  graph=max(30,min(46,section//2))
