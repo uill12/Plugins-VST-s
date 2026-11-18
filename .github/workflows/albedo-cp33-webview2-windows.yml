@@ -674,7 +674,8 @@ jobs:
       - name: Configure JUCE native audio plugins x64
         shell: pwsh
         run: |
-          cmake -S Albedo-JUCE-Native -B build-cp36-juce -G "Visual Studio 17 2022" -A x64 -DALBEDO_BUILD_CLAP=ON -DBUILD_TESTING=ON -DALBEDO_DSP_ROOT="$PWD/Albedo-Quintessential-Synth" -DJUCE_WEBVIEW2_PACKAGE_LOCATION="$PWD/cp33-webview2-sdk"
+          $albedoSourceDir=("$PWD/Albedo-Quintessential-Synth").Replace('\\','/')
+          cmake -S Albedo-JUCE-Native -B build-cp36-juce -G "Visual Studio 17 2022" -A x64 -DALBEDO_BUILD_CLAP=ON -DBUILD_TESTING=ON -DALBEDO_DSP_ROOT="$albedoSourceDir" -DJUCE_WEBVIEW2_PACKAGE_LOCATION="$PWD/cp33-webview2-sdk"
           if ($LASTEXITCODE -ne 0) { throw 'JUCE Windows CMake configuration failed' }
       - name: Build JUCE VST3 and CLAP plugins
         shell: pwsh
