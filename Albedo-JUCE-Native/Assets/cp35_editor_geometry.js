@@ -6,10 +6,10 @@
  const root=document.documentElement;
  const page=document.getElementById('page');
  if(!page)return;
- const BASE_W=1320,BASE_H=880;
+ const BASE_W=1500,BASE_H=1000; // Match actual CSS #page canvas; do not crop at 3:2 host sizes.
  let nativeW=0,nativeH=0,lastW=-1,lastH=-1,lastScale=-1;
  let frame=0;
- const clampWidth=w=>Math.max(480,Math.min(1500,Math.round(w/6)*6));
+ const clampWidth=w=>Math.max(720,Math.min(1500,Math.round(w/6)*6));
  const send=(w,h)=>{
    const width=clampWidth(w),height=width*2/3;
    const payload='resize|'+width+'|'+height;
@@ -27,7 +27,7 @@
  }
  function fit(){
    const {w,h}=measured();
-   const scale=Math.max(.1,Math.min(1,w/BASE_W,h/BASE_H));
+   const scale=Math.max(.1,Math.min(w/BASE_W,h/BASE_H));
    if(w===lastW&&h===lastH&&Math.abs(lastScale-scale)<.0002)return;
    lastW=w;lastH=h;lastScale=scale;
    root.style.setProperty('--albedo-viewport-w',w+'px');
@@ -165,7 +165,7 @@
  controls.setAttribute('aria-label','Resize the Albedo plugin window');
  controls.innerHTML='<button type="button" id="albedo-cp35-smaller" title="Smaller 3:2 window">−</button>'+
    '<span id="albedo-cp35-size-value">1320×880</span>'+
-   '<button type="button" id="albedo-cp35-reset" title="Match original 1320 by 880 render">↔</button>'+
+   '<button type="button" id="albedo-cp35-reset" title="Request 1320×880 (limited by available screen area)">↔</button>'+
    '<button type="button" id="albedo-cp35-resize-grip" title="Drag to resize the 3:2 plugin window">◢</button>';
  document.body.appendChild(controls);
  function ask(width){
