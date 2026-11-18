@@ -3,7 +3,8 @@ project(AlbedoJUCE VERSION 1.0.39 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# CP39 uses JUCE 8 WebBrowserComponent/WebView2 to render the canonical Albedo HTML.\n# Keep stable plugin identifiers for host/session compatibility; version differentiates build.
+# CP39 uses JUCE 8 WebBrowserComponent/WebView2 to render the canonical Albedo HTML.
+# Keep stable plugin identifiers for host/session compatibility; version differentiates build.
 # JUCE-native editor remains compiled as a full fallback.
 if(NOT DEFINED ALBEDO_DSP_ROOT)
   set(ALBEDO_DSP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../Albedo-Quintessential-Synth")
