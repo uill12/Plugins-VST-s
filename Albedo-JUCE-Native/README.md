@@ -1,6 +1,8 @@
-# Albedo Quintessential Synth — JUCE Native (No WebView2)
+# Albedo Quintessential Synth — JUCE Native (No WebView2) · CP35
 
-**Identidade desta variante:** `juce-native-no-webview2`. **Versão de projeto:** `1.0.32`.
+**CP35:** original CP31 HTML engine-method/knob labels and material palette have been mapped into the native JUCE controls. Source-level parity is tested by `tests/check_cp35_html_native_labels.py`. Pixel-accurate render and Bitwig host QA remain pending; the compiled CP32 version is still available for rollback.
+
+**Identidade desta variante:** `juce-native-no-webview2`. **Versão de projeto:** `1.0.35`.
 Este ramo contém a GUI JUCE/C++ independente do navegador, e **não** a variante JUCE com HTML/WebView2.
 A nomenclatura explícita identifica uma instalação separada no Bitwig e evita a colisão com os IDs anteriores.
 
@@ -13,7 +15,7 @@ A nomenclatura explícita identifica uma instalação separada no Bitwig e evita
 | VST3 `BUNDLE_ID` | `org.vitriol.albedo.juce.native.noview2` | `org.vitriol.albedo.juce32` |
 | CLAP `CLAP_ID` | `org.vitriol.albedo.juce.native.noview2` | `org.vitriol.opussonorum.juce32` |
 
-**Arquivos identificáveis:** `Albedo_JUCE_Native_NoWebView2_v1.0.32_Windows_x64.clap` e bundle VST3 esperado `Albedo Quintessential Synth - JUCE Native (No WebView2).vst3`. O artefato de CI será `Albedo_JUCE_Native_NoWebView2_v1.0.32_Windows_x64_CLAP_VST3` **apenas após compilação bem-sucedida**.
+**Arquivos identificáveis:** `Albedo_JUCE_Native_NoWebView2_v1.0.35_Windows_x64.clap` e bundle VST3 esperado `Albedo Quintessential Synth - JUCE Native (No WebView2).vst3`. O artefato de CI será `Albedo_JUCE_Native_NoWebView2_v1.0.35_Windows_x64_CLAP_VST3` **apenas após compilação bem-sucedida**.
 
 A identificação é formalizada em [`Metadata/PLUGIN_IDENTITY.json`](Metadata/PLUGIN_IDENTITY.json) e validada por `tests/check_plugin_identity.py`.
 **Atenção:** alterar os IDs cria uma instância de plugin diferente, deliberadamente. Sessões anteriores do Bitwig não migram automaticamente. O último binário verificado permanece preservado; esta revisão de identificação requer nova compilação Windows e QA no host.
