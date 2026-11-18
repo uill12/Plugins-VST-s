@@ -34,6 +34,8 @@ private:
     void activateFallback(const juce::String& reason);
     void sendDelta(bool full);
     void onBrowserPageLoaded();
+    void sendViewportSize(bool force=false);
+    void requestHostResize(int width);
 
     AlbedoProcessor& processor;
     Browser browser;
@@ -44,6 +46,7 @@ private:
     bool pageReady=false, browserHasLoaded=false, fullSyncPending=true;
     int pendingTicks=0;
     int lastProgram=-1;
+    int lastViewportW=-1, lastViewportH=-1;
     uint32_t currentGesture=UINT32_MAX;
     juce::String fallbackMessage;
     juce::ComponentBoundsConstrainer aspect;
