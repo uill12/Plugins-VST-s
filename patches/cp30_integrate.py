@@ -19,7 +19,7 @@ EXPECTED='681eaf3c20e84d8e84c45488c6e1b25a8301c8f1650911fe1f795536fa5c084d'
 if not canonical.is_file():
  assert sha==EXPECTED,('CP30 fallback HTML SHA mismatch',sha)
 s=data.decode('utf-8')
-checks=['const BASE_W=1320,BASE_H=880',"aspectRatio:'3:2'",'window.ALBEDO_NATIVE_CP27','window.ALBEDO_NATIVE_CP27?.onDial(k,v)','window.ALBEDO_NATIVE_CP27?.onPreset(name)','window.ALBEDO_NATIVE_CP27?.onExtraParam(id,api.state.cp04[id])','id="presetBrowser"','id="cp04Lab"','id="albedoFactoryCatalog"']
+checks=['const BASE_W=1500,BASE_H=1000',"aspectRatio:'3:2'",'window.ALBEDO_NATIVE_CP27','window.ALBEDO_NATIVE_CP27?.onDial(k,v)','window.ALBEDO_NATIVE_CP27?.onPreset(name)','window.ALBEDO_NATIVE_CP27?.onExtraParam(id,api.state.cp04[id])','id="presetBrowser"','id="cp04Lab"','id="albedoFactoryCatalog"']
 assert all(x in s for x in checks),[x for x in checks if x not in s]
 assert 'window.ALBEDO_CP31_MOTION' in s, 'CP31 animated Arbor implementation absent'
 assert s.count('<div class="brand"><svg')==1
@@ -61,7 +61,7 @@ for rel in ['tests/cp27_webview_contract.py','tests/cp29_directcomposition_contr
  if not p.exists():continue
  t=p.read_text(encoding='utf-8'); orig=t
  t=t.replace('resources/Albedo_CP27_5x3_embedded.html','resources/Albedo_CP30_CP22_3x2_embedded.html')
- t=t.replace('const BASE_W=1650,BASE_H=990','const BASE_W=1320,BASE_H=880')
+ t=t.replace('const BASE_W=1650,BASE_H=990','const BASE_W=1500,BASE_H=1000')
  t=t.replace("aspectRatio:'5:3'","aspectRatio:'3:2'")
  t=t.replace('kDefaultEditorWidth=1440, kDefaultEditorHeight=864','kDefaultEditorWidth=1440, kDefaultEditorHeight=960')
  t=t.replace('constexpr double aspect=5.0/3.0;','constexpr double aspect=3.0/2.0;')
