@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(AlbedoJUCE VERSION 1.0.36 LANGUAGES C CXX RC)
+project(AlbedoJUCE VERSION 1.0.38 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -115,4 +115,12 @@ if(BUILD_TESTING)
   target_compile_features(AlbedoCP36HifiDspTest PRIVATE cxx_std_20)
   target_include_directories(AlbedoCP36HifiDspTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
   add_test(NAME cp36_hifi_double_precision_polyphony COMMAND AlbedoCP36HifiDspTest)
+  add_executable(AlbedoCP38CreativeAudioTest
+    tests/cp38_recursive_audio_qa.cpp
+    "${ALBEDO_CP36_DSP_ROOT}/src/vitriol_dsp.cpp")
+  target_compile_features(AlbedoCP38CreativeAudioTest PRIVATE cxx_std_20)
+  target_include_directories(AlbedoCP38CreativeAudioTest PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source"
+    "${ALBEDO_CP36_DSP_ROOT}/include")
+  add_test(NAME cp38_recursive_forms_24_presets_polyphony COMMAND AlbedoCP38CreativeAudioTest)
 endif()
