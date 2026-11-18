@@ -16,7 +16,7 @@ from pathlib import Path
 SCHEMA_VERSION = 1
 REQUIRED = {"event_id", "project", "rule_id", "area", "source_kind", "status", "observed_at", "symptom", "source_ref"}
 OPTIONAL = {"corrective_action", "acceptance_test", "source_revision", "target_format", "environment", "severity"}
-KINDS = {"user_feedback", "build_log", "source_audit", "offline_test", "host_test", "user_confirmation"}
+KINDS = {"user_feedback", "assistant_history", "build_log", "source_audit", "offline_test", "host_test", "user_confirmation"}
 STATUSES = {"reported", "reproduced", "fix_attempted", "offline_test_passed", "host_test_passed", "user_confirmed", "regressed", "superseded", "blocked"}
 PASS = {"offline_test_passed", "host_test_passed", "user_confirmed"}
 EMAIL = re.compile(r"[\w.+-]+@[\w.-]+\.[a-z]{2,}", re.I)
