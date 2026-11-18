@@ -2,15 +2,15 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <algorithm>
 
-// CP35 — the HTML's original logical canvas is 1320x880 (exact 3:2).
-// Prefer a host editor with these exact dimensions; only shrink on smaller
-// displays. Leave space for Bitwig's title bar and the Windows taskbar.
+// CP39 — the live HTML design canvas is 1500x1000 (3:2).
+// Start at a comfortable 1200x800 viewport, subject to available screen space.
+// Preserve the Bitwig chrome/taskbar clearance and the exact 3:2 ratio.
 namespace albedo_window_fit
 {
 struct Geometry
 {
-    int initialWidth=1320;
-    int initialHeight=880;
+    int initialWidth=1200;
+    int initialHeight=800;
     int minWidth=720;
     int minHeight=480;
     int maxWidth=1458;
@@ -33,7 +33,7 @@ inline Geometry calculate()
     g.maxHeight=g.maxWidth*2/3;
     g.minWidth=std::min(720,g.maxWidth);
     g.minHeight=g.minWidth*2/3;
-    g.initialWidth=std::min(1320,g.maxWidth);
+    g.initialWidth=std::min(1200,g.maxWidth);
     g.initialWidth=(g.initialWidth/6)*6;
     g.initialHeight=g.initialWidth*2/3;
     return g;
