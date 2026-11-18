@@ -1,4 +1,5 @@
 #include "AlbedoWebViewEditor.h"
+#include "AlbedoWindowFit.h"
 #include <BinaryData.h>
 #include <cmath>
 #include <cstring>
@@ -76,11 +77,12 @@ AlbedoWebViewEditor::AlbedoWebViewEditor(AlbedoProcessor& p)
     lastValues.assign(processor.definitions().size(), std::numeric_limits<float>::quiet_NaN());
     lastProgram=processor.getCurrentProgram();
     addAndMakeVisible(browser);
+    const auto fit=albedo_window_fit::calculate();
     aspect.setFixedAspectRatio(1.5);
-    aspect.setSizeLimits(990,660,1920,1280);
+    aspect.setSizeLimits(fit.minWidth,fit.minHeight,fit.maxWidth,fit.maxHeight);
     setResizable(true,true);
     setConstrainer(&aspect);
-    setSize(1440,960);
+    setSize(fit.initialWidth,fit.initialHeight);
     browser.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
     startTimerHz(12);
 }
