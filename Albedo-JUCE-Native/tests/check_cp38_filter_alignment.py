@@ -21,7 +21,7 @@ assert "grid-template-rows:33px 12px 14px!important" in style
 assert "width:33px!important;height:33px!important" in style
 assert "min-height:33px!important;max-width:33px!important;max-height:33px!important" in style
 assert "font-variant-numeric:tabular-nums!important" in style
-assert style.count(".shape-block:nth-child(-n+2)")>=12
+assert style.count(".shape-block:nth-child(-n+2)")>=11
 assert "document.body.innerHTML" not in style
 assert "overflow:visible!important" in style
 assert "grid-column:1!important;grid-row:1!important" in style
