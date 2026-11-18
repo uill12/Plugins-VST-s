@@ -6,7 +6,6 @@
  const root=document.documentElement;
  const page=document.getElementById('page');
  if(!page)return;
- const BASE_W=1500,BASE_H=1000; // Match actual CSS #page canvas; do not crop at 3:2 host sizes.
  let nativeW=0,nativeH=0,lastW=-1,lastH=-1,lastScale=-1;
  let frame=0;
  const clampWidth=w=>Math.max(720,Math.min(1500,Math.round(w/6)*6));
@@ -26,13 +25,13 @@
  }
  function fit(){
    const {w,h}=measured();
-   const scale=Math.max(.1,Math.min(w/BASE_W,h/BASE_H));
+   const scale=Math.max(.1,Math.min(w/page.offsetWidth,h/page.offsetHeight));
    if(w===lastW&&h===lastH&&Math.abs(lastScale-scale)<.0002)return;
    lastW=w;lastH=h;lastScale=scale;
    root.style.setProperty('--albedo-viewport-w',w+'px');
    root.style.setProperty('--albedo-viewport-h',h+'px');
-   root.style.setProperty('--albedo-center-x',Math.floor(w/2)+'px');
-   root.style.setProperty('--albedo-center-y',Math.floor(h/2)+'px');
+   root.style.setProperty('--albedo-offset-x',Math.max(0,(w-page.offsetWidth*scale)/2)+'px');
+   root.style.setProperty('--albedo-offset-y',Math.max(0,(h-page.offsetHeight*scale)/2)+'px');
    // CP36: the Atlas uses most of the available editor area. Removing the
    // secondary filter row adds room for readable factory-patch list entries.
    const atlasW=Math.min(960,Math.floor(w*.96),Math.max(320,w-22));
@@ -51,8 +50,10 @@
  style.id='albedo-cp35-style';
  style.textContent=`
  html.albedo-fit #page.page{
-   left:var(--albedo-center-x,660px)!important;
-   top:var(--albedo-center-y,440px)!important;
+   position:fixed!important;margin:0!important;transform-origin:0 0!important;
+   transform:scale(var(--fit-scale,1))!important;
+   left:var(--albedo-offset-x,0px)!important;
+   top:var(--albedo-offset-y,0px)!important;
  }
  html.albedo-fit .preset-browser-backdrop{
    position:fixed!important;inset:0 auto auto 0!important;
@@ -126,6 +127,17 @@
  html.albedo-fit .pb-matrix-scroller{
    max-height:100%!important;min-height:0!important;overflow:auto!important;
  }
+ html.albedo-fit #presetBrowser #pbResultContainer{overflow:auto!important}
+ html.albedo-fit #presetBrowser #pbItems:not([hidden]){display:block!important;height:auto!important;overflow:visible!important}
+ html.albedo-fit #presetBrowser .pb-item, html.albedo-fit #presetBrowser .pb-column-headers{
+   display:grid!important;grid-template-columns:minmax(0,2fr) repeat(2,minmax(0,1fr)) 32px!important;
+   align-items:center;gap:8px!important;text-align:left;padding:5px 10px!important;
+ }
+ html.albedo-fit #presetBrowser .pb-item{height:auto!important;min-height:32px!important;border-radius:0!important}
+ html.albedo-fit #presetBrowser .pb-item-name{display:block;font-size:14px!important}
+ html.albedo-fit #presetBrowser .pb-item-family,html.albedo-fit #presetBrowser .pb-item-role{font-size:12px!important}
+ html.albedo-fit #presetBrowser .pb-item-index{position:static;font-size:11px!important}
+ html.albedo-fit #presetBrowser :is(#pbListMode,#pbMatrixMode){display:none!important}
  #albedo-cp35-controls{
    position:fixed;right:8px;bottom:8px;left:auto;top:auto;
    width:153px;height:29px;z-index:12000;
