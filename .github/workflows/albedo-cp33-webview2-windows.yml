@@ -655,9 +655,11 @@ jobs:
           New-Item -ItemType Directory -Path 'cp33-webview2-sdk' -Force | Out-Null
           $uri="https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/$v/microsoft.web.webview2.$v.nupkg"
           Invoke-WebRequest -Uri $uri -OutFile 'cp33-webview2-sdk.zip'
-          Expand-Archive -LiteralPath 'cp33-webview2-sdk.zip' -DestinationPath 'cp33-webview2-sdk' -Force
-          if (!(Test-Path 'cp33-webview2-sdk/build/native/include/WebView2.h')) { throw 'WebView2 NuGet SDK header missing' }
-          if (!(Test-Path 'cp33-webview2-sdk/build/native/x64/WebView2LoaderStatic.lib')) { throw 'WebView2 SDK x64 static loader missing' }
+          $pkgDir="cp33-webview2-sdk/Microsoft.Web.WebView2.$v"
+          New-Item -ItemType Directory -Path $pkgDir -Force | Out-Null
+          Expand-Archive -LiteralPath 'cp33-webview2-sdk.zip' -DestinationPath $pkgDir -Force
+          if (!(Test-Path 'cp33-webview2-sdk/Microsoft.Web.WebView2.1.0.4258.31/build/native/include/WebView2.h')) { throw 'WebView2 NuGet SDK header missing' }
+          if (!(Test-Path 'cp33-webview2-sdk/Microsoft.Web.WebView2.1.0.4258.31/build/native/x64/WebView2LoaderStatic.lib')) { throw 'WebView2 SDK x64 static loader missing' }
       - name: Configure JUCE native audio plugins x64
         shell: pwsh
         run: |
