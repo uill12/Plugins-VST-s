@@ -13,6 +13,9 @@ metadata=json.loads((root/"Metadata/factory_preset_taxonomy.json").read_text(enc
 assert "initialWidth=1200" in fit and "initialHeight=800" in fit
 assert "g.initialHeight=g.initialWidth*2/3" in fit
 assert "g.minWidth=std::min(720,g.maxWidth)" in fit
+assert "Math.min(cssW,vv?.width" not in js
+assert "nativeW||cssW" not in js
+assert "window.setInterval" not in js
 assert "getPrimaryDisplay()" in fit and "userArea.getHeight()" in fit
 assert "availableH-95" in fit and "availableW-80" in fit
 assert "setResizable(true,false)" in cpp, "HTML resize grip must replace covered native corner"
@@ -38,7 +41,7 @@ assert len({(x["family"],x["role"]) for x in metadata})==64
 required=[
     "albedoViewport","ResizeObserver","visualViewport",
     "const BASE_W=1500,BASE_H=1000",
-    "nativeW||cssW","--albedo-viewport-w","--albedo-viewport-h",
+    "root.clientWidth||window.innerWidth","--albedo-viewport-w","--albedo-viewport-h",
     "root.style.setProperty('--fit-scale'",
     "--albedo-center-x","--albedo-center-y",
     "--albedo-atlas-width","--albedo-atlas-height",
