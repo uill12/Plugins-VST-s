@@ -651,6 +651,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP33 WebView2 frontend script syntax failed' }
           python Albedo-JUCE-Native/tests/check_cp38_recursive_bank.py
           if ($LASTEXITCODE -ne 0) { throw 'CP38 new 24-program library / original 64 stability regression' }
+          node --check Albedo-JUCE-Native/Assets/cp38_rotary_overlays.js
+          if ($LASTEXITCODE -ne 0) { throw 'CP38 rotary and popups JavaScript syntax failed' }
           python Albedo-JUCE-Native/tests/check_cp37_alignment.py
           if ($LASTEXITCODE -ne 0) { throw 'CP37 source graphs, filter controls, gain, or animated ADSR failed' }
           python Albedo-JUCE-Native/tests/check_cp36_quality.py
