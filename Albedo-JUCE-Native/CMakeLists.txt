@@ -64,6 +64,19 @@ target_link_libraries(AlbedoNative PRIVATE
   juce::juce_recommended_warning_flags
 )
 target_compile_definitions(AlbedoNative PUBLIC JUCE_WEB_BROWSER=1 JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0)
+# JUCE 8.0.17-security may not propagate the NuGet include directory to the
+# amalgamated juce_gui_extra.cpp compilation in a plugin's shared-code target.
+# Include and link the pinned SDK explicitly (in addition to NEEDS_WEBVIEW2).
+if(WIN32)
+  if(NOT EXISTS "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/build/native/include/WebView2.h")
+    message(FATAL_ERROR "CP33: JUCE_WEBVIEW2_PACKAGE_LOCATION must point to the extracted NuGet SDK")
+  endif()
+  target_include_directories(AlbedoNative PRIVATE
+    "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/build/native/include")
+  target_link_libraries(AlbedoNative PRIVATE
+    "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/build/native/x64/WebView2LoaderStatic.lib")
+endif()
+
 
 # Keep all 32 original materials. The MIDI engine loads this exact bank from
 # Windows resource 102 as it does in the existing non-JUCE Windows plugins.
