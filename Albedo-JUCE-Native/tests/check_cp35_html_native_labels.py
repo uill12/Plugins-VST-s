@@ -41,6 +41,22 @@ assert [x.upper() for x in engines] == cpp_array("kEngineMatter", 4)
 assert cpp_array("kMethodKnobs", 10) == [knobs[name] for name in methods]
 assert cpp_array("kMacroNames", 7) == [entry[1] for entry in palette]
 
+# Original HTML's alchemical material colors must remain exact, not approximate.
+html_colors = dict(re.findall(r"--([a-z0-9]+):(#(?:[0-9a-fA-F]{6}))", html))
+colour_pairs = {
+    "canvas": "paper", "surface": "panel", "text": "ink",
+    "accent": "e0", "gold": "e1", "air": "e2", "terra": "e3",
+    "muted": "muted", "teal": "teal"
+}
+for cpp_name, html_name in colour_pairs.items():
+    match = re.search(
+        rf"const auto {cpp_name}\s*=\s*juce::Colour::fromRGB\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)",
+        cpp,
+    )
+    assert match is not None, f"Missing JUCE material color {cpp_name}"
+    rgb = "#" + "".join(f"{int(v):02x}" for v in match.groups())
+    assert rgb.lower() == html_colors[html_name].lower(), f"{cpp_name} differs from CP31 {html_name}"
+
 sections = [
     "Prima Materia", "Source Inspector", "Arbor Resonantia",
     "Corpus & Character", "Correspondentiae", "Motus & Cellular",
