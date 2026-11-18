@@ -24,10 +24,15 @@ on:
         options: [clap,vst3, clap, vst3]
 permissions:
   contents: read
+# Avoid multiple long-running Windows fallback jobs for the same branch and project.
+# A newer explicit dispatch supersedes the older duplicate; other projects are unaffected.
+concurrency:
+  group: rgnes-win64-${{ github.ref }}-${{ inputs.project_path }}
+  cancel-in-progress: true
 jobs:
   windows-x64-build:
     runs-on: windows-2022
-    timeout-minutes: 75
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
