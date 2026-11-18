@@ -3,6 +3,7 @@ on:
   push:
     branches: [albedo-cp40-overlay-free-viewport-fit]
     paths:
+      - '.github/workflows/albedo-cp40-windows.yml'
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
       - 'Albedo-JUCE-Native/**'
       - 'patches/cp15_apply_part*.txt'
