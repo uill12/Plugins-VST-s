@@ -102,12 +102,13 @@
     queued=true;
     requestAnimationFrame(()=>{queued=false;apply()});
   }
+  // CP41: don't live-filter while the user edits draft filter labels.
+  // Apply/Enter triggers one render, then the list/matrix observers reconcile.
   for(const field of ['pbSearch','pbFamily','pbRole','pbSort'])
-    document.getElementById(field)?.addEventListener('input',requestApply);
-  dialog.addEventListener('click',requestApply);
-  document.getElementById('pbClear')?.addEventListener('click',()=>{
-    requestApply();
-  });
+    document.getElementById(field)?.addEventListener('change',requestApply);
+  for(const id of ['pbApply','pbClear','pbListMode','pbMatrixMode'])
+    document.getElementById(id)?.addEventListener('click',requestApply);
+  dialog.querySelectorAll('[data-collection]').forEach(tab=>tab.addEventListener('click',requestApply));
   new MutationObserver(requestApply).observe(list,{childList:true});
   new MutationObserver(requestApply).observe(matrix,{childList:true});
   // A visible Atlas is synchronized from host program IDs via its original API.
