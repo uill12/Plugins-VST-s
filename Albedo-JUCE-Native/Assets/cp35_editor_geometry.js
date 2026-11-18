@@ -32,6 +32,14 @@
    lastW=w;lastH=h;lastScale=scale;
    root.style.setProperty('--albedo-viewport-w',w+'px');
    root.style.setProperty('--albedo-viewport-h',h+'px');
+   root.style.setProperty('--albedo-center-x',Math.floor(w/2)+'px');
+   root.style.setProperty('--albedo-center-y',Math.floor(h/2)+'px');
+   // CSS calc multiplication is not equally supported by all WebView2
+   // runtimes; calculate the Atlas 1.618 ratio explicitly in JavaScript.
+   const atlasW=Math.min(1016,Math.floor(w*.77));
+   const atlasH=Math.min(628,Math.floor(h*.76),Math.floor(atlasW/1.618));
+   root.style.setProperty('--albedo-atlas-width',atlasW+'px');
+   root.style.setProperty('--albedo-atlas-height',atlasH+'px');
    root.style.setProperty('--fit-scale',String(scale));
    const sizeDisplay=document.getElementById('albedo-cp35-size-value');
    if(sizeDisplay)sizeDisplay.textContent=Math.round((nativeW||w))+'×'+Math.round(nativeH||h);
@@ -44,8 +52,8 @@
  style.id='albedo-cp35-style';
  style.textContent=`
  html.albedo-fit #page.page{
-   left:calc(var(--albedo-viewport-w,1320px) / 2)!important;
-   top:calc(var(--albedo-viewport-h,880px) / 2)!important;
+   left:var(--albedo-center-x,660px)!important;
+   top:var(--albedo-center-y,440px)!important;
  }
  html.albedo-fit .preset-browser-backdrop{
    position:fixed!important;inset:0 auto auto 0!important;
@@ -58,9 +66,9 @@
  }
  html.albedo-fit .preset-browser-backdrop[hidden]{display:none!important}
  html.albedo-fit .preset-browser-panel{
-   width:min(1016px,calc(var(--albedo-viewport-w,1320px) * .77))!important;
+   width:var(--albedo-atlas-width,1016px)!important;
    max-width:calc(var(--albedo-viewport-w,1320px) - 20px)!important;
-   height:min(628px,calc(var(--albedo-viewport-h,880px) * .76))!important;
+   height:var(--albedo-atlas-height,628px)!important;
    max-height:calc(var(--albedo-viewport-h,880px) - 20px)!important;
    min-height:0!important;
    box-sizing:border-box!important;
