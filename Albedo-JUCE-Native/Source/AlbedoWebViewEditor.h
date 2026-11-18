@@ -28,6 +28,8 @@ private:
     static juce::WebBrowserComponent::Options makeOptions(AlbedoWebViewEditor*);
     std::optional<juce::WebBrowserComponent::Resource> resource(const juce::String&) const;
     void receive(const juce::var&);
+    void handleAction(const juce::String&);
+    void postActionStatus(const juce::String&);
     void timerCallback() override;
     void activateFallback(const juce::String& reason);
     void sendDelta(bool full);
@@ -36,6 +38,8 @@ private:
     AlbedoProcessor& processor;
     Browser browser;
     std::unique_ptr<AlbedoEditor> nativeFallback;
+    std::unique_ptr<juce::FileChooser> patchChooser;
+    bool patchDialogOpen=false;
     std::vector<float> lastValues;
     bool pageReady=false, browserHasLoaded=false, fullSyncPending=true;
     int pendingTicks=0;
