@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "project": "Albedo Quintessential Synth",
+  "variant_id": "juce-webview2-html",
+  "version": "1.0.32",
+  "checkpoint": "CP34",
+  "renderer": "JUCE 8 WebBrowserComponent / Windows WebView2; HTML CP31",
+  "requires_webview2": true,
+  "embeds_html_runtime": true,
+  "native_juce_fallback": true,
+  "juce_web_browser": true,
+  "target": "AlbedoNative",
+  "product_name": "Albedo Quintessential Synth JUCE",
+  "manufacturer": "Albedo",
+  "vst3": {
+    "manufacturer_code": "Albd",
+    "plugin_code": "AQ32",
+    "bundle_id": "org.vitriol.albedo.juce32"
+  },
+  "clap": {
+    "plugin_id": "org.vitriol.opussonorum.juce32",
+    "adapter": "clap-juce-extensions"
+  },
+  "distribution": {
+    "source_branch": "albedo-cp34-window-fit-3x2",
+    "filename_label": "Albedo_JUCE_WebView2_CP34",
+    "never_label_as": "JUCE_Native_NoWebView2"
+  },
+  "compatibility": {
+    "native_no_webview2_branch": "albedo-juce-native-no-webview2",
+    "native_vst3_code": "AJNW",
+    "native_clap_id": "org.vitriol.albedo.juce.native.noview2"
+  },
+  "verification": {
+    "compiler_configuration": "JUCE WebView2",
+    "bitwig_host_qa": "not certified by metadata"
+  }
+}
