@@ -1,0 +1,43 @@
+name: Albedo CP37 A-D Containment ADSR Preview QA
+on:
+  push:
+    branches: [albedo-cp37-gui-grid-master-cellular]
+    paths:
+      - '.github/workflows/albedo-cp37-ui-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ui-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate all inline JS, four source bounds and ADSR source
+        shell: bash
+        run: |
+          test -s ui/Albedo_CP30_CP22_Landscape_3x2.html
+          node --check Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,subprocess,tempfile
+          s=Path('ui/Albedo_CP30_CP22_Landscape_3x2.html').read_text()
+          assert 'cp37-r1-source-bounds-adsr' in s and 'cp37-r1-adsr-live' in s
+          js=re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>',s)
+          assert len(js)>=5, len(js)
+          with tempfile.TemporaryDirectory() as tmp:
+              for i,body in enumerate(js):
+                  if not body.strip(): continue
+                  f=Path(tmp)/f'inline_{i}.js'
+                  f.write_text(body)
+                  subprocess.run(['node','--check',str(f)],check=True)
+          print('CP37 UI inline scripts valid:',len(js))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP37_ADSR_Containment_Exact_WebView2_Source
+          path: |
+            ui/Albedo_CP30_CP22_Landscape_3x2.html
+            Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+            Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
+            Albedo-JUCE-Native/Metadata/factory_preset_taxonomy.json
+          retention-days: 14
