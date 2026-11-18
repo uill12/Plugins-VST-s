@@ -144,6 +144,11 @@ void AlbedoWebViewEditor::receive(const juce::var& value)
         return;
     }
     if(parts.size()<2) return;
+    if(parts[0]=="action")
+    {
+        handleAction(parts[1]);
+        return;
+    }
     const auto id64=parts[1].getLargeIntValue();
     if(parts[0]=="preset")
     {
@@ -183,6 +188,79 @@ void AlbedoWebViewEditor::receive(const juce::var& value)
     if(currentGesture!=id) parameter->beginChangeGesture();
     parameter->setValueNotifyingHost(normalized);
     if(currentGesture!=id) parameter->endChangeGesture();
+}
+
+
+void AlbedoWebViewEditor::postActionStatus(const juce::String& msg)
+{
+    if(pageReady && browserHasLoaded && !nativeFallback)
+        browser.emitEventIfBrowserIsVisible("albedoActionStatus", juce::var(msg));
+}
+
+void AlbedoWebViewEditor::handleAction(const juce::String& action)
+{
+    if(action=="mutate")
+    {
+        // Real DAW parameter changes, not a visual-only morphology.
+        juce::Random rng;
+        for(uint32_t id=2000;id<=2006;++id)
+            if(auto* p=processor.parameter(id))
+            {
+                const auto lo=p->range.start,hi=p->range.end;
+                const float proposed=juce::jlimit(lo,hi,p->get()+(rng.nextFloat()-.5f)*(hi-lo)*.4f);
+                p->beginChangeGesture();
+                p->setValueNotifyingHost(p->convertTo0to1(proposed));
+                p->endChangeGesture();
+            }
+        fullSyncPending=true;
+        postActionStatus("New audio morphology: seven macro parameters mutated");
+        return;
+    }
+    if(patchDialogOpen || (action!="import" && action!="export"))return;
+    patchDialogOpen=true;
+    const bool saving=action=="export";
+    const auto defaultFile=juce::File::getSpecialLocation(juce::File::userDocumentsDirectory)
+        .getChildFile("Albedo_Patch.albedopatch");
+    patchChooser=std::make_unique<juce::FileChooser>(
+        saving?"Save Albedo audio patch":"Import Albedo audio patch",
+        defaultFile,"*.albedopatch",true);
+    const int flags=juce::FileBrowserComponent::canSelectFiles
+        | (saving ? juce::FileBrowserComponent::saveMode
+                  : juce::FileBrowserComponent::openMode);
+    juce::Component::SafePointer<AlbedoWebViewEditor> weakThis(this);
+    patchChooser->launchAsync(flags,[weakThis,saving](const juce::FileChooser& chooser)
+    {
+        if(weakThis==nullptr)return;
+        weakThis->patchDialogOpen=false;
+        auto file=chooser.getResult();
+        if(file.getFullPathName().isEmpty())return; // User cancelled
+        if(saving)
+        {
+            if(!file.hasFileExtension(".albedopatch"))
+                file=file.withFileExtension(".albedopatch");
+            juce::MemoryBlock binary;
+            weakThis->processor.getStateInformation(binary);
+            const bool ok=binary.getSize()>12 && file.replaceWithData(binary.getData(),binary.getSize());
+            weakThis->postActionStatus(ok?"Audio patch saved: "+file.getFileName()
+                                         :"Could not save the Albedo audio patch");
+            return;
+        }
+        juce::MemoryBlock binary;
+        if(!file.loadFileAsData(binary) || binary.getSize()<12 || binary.getSize()>256*1024)
+        {
+            weakThis->postActionStatus("Import rejected: missing or oversized patch");
+            return;
+        }
+        juce::MemoryInputStream probe(binary,false);
+        if(probe.readInt()!=0x414C4232) // Native JUCE patch state magic: ALB2
+        {
+            weakThis->postActionStatus("Import rejected: unsupported audio patch format");
+            return;
+        }
+        weakThis->processor.setStateInformation(binary.getData(),(int)binary.getSize());
+        weakThis->fullSyncPending=true;
+        weakThis->postActionStatus("Audio patch imported: "+file.getFileName());
+    });
 }
 
 void AlbedoWebViewEditor::onBrowserPageLoaded()
