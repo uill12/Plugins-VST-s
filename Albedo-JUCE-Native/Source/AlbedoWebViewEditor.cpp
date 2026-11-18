@@ -168,7 +168,7 @@ void AlbedoWebViewEditor::receive(const juce::var& value)
     const auto id64=parts[1].getLargeIntValue();
     if(parts[0]=="preset")
     {
-        if(id64>=0 && id64<64)
+        if(id64>=0 && id64<processor.getNumPrograms())
         {
             processor.loadFactoryPreset((int)id64);
             fullSyncPending=true;
