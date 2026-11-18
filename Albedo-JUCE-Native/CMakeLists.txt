@@ -3,7 +3,8 @@ project(AlbedoJUCE VERSION 1.0.32 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Native JUCE GUI only. No WebBrowserComponent, WebView2 or embedded HTML.
+# Renderer identity: JUCE 8 native C++ graphics. No WebBrowserComponent, WebView2 or HTML runtime.
+# This is a distinct plugin identity; do not reuse the CP33/CP34 WebView2 identifiers.
 if(NOT DEFINED ALBEDO_DSP_ROOT)
   set(ALBEDO_DSP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../Albedo-Quintessential-Synth")
 endif()
@@ -23,10 +24,10 @@ endif()
 
 juce_add_plugin(AlbedoNative
   COMPANY_NAME "Albedo"
-  BUNDLE_ID "org.vitriol.albedo.juce32"
+  BUNDLE_ID "org.vitriol.albedo.juce.native.noview2"
   PLUGIN_MANUFACTURER_CODE Albd
-  PLUGIN_CODE AQ32
-  PRODUCT_NAME "Albedo Quintessential Synth JUCE"
+  PLUGIN_CODE AJNW
+  PRODUCT_NAME "Albedo Quintessential Synth - JUCE Native (No WebView2)"
   FORMATS VST3
   IS_SYNTH TRUE
   NEEDS_MIDI_INPUT TRUE
@@ -54,7 +55,7 @@ target_link_libraries(AlbedoNative PRIVATE
   juce::juce_recommended_lto_flags
   juce::juce_recommended_warning_flags
 )
-target_compile_definitions(AlbedoNative PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0)
+target_compile_definitions(AlbedoNative PUBLIC JUCE_WEB_BROWSER=0 ALBEDO_GUI_NATIVE_JUCE=1 ALBEDO_GUI_WEBVIEW2=0 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0)
 
 # Keep all 32 original materials. The MIDI engine loads this exact bank from
 # Windows resource 102 as it does in the existing non-JUCE Windows plugins.
@@ -74,10 +75,10 @@ if(ALBEDO_BUILD_CLAP)
   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ext/clap-juce-extensions/CMakeLists.txt")
     add_subdirectory(ext/clap-juce-extensions EXCLUDE_FROM_ALL)
     clap_juce_extensions_plugin(TARGET AlbedoNative
-      CLAP_ID "org.vitriol.opussonorum.juce32"
+      CLAP_ID "org.vitriol.albedo.juce.native.noview2"
       CLAP_FEATURES instrument synthesizer stereo)
   else()
-    message(WARNING "CLAP extension checkout missing; build only VST3 until it is present")
+    message(FATAL_ERROR "CLAP was requested but clap-juce-extensions is missing; no partial CLAP+VST3 release")
   endif()
 endif()
 
