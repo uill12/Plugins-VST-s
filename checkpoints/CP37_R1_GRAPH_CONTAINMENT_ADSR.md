@@ -64,3 +64,20 @@ against card and rack rectangles at multiple actual host viewports.
 Transient graph overlays should update live SVG elements incrementally,
 retain the original font/texture, have pointer-events:none, and keep
 input focus on the controls they describe.
+
+## Build completed and distribution
+
+- Latest Windows JUCE CLAP+VST3 build: **success**, [Actions run 44276868220](https://github.com/uill12/Plugins-VST-s/actions/runs/44276868220).
+- The source UI artifact test also succeeded:
+  [Actions run 44276928275](https://github.com/uill12/Plugins-VST-s/actions/runs/44276928275).
+- Browser QA: 1320×880, 1152×768 and 1024×683: 4/4 card/wave/slider/value
+  rectangles contained within modules, no JS errors, real ADSR popup
+  curve changes; at 900×600, filter rows and cellular knobs remain aligned.
+- Distribution `Albedo_CP37_R1_Final_Win64_CLAP_VST3.zip` has valid ZIP CRC,
+  verified CLAP `clap_entry`, VST3 `GetPluginFactory`, embedded new
+  `cp37AdsrPopup` and `Pre FX Gain` strings, and strict JSON
+  `moduleinfo.json`. Only VST3 metadata's trailing commas were cleaned
+  after CI; PE code binaries remain identical to the successful CI build.
+- Final Google Drive: https://drive.google.com/file/d/1hhy3CcvLyK_0Eb4115NEmZX4dq4ZR6kq/view
+- No live Bitwig host visual or audio verification for CP37 is claimed.
+  Previous CP36 remains available for rollback.
