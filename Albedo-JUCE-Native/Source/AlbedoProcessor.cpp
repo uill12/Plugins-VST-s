@@ -97,21 +97,42 @@ float AlbedoProcessor::paramValue (uint32_t id) const noexcept
 void AlbedoProcessor::setCurrentProgram (int index) { loadFactoryPreset (index); }
 const juce::String AlbedoProcessor::getProgramName (int i)
 {
-    if (i < 0 || i >= (int) albedo_factory::patches.size()) return {};
-    return juce::String (albedo_factory::patches[(size_t)i].name);
+    if (i < 0 || i >= getNumPrograms()) return {};
+    if (i < (int) albedo_factory::patches.size())
+        return juce::String (albedo_factory::patches[(size_t)i].name);
+    return juce::String (albedo_creative::patches[(size_t)(i-64)].name);
 }
 void AlbedoProcessor::loadFactoryPreset (int index)
 {
-    if (index < 0 || index >= (int) albedo_factory::patches.size()) return;
-    const auto& patch = albedo_factory::patches[(size_t) index];
-    // Keyboard polyphony is required for every preset, including Bass/Lead.
+    if (index < 0 || index >= getNumPrograms()) return;
+    // Original 64 immutable factory program indexes are preserved. An
+    // additional 24 independently curated patches inherit an existing base
+    // patch before explicit timbre/envelope/modulation/effect overrides.
+    const bool creative = index >= (int) albedo_factory::patches.size();
+    const albedo_creative::Preset* extra =
+        creative ? &albedo_creative::patches[(size_t)(index-64)] : nullptr;
+    const auto baseIndex = creative ? extra->baseIndex : index;
+    const auto& patch = albedo_factory::patches[(size_t) baseIndex];
     for (size_t i = 0; i < albedo_factory::parameterIds.size(); ++i)
     {
-        uint32_t id = albedo_factory::parameterIds[i];
+        const uint32_t id = albedo_factory::parameterIds[i];
         if (auto* p = parameter (id))
         {
-            auto value = id == 3111 ? 0.0f : patch.values[i];
+            const auto value = id == 3111 ? 0.0f : patch.values[i];
             p->setValueNotifyingHost (p->convertTo0to1 (value));
+        }
+    }
+    if (creative)
+    {
+        for (size_t i=0;i<extra->changeCount;++i)
+        {
+            const auto [id,value] = extra->changes[i];
+            if (auto* p = parameter (id))
+            {
+                const float bounded = id == 3111 ? 0.0f :
+                    juce::jlimit (p->range.start,p->range.end,value);
+                p->setValueNotifyingHost (p->convertTo0to1 (bounded));
+            }
         }
     }
     currentProgram.store (index);
@@ -128,7 +149,7 @@ void AlbedoProcessor::setStateInformation (const void* data, int size)
 {
     juce::MemoryInputStream in (data, (size_t) juce::jmax (0, size), false);
     if (in.readInt() != 0x414C4232) return;
-    currentProgram.store (juce::jlimit (0, 63, in.readInt()));
+    currentProgram.store (juce::jlimit (0, getNumPrograms()-1, in.readInt()));
     const int count = juce::jlimit (0, 500, in.readInt());
     for (int i=0; i<count && !in.isExhausted(); ++i)
     {
