@@ -10,7 +10,7 @@ js=(root/"Assets/cp35_editor_geometry.js").read_text(encoding="utf-8")
 cm=(root/"CMakeLists.txt").read_text(encoding="utf-8")
 html=(root.parent/"ui/Albedo_CP30_CP22_Landscape_3x2.html").read_text(encoding="utf-8")
 metadata=json.loads((root/"Metadata/factory_preset_taxonomy.json").read_text(encoding="utf-8"))
-assert "initialWidth=1320" in fit and "initialHeight=880" in fit
+assert "initialWidth=1200" in fit and "initialHeight=800" in fit
 assert "g.initialHeight=g.initialWidth*2/3" in fit
 assert "g.minWidth=std::min(720,g.maxWidth)" in fit
 assert "getPrimaryDisplay()" in fit and "userArea.getHeight()" in fit
@@ -52,4 +52,4 @@ required=[
 for value in required:assert value in js, value
 assert "document.body.innerHTML" not in js and "location.reload" not in js
 assert "juce::juce_gui_extra" in cm and "NEEDS_WEBVIEW2 TRUE" in cm
-print("CP39 PASS: 1320x880 initial editor, 1500x1000 HTML canvas, 720x480 minimum, 3:2 host resize, matched WebView viewport, 64 factory presets")
+print("CP39 PASS: 1200x800 initial editor, 1500x1000 HTML canvas, 720x480 minimum, 3:2 host resize, matched WebView viewport, 64 factory presets")
