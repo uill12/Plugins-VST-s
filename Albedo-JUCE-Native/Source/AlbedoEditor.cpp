@@ -556,7 +556,7 @@ struct AlbedoEditor::Atlas final : juce::Component, juce::ListBoxModel
             g.setColour(teal.withAlpha(.13f));g.fillRoundedRectangle(gridBounds.toFloat(),4.f);
             for(int col=0;col<8;col++)
                 label(g,albedo_preset_taxonomy::roles[(size_t)col],
-                      {gridBounds.getX()+labelW+col*cw,gridBounds.getY(),cw,headH},
+                      {float(gridBounds.getX()+labelW)+col*cw,float(gridBounds.getY()),cw,float(headH)},
                       10.f,false,true,juce::Justification::centred,muted);
             for(int row=0;row<8;row++)
             {
@@ -683,7 +683,7 @@ void AlbedoEditor::layoutControls(const std::vector<ParamControl*>& items,juce::
 void AlbedoEditor::drawSection(juce::Graphics&g,juce::Rectangle<float>b,const juce::String&title,int index)
 {
     panel(g,b);
-    g.setColour(colours[(size_t)(index%4)]);g.fillRect(b.getX()+7,b.getY()+8,3,24);
+    g.setColour(colours[(size_t)(index%4)]);g.fillRect(b.getX()+7.f,b.getY()+8.f,3.f,24.f);
     label(g,title,{b.getX()+15,b.getY()+4,b.getWidth()-28,30},18.f,true,true);
 }
 AlbedoEditor::AlbedoEditor(AlbedoProcessor& p):juce::AudioProcessorEditor(&p),processor(p)
@@ -734,9 +734,9 @@ AlbedoEditor::AlbedoEditor(AlbedoProcessor& p):juce::AudioProcessorEditor(&p),pr
         advancedControls.push_back(ctrl);
     }
     constrainer.setFixedAspectRatio(1.5);
-    constrainer.setSizeLimits(960,640,1920,1280);
+    constrainer.setSizeLimits(1260,840,1920,1280);
     setResizable(true,true);setConstrainer(&constrainer);
-    setSize(1440,960);
+    setSize(1290,860);
     startTimerHz(24); // animated regions 24 Hz; host parameter sync 12 Hz
 }
 AlbedoEditor::~AlbedoEditor(){stopTimer();setLookAndFeel(nullptr);}
