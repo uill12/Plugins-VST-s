@@ -42,7 +42,8 @@ assert cpp_array("kMethodKnobs", 10) == [knobs[name] for name in methods]
 assert cpp_array("kMacroNames", 7) == [entry[1] for entry in palette]
 
 # Original HTML's alchemical material colors must remain exact, not approximate.
-html_colors = dict(re.findall(r"--([a-z0-9]+):(#(?:[0-9a-fA-F]{6}))", html))
+root_css = body(html, r":root\s*\{([^}]+)\}")
+html_colors = dict(re.findall(r"--([a-z0-9]+):(#(?:[0-9a-fA-F]{6}))", root_css))
 colour_pairs = {
     "canvas": "paper", "surface": "panel", "text": "ink",
     "accent": "e0", "gold": "e1", "air": "e2", "terra": "e3",
