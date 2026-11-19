@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(AlbedoJUCE VERSION 1.0.47 LANGUAGES C CXX RC)
+project(AlbedoJUCE VERSION 1.0.48 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -139,3 +139,4 @@ if(WIN32 AND BUILD_TESTING)
   target_include_directories(AlbedoViewportHost PRIVATE "${albedoClapDir}/..")
   target_link_libraries(AlbedoViewportHost PRIVATE user32)
 endif()
+

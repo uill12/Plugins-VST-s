@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CP38: generate deterministic native 24-preset program bank from a single JSON.
+"""Generate a contiguous 64-program native bank from its sound-design metadata.
 No copyrighted source audio, MIDI notes, chord progressions or sequences.
 """
 from pathlib import Path
@@ -7,12 +7,15 @@ import argparse, json, math
 p=argparse.ArgumentParser()
 p.add_argument("--metadata",type=Path,default=Path("Albedo-JUCE-Native/Metadata/recursive_forms_bank.json"))
 p.add_argument("--output",type=Path,default=Path("Albedo-JUCE-Native/Source/AlbedoCreativeBank.hpp"))
+p.add_argument("--bank", choices=["creative","material","previous"], default="creative")
 args=p.parse_args()
+namespace = {"creative":"albedo_creative","material":"albedo_material","previous":"albedo_previous"}[args.bank]
+first = 0 if args.bank == "material" else 64
 rows=json.loads(args.metadata.read_text(encoding="utf-8"))
 assert len(rows)==64
-assert [p["index"] for p in rows]==list(range(64,128))
+assert [p["index"] for p in rows]==list(range(first, first+64))
 assert len({p["name"] for p in rows})==64
-assert {p["family"] for p in rows}=={"Resynthesis Forms","Repetition Fields","Phase Studies"}
+if args.bank != "material": assert {p["family"] for p in rows}=={"Resynthesis Forms","Repetition Fields","Phase Studies"}
 assert all(p["baseIndex"] in range(64) for p in rows)
 for p in rows:
     assert len(p["overrides"])>=35
@@ -36,7 +39,7 @@ out=["#pragma once",
      "#include <array>",
      "#include <cstddef>",
      "#include <cstdint>",
-     "namespace albedo_creative {",
+     "namespace "+namespace+" {",
      "struct Change { uint32_t id; float value; };",
      "struct Preset { int index; const char* name; const char* family;",
      " const char* role; int baseIndex; const Change* changes; std::size_t changeCount; };"]

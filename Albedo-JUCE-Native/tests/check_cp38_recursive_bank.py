@@ -40,7 +40,7 @@ assert "source==='Creative'?creative" in html
 assert "payload:'preset|'+p.id" in html
 assert "get creative(){return creative.map" in html
 assert "getNumPrograms() override { return 64 + (int) albedo_creative::patches.size(); }" in hpp
-assert "if (creative)" in cpp and "const auto baseIndex = creative ? extra->baseIndex : index;" in cpp
+assert "albedo_programs::apply(index" in cpp
 assert "currentProgram.store (juce::jlimit (0, getNumPrograms()-1, in.readInt()));" in cpp
 assert "if(id64>=0 && id64<processor.getNumPrograms())" in web
 assert "...window.ALBEDO_PRESET_ATLAS.creative" in bridge

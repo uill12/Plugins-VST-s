@@ -2,6 +2,7 @@
 #include "AlbedoEditor.h"
 #include "AlbedoWebViewEditor.h"
 #include <cmath>
+#include "AlbedoPrograms.hpp"
 
 AlbedoProcessor::AlbedoProcessor()
   : juce::AudioProcessor (juce::AudioProcessor::BusesProperties().withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
@@ -20,6 +21,7 @@ AlbedoProcessor::AlbedoProcessor()
         parameterList.emplace_back (d.id, p);
         lastValues.push_back (d.def);
     }
+    loadFactoryPreset(0);
 }
 AlbedoProcessor::~AlbedoProcessor()
 {
@@ -113,36 +115,10 @@ const juce::String AlbedoProcessor::getProgramName (int i)
 void AlbedoProcessor::loadFactoryPreset (int index)
 {
     if (index < 0 || index >= getNumPrograms()) return;
-    // Original 64 immutable factory program indexes are preserved. An
-    // additional 24 independently curated patches inherit an existing base
-    // patch before explicit timbre/envelope/modulation/effect overrides.
-    const bool creative = index >= (int) albedo_factory::patches.size();
-    const albedo_creative::Preset* extra =
-        creative ? &albedo_creative::patches[(size_t)(index-64)] : nullptr;
-    const auto baseIndex = creative ? extra->baseIndex : index;
-    const auto& patch = albedo_factory::patches[(size_t) baseIndex];
-    for (size_t i = 0; i < albedo_factory::parameterIds.size(); ++i)
-    {
-        const uint32_t id = albedo_factory::parameterIds[i];
-        if (auto* p = parameter (id))
-        {
-            const auto value = id == 3111 ? 0.0f : patch.values[i];
-            p->setValueNotifyingHost (p->convertTo0to1 (value));
-        }
-    }
-    if (creative)
-    {
-        for (size_t i=0;i<extra->changeCount;++i)
-        {
-            const auto [id,value] = extra->changes[i];
-            if (auto* p = parameter (id))
-            {
-                const float bounded = id == 3111 ? 0.0f :
-                    juce::jlimit (p->range.start,p->range.end,value);
-                p->setValueNotifyingHost (p->convertTo0to1 (bounded));
-            }
-        }
-    }
+    albedo_programs::apply(index, [this](uint32_t id, float value) {
+        if (auto* p=parameter(id))
+            p->setValueNotifyingHost(p->convertTo0to1(juce::jlimit(p->range.start,p->range.end,value)));
+    });
     currentProgram.store (index);
 }
 void AlbedoProcessor::getStateInformation (juce::MemoryBlock& dest)
