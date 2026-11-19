@@ -713,6 +713,7 @@ jobs:
       - name: Measure and balance all 128 programs
         shell: pwsh
         run: |
+          Set-Content -Encoding ascii Albedo-JUCE-Native/Source/AlbedoProgramTrim.hpp '#pragma once', '#include <array>', 'inline constexpr std::array<float,128> albedo_program_trim{};'
           cmake --build build-cp38-juce --config Release --target AlbedoBankAudition --parallel 4
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $render=(Get-ChildItem build-cp38-juce -Recurse -Filter AlbedoBankAudition.exe)[0].FullName

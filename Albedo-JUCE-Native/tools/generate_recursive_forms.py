@@ -56,3 +56,8 @@ out+=["}};","static_assert(patches.size()==64);","} // namespace albedo_creative
 args.output.parent.mkdir(parents=True,exist_ok=True)
 args.output.write_text("\n".join(out),encoding="utf-8")
 print("CP38: generated 64 unique native factory additions, indexes 64..127; source metadata:",args.metadata)
+
+# Keep both program tables in sync for local builds that use the default entry point.
+if args.bank=="creative" and args.metadata.name=="recursive_forms_bank.json":
+    import subprocess, sys
+    subprocess.run([sys.executable,__file__,"--bank","material","--metadata",str(args.metadata.with_name("material_factory_bank.json")),"--output",str(args.output.with_name("AlbedoMaterialBank.hpp"))],check=True)
