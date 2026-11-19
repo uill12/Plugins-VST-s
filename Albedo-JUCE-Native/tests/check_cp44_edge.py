@@ -9,6 +9,8 @@ with sync_playwright() as playwright:
     for dpi in (1, 1.25, 1.5):
         page = browser.new_page(device_scale_factor=dpi, viewport={'width': 1300, 'height': 867})
         page.goto(html.as_uri())
+        first = page.locator('#page').bounding_box()
+        assert abs(first['x']) < 1.5 and abs(first['width']-1300) < 1.5, first
         page.add_script_tag(path=str(geometry))
         for w,h in ((1300,867),(720,480),(1440,960),(1050,760),(1200,800)):
             page.set_viewport_size({'width':w,'height':h})

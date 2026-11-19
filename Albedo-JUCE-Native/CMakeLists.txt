@@ -124,5 +124,8 @@ if(BUILD_TESTING)
   target_include_directories(AlbedoCP38CreativeAudioTest PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/Source"
     "${ALBEDO_CP36_DSP_ROOT}/include")
-  add_test(NAME cp38_recursive_forms_24_presets_polyphony COMMAND AlbedoCP38CreativeAudioTest)
+  add_executable(AlbedoRearFieldTest tests/rear_field.cpp)
+  target_compile_features(AlbedoRearFieldTest PRIVATE cxx_std_20)
+  add_test(NAME cp45_quad_rear_impulse_and_block_continuity COMMAND AlbedoRearFieldTest)
+  add_test(NAME cp45_recursive_forms_64_presets_polyphony COMMAND AlbedoCP38CreativeAudioTest)
 endif()

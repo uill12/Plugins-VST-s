@@ -85,7 +85,7 @@ AlbedoWebViewEditor::AlbedoWebViewEditor(AlbedoProcessor& p)
     setResizable(true,false);
     setConstrainer(&aspect);
     setSize(fit.initialWidth,fit.initialHeight);
-    browser.goToURL(juce::WebBrowserComponent::getResourceProviderRoot() + "cp44/index.html");
+    browser.goToURL(juce::WebBrowserComponent::getResourceProviderRoot() + juce::String(JucePlugin_VersionString) + "/index.html");
     startTimerHz(12);
 }
 
@@ -100,7 +100,8 @@ AlbedoWebViewEditor::~AlbedoWebViewEditor()
 std::optional<juce::WebBrowserComponent::Resource>
 AlbedoWebViewEditor::resource(const juce::String& path) const
 {
-    const auto assetPath = path.startsWith("/cp44/") ? path.substring(5) : path;
+    const auto versionPrefix = "/" + juce::String(JucePlugin_VersionString);
+    const auto assetPath = path.startsWith(versionPrefix + "/") ? path.substring(versionPrefix.length()) : path;
     if(assetPath=="/" || assetPath=="/index.html")
     {
         int size=0;
