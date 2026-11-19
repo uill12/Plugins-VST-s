@@ -30,7 +30,7 @@ assert 'cp35_editor_geometry.js' in cpp and 'cp35_editor_geometry_js' in cpp
 assert "cp35_editor_geometry.js" in cm
 assert "cp34_window_fit.js" not in cm, "old conflicting browser fit must be unbundled"
 assert "cp34_window_fit.js" not in cpp
-assert "const BASE_W=1500,BASE_H=1000" in html
+assert "w/canvas.offsetWidth" in html
 assert 'id="presetBrowser"' in html and 'id="cp04Lab"' in html
 assert "window.ALBEDO_CP31_MOTION" in html
 assert len(metadata)==64 and [x["index"] for x in metadata]==list(range(64))

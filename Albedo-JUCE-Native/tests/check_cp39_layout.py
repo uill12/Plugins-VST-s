@@ -21,7 +21,7 @@ for text in (
     "justify-self:center!important",
 ):
     assert text in css, text
-assert "const BASE_W=1500,BASE_H=1000,root=document.documentElement" in html
+assert "w/canvas.offsetWidth" in html
 assert "transform-origin:0 0!important" in geometry
 assert "Math.min(w/page.offsetWidth,h/page.offsetHeight)" in geometry
 assert "g.minWidth=std::min(720,g.maxWidth)" in fit

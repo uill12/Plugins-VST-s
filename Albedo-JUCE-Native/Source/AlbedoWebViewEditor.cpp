@@ -85,7 +85,7 @@ AlbedoWebViewEditor::AlbedoWebViewEditor(AlbedoProcessor& p)
     setResizable(true,false);
     setConstrainer(&aspect);
     setSize(fit.initialWidth,fit.initialHeight);
-    browser.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
+    browser.goToURL(juce::WebBrowserComponent::getResourceProviderRoot() + "cp44/index.html");
     startTimerHz(12);
 }
 
@@ -100,7 +100,8 @@ AlbedoWebViewEditor::~AlbedoWebViewEditor()
 std::optional<juce::WebBrowserComponent::Resource>
 AlbedoWebViewEditor::resource(const juce::String& path) const
 {
-    if(path=="/" || path=="/index.html")
+    const auto assetPath = path.startsWith("/cp44/") ? path.substring(5) : path;
+    if(assetPath=="/" || assetPath=="/index.html")
     {
         int size=0;
         auto* data=BinaryData::getNamedResource("Albedo_CP30_CP22_Landscape_3x2_html",size);
@@ -120,13 +121,13 @@ AlbedoWebViewEditor::resource(const juce::String& path) const
 
     const char* name=nullptr;
     const char* mime=nullptr;
-    if(path=="/juce_cp33_bridge.js")
+    if(assetPath=="/juce_cp33_bridge.js")
     { name="juce_cp33_bridge_js"; mime="text/javascript"; }
-    else if(path=="/cp35_editor_geometry.js")
+    else if(assetPath=="/cp35_editor_geometry.js")
     { name="cp35_editor_geometry_js"; mime="text/javascript"; }
-    else if(path=="/cp38_rotary_overlays.js")
+    else if(assetPath=="/cp38_rotary_overlays.js")
     { name="cp38_rotary_overlays_js"; mime="text/javascript"; }
-    else if(path=="/factory_preset_taxonomy.json")
+    else if(assetPath=="/factory_preset_taxonomy.json")
     { name="factory_preset_taxonomy_json"; mime="application/json"; }
     else return std::nullopt;
     int size=0;

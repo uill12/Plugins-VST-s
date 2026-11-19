@@ -229,6 +229,7 @@
  if(typeof ResizeObserver==='function'){
    const observer=new ResizeObserver(enqueue);
    observer.observe(root);
+   observer.observe(page);
    window.__ALBEDO_CP35_RESIZE_OBSERVER=observer;
  }
  // ResizeObserver, window events and host viewport events update fit without polling.

@@ -1801,6 +1801,17 @@ html.albedo-fit #presetBrowser .preset-browser-panel,
   #presetBrowser .pb-item-family,#presetBrowser .pb-item-role{font-size:7px!important}
 }
 </style>
+<style id="cp44-viewport">
+/* Size the first paint and every subsequent layout against the actual viewport. */
+@supports (transform:scale(tan(atan2(10px,10px)))) {
+ html.albedo-fit body #page.page {
+  position:fixed!important;margin:0!important;transform-origin:0 0!important;
+  left:max(0px,calc((100vw - 150dvh)/2))!important;
+  top:max(0px,calc((100dvh - 66.6666667vw)/2))!important;
+  transform:scale(min(tan(atan2(100vw,1320px)),tan(atan2(100dvh,880px))))!important;
+ }
+}
+</style>
 </head>
 <body>
 <div class="page" id="page">
@@ -2211,17 +2222,17 @@ document.getElementById('graphClose').addEventListener('click',close);overlay.ad
 /* CP31 only scales the complete single-page canvas on actual viewport changes;
    pointer movements and parameter changes never modify frame geometry. */
 (()=>{
- const BASE_W=1500,BASE_H=1000,root=document.documentElement;
+ const root=document.documentElement, canvas=document.getElementById('page');
  function fit(){
    // Native JUCE/WebView2: CP40's viewport controller is the single fit writer.
    // Standalone HTML keeps this fallback for preview outside a plugin host.
    if(window.__JUCE__?.backend)return;
    const w=Math.max(1,document.documentElement.clientWidth),h=Math.max(1,document.documentElement.clientHeight);
-   const scale=Math.min(w/BASE_W,h/BASE_H);
+   const scale=Math.min(w/canvas.offsetWidth,h/canvas.offsetHeight);
    root.style.setProperty('--fit-scale',String(Math.max(.1,scale)));
  }
  fit();window.addEventListener('resize',fit,{passive:true});
- Object.defineProperty(window,'ALBEDO_CP30_LAYOUT',{get:()=>({aspectRatio:'3:2',baseWidth:BASE_W,baseHeight:BASE_H,scale:Number(root.style.getPropertyValue('--fit-scale')),logo:'original CP24 SVG — unchanged',nativeBuild:'DirectComposition WebView2 CP31 layout' })});
+ Object.defineProperty(window,'ALBEDO_CP30_LAYOUT',{get:()=>({aspectRatio:'3:2',baseWidth:canvas.offsetWidth,baseHeight:canvas.offsetHeight,scale:Number(root.style.getPropertyValue('--fit-scale')),logo:'original CP24 SVG — unchanged',nativeBuild:'DirectComposition WebView2 CP31 layout' })});
 })();
 </script>
 <script>
