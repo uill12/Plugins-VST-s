@@ -140,3 +140,10 @@ if(WIN32 AND BUILD_TESTING)
   target_link_libraries(AlbedoViewportHost PRIVATE user32)
 endif()
 
+
+if(BUILD_TESTING AND WIN32 AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Source/AlbedoPreviousBank.hpp")
+  add_executable(AlbedoBankAudition tests/cp48_audition.cpp
+    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp" "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
+  target_compile_features(AlbedoBankAudition PRIVATE cxx_std_20)
+  target_include_directories(AlbedoBankAudition PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Source" "${ALBEDO_DSP_ROOT}/include")
+endif()

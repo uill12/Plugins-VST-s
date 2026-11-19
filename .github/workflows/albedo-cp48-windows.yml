@@ -635,6 +635,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP36 high-resolution audio patch failed' }
           python patches/cp37_gain_stage.py --root Albedo-Quintessential-Synth
           if ($LASTEXITCODE -ne 0) { throw 'CP37 native gain stage patch failed' }
+          git fetch --depth=1 origin 84d1861f5a891729ea7a90e70fbd838616aef7eb
+          if ($LASTEXITCODE -ne 0) { throw 'CP47 reference missing' }
+          git show 84d1861f5a891729ea7a90e70fbd838616aef7eb:Albedo-JUCE-Native/Metadata/recursive_forms_bank.json | Set-Content -Encoding utf8 cp47-reference.json
+          python Albedo-JUCE-Native/tools/generate_recursive_forms.py --bank previous --metadata cp47-reference.json --output Albedo-JUCE-Native/Source/AlbedoPreviousBank.hpp
+          if ($LASTEXITCODE -ne 0) { throw 'CP47 reference generation failed' }
           python Albedo-JUCE-Native/tools/generate_recursive_forms.py --bank material --metadata Albedo-JUCE-Native/Metadata/material_factory_bank.json --output Albedo-JUCE-Native/Source/AlbedoMaterialBank.hpp
           if ($LASTEXITCODE -ne 0) { throw 'Material factory generation failed' }
           python Albedo-JUCE-Native/tools/generate_recursive_forms.py
@@ -705,6 +710,28 @@ jobs:
           $albedoSourceDir=("$PWD/Albedo-Quintessential-Synth").Replace([char]92, [char]47)
           cmake -S Albedo-JUCE-Native -B build-cp38-juce -G "Visual Studio 17 2022" -A x64 -DALBEDO_BUILD_CLAP=ON -DBUILD_TESTING=ON -DALBEDO_DSP_ROOT="$albedoSourceDir" -DJUCE_WEBVIEW2_PACKAGE_LOCATION="$PWD/cp33-webview2-sdk"
           if ($LASTEXITCODE -ne 0) { throw 'JUCE Windows CMake configuration failed' }
+      - name: Measure and balance all 128 programs
+        shell: pwsh
+        run: |
+          cmake --build build-cp38-juce --config Release --target AlbedoBankAudition --parallel 4
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $render=(Get-ChildItem build-cp38-juce -Recurse -Filter AlbedoBankAudition.exe)[0].FullName
+          & $render old audio/old
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $render new audio/raw
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python Albedo-JUCE-Native/tools/cp48_balance.py trim
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build build-cp38-juce --config Release --target AlbedoBankAudition --parallel 4
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $render new audio/final
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python Albedo-JUCE-Native/tools/cp48_balance.py verify
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP48_Sound_QA
+          path: dist-cp48-qa/*
       - name: Build JUCE VST3 and CLAP plugins
         shell: pwsh
         run: |
