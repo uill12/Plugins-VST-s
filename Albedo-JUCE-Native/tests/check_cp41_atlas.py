@@ -34,14 +34,14 @@ assert "dialog.addEventListener('click',requestApply)" not in bridge
 assert "addEventListener('change',requestApply)" in bridge
 assert "cp38-visual" not in rotary
 assert "cp37AdsrPopup" in html
-assert "VERSION 1.0.44" in cmake
+assert "VERSION 1.0.45" in cmake
 assert "juce32" in cmake and "CLAP_ID" in cmake
 factory=re.search(r'<script type="application/json" id="albedoFactoryCatalog">([^<]+)</script>',html)
 creative=re.search(r'<script type="application/json" id="albedoCreativeCatalog">([^<]+)</script>',html)
 assert factory and creative
 fa=json.loads(factory.group(1));cr=json.loads(creative.group(1))
 assert [r['id'] for r in fa]==list(range(64))
-assert [r['id'] for r in cr]==list(range(64,94))
+assert [r['id'] for r in cr]==list(range(64,128))
 assert len({(r["family"],r["role"]) for r in fa})==64
 with tempfile.TemporaryDirectory() as td:
     for i,src in enumerate(re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>',html)):

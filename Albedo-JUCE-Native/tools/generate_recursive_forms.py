@@ -9,9 +9,9 @@ p.add_argument("--metadata",type=Path,default=Path("Albedo-JUCE-Native/Metadata/
 p.add_argument("--output",type=Path,default=Path("Albedo-JUCE-Native/Source/AlbedoCreativeBank.hpp"))
 args=p.parse_args()
 rows=json.loads(args.metadata.read_text(encoding="utf-8"))
-assert len(rows)==30
-assert [p["index"] for p in rows]==list(range(64,94))
-assert len({p["name"] for p in rows})==30
+assert len(rows)==64
+assert [p["index"] for p in rows]==list(range(64,128))
+assert len({p["name"] for p in rows})==64
 assert {p["family"] for p in rows}=={"Resynthesis Forms","Repetition Fields","Phase Studies"}
 assert all(p["baseIndex"] in range(64) for p in rows)
 for p in rows:
@@ -45,11 +45,11 @@ for p in rows:
     for id,val in sorted(p["overrides"].items(),key=lambda item:int(item[0])):
         out.append(" {"+str(int(id))+"u, "+cfloat(val)+"},")
     out.append("};")
-out.append("inline constexpr std::array<Preset,30> patches{{")
+out.append("inline constexpr std::array<Preset,64> patches{{")
 for p in rows:
     i=p["index"]
     out.append(" {"+str(i)+", "+escaped(p["name"])+", "+escaped(p["family"])+", "+escaped(p["role"])+", "+str(p["baseIndex"])+f", changes_{i}, std::size(changes_{i})"+"},")
-out+=["}};","static_assert(patches.size()==30);","} // namespace albedo_creative",""]
+out+=["}};","static_assert(patches.size()==64);","} // namespace albedo_creative",""]
 args.output.parent.mkdir(parents=True,exist_ok=True)
 args.output.write_text("\n".join(out),encoding="utf-8")
-print("CP38: generated 30 unique native factory additions, indexes 64..93; source metadata:",args.metadata)
+print("CP38: generated 64 unique native factory additions, indexes 64..127; source metadata:",args.metadata)

@@ -3,15 +3,17 @@
 #include <vitriol_dsp.hpp>
 #include <albedo_factory_patches.hpp>
 #include "AlbedoCreativeBank.hpp"
+#include "AlbedoRearField.hpp"
 #include <memory>
 #include <unordered_map>
 #include <vector>
 
-class AlbedoProcessor final : public juce::AudioProcessor
+class AlbedoProcessor final : public juce::AudioProcessor, private juce::AudioProcessorParameter::Listener
 {
 public:
     AlbedoProcessor();
-    ~AlbedoProcessor() override = default;
+    ~AlbedoProcessor() override;
+    bool supportsDoublePrecisionProcessing() const override { return true; }
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -47,7 +49,16 @@ private:
     std::vector<double> lastValues;
     std::atomic<int> currentProgram { 0 };
     std::atomic<int> activeVoiceCount { 0 };
-    juce::AudioBuffer<float> floatScratch;
+    AlbedoRearField rearField;
+    std::atomic<bool> parametersChanged { true };
+    void parameterValueChanged(int, float) override { parametersChanged.store(true, std::memory_order_release); }
+    void parameterGestureChanged(int, bool) override {}
+    template<typename T> void renderRear(juce::AudioBuffer<T>& b)
+    {
+        if (b.getNumChannels()==4)
+            rearField.render(b.getReadPointer(0), b.getReadPointer(1), b.getWritePointer(2),
+                             b.getWritePointer(3), b.getNumSamples());
+    }
     void updateSynthParameters();
     void handleMidi (const juce::MidiMessage&);
     void processRegion (juce::AudioBuffer<float>& buffer, int start, int length);

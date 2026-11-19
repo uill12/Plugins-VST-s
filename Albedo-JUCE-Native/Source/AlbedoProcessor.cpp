@@ -15,22 +15,30 @@ AlbedoProcessor::AlbedoProcessor()
         auto* p = new juce::AudioParameterFloat (juce::ParameterID ("p" + juce::String (d.id), 1),
                         juce::String (d.name), range, (float) d.def, juce::String (d.unit));
         addParameter (p);
+        p->addListener(this);
         idParameters.emplace (d.id, p);
         parameterList.emplace_back (d.id, p);
         lastValues.push_back (d.def);
     }
 }
+AlbedoProcessor::~AlbedoProcessor()
+{
+    for (const auto& entry : parameterList) entry.second->removeListener(this);
+}
 void AlbedoProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     synth->prepare (sampleRate);
-    floatScratch.setSize (2, juce::jmax (512, samplesPerBlock), false, true, true);
+    juce::ignoreUnused(samplesPerBlock);
+    rearField.prepare(sampleRate);
+    parametersChanged.store(true, std::memory_order_release);
     updateSynthParameters();
 }
 void AlbedoProcessor::releaseResources() { synth->allNotesOff(); }
 bool AlbedoProcessor::isBusesLayoutSupported (const BusesLayout& l) const
-{ return l.getMainOutputChannelSet() == juce::AudioChannelSet::stereo(); }
+{ return l.getMainOutputChannelSet() == juce::AudioChannelSet::stereo() || l.getMainOutputChannelSet() == juce::AudioChannelSet::quadraphonic(); }
 void AlbedoProcessor::updateSynthParameters()
 {
+    if (!parametersChanged.exchange(false, std::memory_order_acq_rel)) return;
     // Audio-thread-owned lastValues; no locks, GUI operations, or allocations.
     for (size_t i = 0; i < parameterList.size(); ++i)
     {
@@ -56,7 +64,6 @@ void AlbedoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
 {
     juce::ScopedNoDenormals noDenormals;
     updateSynthParameters();
-    buffer.clear();
     int pos = 0;
     for (const auto metadata : midi)
     {
@@ -66,13 +73,13 @@ void AlbedoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
         handleMidi (metadata.getMessage());
     }
     processRegion (buffer, pos, buffer.getNumSamples() - pos);
+    renderRear(buffer);
     activeVoiceCount.store (synth->activeVoices(), std::memory_order_relaxed);
 }
 void AlbedoProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
     updateSynthParameters();
-    buffer.clear();
     int pos=0;
     for (const auto metadata : midi)
     {
@@ -84,6 +91,7 @@ void AlbedoProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::Mid
     if (buffer.getNumSamples()>pos)
         synth->process64(buffer.getWritePointer(0,pos),buffer.getWritePointer(1,pos),
                          (uint32_t)(buffer.getNumSamples()-pos));
+    renderRear(buffer);
     activeVoiceCount.store(synth->activeVoices(),std::memory_order_relaxed);
 }
 juce::AudioParameterFloat* AlbedoProcessor::parameter (uint32_t id) const noexcept

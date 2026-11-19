@@ -10,7 +10,7 @@
 int main()
 {
     static_assert(albedo_factory::patches.size()==64);
-    static_assert(albedo_creative::patches.size()==30);
+    static_assert(albedo_creative::patches.size()==64);
     bool ok=true;
     int audible=0;
     for (const auto& patch:albedo_creative::patches)
@@ -28,7 +28,7 @@ int main()
         s->prepare(sr);
         for(int n=48;n<60;++n)s->noteOn(n,.57);
         const bool poly=s->activeVoices()>=12;
-        constexpr size_t N=4096;
+        const size_t N=static_cast<size_t>(sr/4);
         std::vector<double> left(N),right(N);
         s->process64(left.data(),right.data(),(uint32_t)N);
         double energy=0,peak=0;
@@ -41,7 +41,7 @@ int main()
         }
         energy/=N;
         const bool good=finite && poly && peak<=1.000001;
-        ok&=good && (patch.index < 88 || energy>1.0e-13);
+        ok&=good && (energy>1.0e-13);
         audible+=energy>1.0e-13;
         // Test retrigger and note-off without stale voices/non-finite output.
         for(int n=48;n<60;++n)s->noteOff(n);
@@ -52,7 +52,7 @@ int main()
                  <<" RMS "<<std::sqrt(energy)<<" peak "<<peak
                  <<" finite "<<finite<<"\n";
     }
-    std::cout<<"Original 64 unchanged; 30 additional voices; audible "
-             <<audible<<"/30; finite/polyphonic "<<ok<<"\n";
-    return ok && audible>=26 ? 0 : 1;
+    std::cout<<"Original 64 unchanged; 64 additional voices; audible "
+             <<audible<<"/64; finite/polyphonic "<<ok<<"\n";
+    return ok && audible==64 ? 0 : 1;
 }
