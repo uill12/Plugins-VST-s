@@ -7,7 +7,7 @@
  const page=document.getElementById('page');
  if(!page)return;
  let nativeW=0,nativeH=0,lastW=-1,lastH=-1,lastScale=-1;
- let frame=0;
+ let frame=0,physicalWidth=0,physicalHeight=0;
  const clampWidth=w=>Math.max(720,Math.min(1500,Math.round(w/6)*6));
  const send=(w,h)=>{
    const width=clampWidth(w),height=width*2/3;
@@ -21,6 +21,9 @@
    // it created a reduced canvas with empty borders in Bitwig.
    const w=Math.max(1,Math.floor(root.clientWidth||window.innerWidth||1));
    const h=Math.max(1,Math.floor(root.clientHeight||window.innerHeight||1));
+   const dpr=window.devicePixelRatio || 1;
+   if(physicalWidth>0 && physicalHeight>0)
+     return {w:Math.min(w,physicalWidth/dpr),h:Math.min(h,physicalHeight/dpr)};
    return {w,h};
  }
  function fit(){
@@ -49,7 +52,7 @@
  const style=document.createElement('style');
  style.id='albedo-cp35-style';
  style.textContent=`
- html.albedo-fit #page.page{
+ html.albedo-fit body #page.page{
    position:fixed!important;margin:0!important;transform-origin:0 0!important;
    transform:scale(var(--fit-scale,1))!important;
    left:var(--albedo-offset-x,0px)!important;
@@ -139,6 +142,8 @@
  html.albedo-fit #presetBrowser .pb-item-index{position:static;font-size:11px!important}
  html.albedo-fit #presetBrowser :is(#pbListMode,#pbMatrixMode){display:none!important}
  #albedo-cp35-controls{
+   margin-right:max(0px,calc(100vw - var(--albedo-viewport-w,100vw)));
+   margin-bottom:max(0px,calc(100vh - var(--albedo-viewport-h,100vh)));
    position:fixed;right:8px;bottom:8px;left:auto;top:auto;
    width:153px;height:29px;z-index:12000;
    display:flex;align-items:center;gap:3px;
@@ -218,9 +223,9 @@
  });
  if(window.__JUCE__?.backend?.addEventListener){
    window.__JUCE__.backend.addEventListener('albedoViewport',payload=>{
-     const [w,h]=String(payload).split(',').map(Number);
+     const [w,h,pw,ph]=String(payload).split(',').map(Number);
      if(Number.isFinite(w)&&Number.isFinite(h)&&w>=320&&h>=240){
-       nativeW=w;nativeH=h;enqueue();
+       nativeW=w;nativeH=h;physicalWidth=pw||0;physicalHeight=ph||0;enqueue();
      }
    });
  }

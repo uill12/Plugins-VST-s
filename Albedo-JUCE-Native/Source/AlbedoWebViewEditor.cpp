@@ -4,6 +4,12 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
+#if JUCE_WINDOWS
+ #ifndef NOMINMAX
+  #define NOMINMAX
+ #endif
+ #include <windows.h>
+#endif
 
 namespace
 {
@@ -318,10 +324,33 @@ void AlbedoWebViewEditor::sendViewportSize(bool force)
 {
     if(!pageReady || !browserHasLoaded || nativeFallback)return;
     const int w=getWidth(),h=getHeight();
-    if(!force && w==lastViewportW && h==lastViewportH)return;
+    int physicalW=0,physicalH=0;
+#if JUCE_WINDOWS
+    if (auto* peer=getPeer())
+    {
+        // Measure client rectangles in a common, physical screen coordinate space.
+        // Walk child parents only; a floating window's owner does not clip it.
+        const auto previousDpi=SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        RECT visible{};
+        bool haveRect=false;
+        for (HWND hwnd=static_cast<HWND>(peer->getNativeHandle()); hwnd!=nullptr; hwnd=GetParent(hwnd))
+        {
+            RECT client{};
+            if (!GetClientRect(hwnd,&client)) break;
+            MapWindowPoints(hwnd,nullptr,reinterpret_cast<POINT*>(&client),2);
+            if (!haveRect) { visible=client; haveRect=true; }
+            else if (!IntersectRect(&visible,&visible,&client)) break;
+            if ((GetWindowLongPtrW(hwnd,GWL_STYLE)&WS_CHILD)==0) break;
+        }
+        if (previousDpi!=nullptr) SetThreadDpiAwarenessContext(previousDpi);
+        if (haveRect) { physicalW=int(visible.right-visible.left); physicalH=int(visible.bottom-visible.top); }
+    }
+#endif
+    if(!force && w==lastViewportW && h==lastViewportH && physicalW==lastPhysicalW && physicalH==lastPhysicalH)return;
+    lastPhysicalW=physicalW;lastPhysicalH=physicalH;
     lastViewportW=w;lastViewportH=h;
     browser.emitEventIfBrowserIsVisible("albedoViewport",
-        juce::var(juce::String(w)+","+juce::String(h)));
+        juce::var(juce::String(w)+","+juce::String(h)+","+juce::String(physicalW)+","+juce::String(physicalH)));
 }
 
 void AlbedoWebViewEditor::onBrowserPageLoaded()

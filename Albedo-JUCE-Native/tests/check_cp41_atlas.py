@@ -34,7 +34,7 @@ assert "dialog.addEventListener('click',requestApply)" not in bridge
 assert "addEventListener('change',requestApply)" in bridge
 assert "cp38-visual" not in rotary
 assert "cp37AdsrPopup" in html
-assert "VERSION 1.0.45" in cmake
+assert "VERSION 1.0.46" in cmake
 assert "juce32" in cmake and "CLAP_ID" in cmake
 factory=re.search(r'<script type="application/json" id="albedoFactoryCatalog">([^<]+)</script>',html)
 creative=re.search(r'<script type="application/json" id="albedoCreativeCatalog">([^<]+)</script>',html)

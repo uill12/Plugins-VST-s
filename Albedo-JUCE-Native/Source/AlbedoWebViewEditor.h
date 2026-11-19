@@ -46,6 +46,7 @@ private:
     bool pageReady=false, browserHasLoaded=false, fullSyncPending=true;
     int pendingTicks=0;
     int lastProgram=-1;
+    int lastPhysicalW=-1, lastPhysicalH=-1;
     int lastViewportW=-1, lastViewportH=-1;
     uint32_t currentGesture=UINT32_MAX;
     juce::String fallbackMessage;
