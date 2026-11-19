@@ -7,7 +7,7 @@ h=r/'resources/Albedo_CP30_CP22_3x2_embedded.html'
 s=h.read_text(encoding='utf-8')
 assert len(s)>250000,'CP31 embedded HTML truncated'
 required=[
- 'const BASE_W=1500,BASE_H=1000',
+ 'w/canvas.offsetWidth',
  "aspectRatio:'3:2'",
  'window.ALBEDO_CP31_MOTION',
  'cp31-signal-particle',
