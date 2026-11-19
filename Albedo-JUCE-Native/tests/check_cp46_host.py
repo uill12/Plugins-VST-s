@@ -43,6 +43,41 @@ def main():
                 assert page.locator('#presetBrowser').is_visible()
                 page.keyboard.press('Escape')
                 print('Compiled CLAP physical client and editor match',w,h)
+            page.evaluate("""() => {
+                window.cp47Echo = {};
+                window.__JUCE__.backend.addEventListener('albedoUpdate',csv=>{
+                    for(const pair of csv.split(',')){
+                        const [id,v]=pair.split(':');window.cp47Echo[id]=Number(v);
+                    }
+                });
+            }""")
+            def check_value(pid, value):
+                page.wait_for_function("([id,v])=>Math.abs(window.cp47Echo[id]-v)<0.001",arg=[pid,value],timeout=5000)
+            for control,pid,options in [('oversample',9002,[('2×',2),('4×',3)]),
+                                        ('filterRoute',3012,[('SERIAL A-B',1),('SERIAL B-A',2)]),
+                                        ('division',6021,[('125',.125),('500',.5)]),
+                                        ('tuning',3112,[('19-TET',3),('24-TET',4)])]:
+                for option,value in options:
+                    page.locator('#'+control).select_option(option,force=True)
+                    check_value(pid,value)
+            page.locator('#play').click()
+            check_value(6020,1)
+            page.locator('#play').click()
+            check_value(6020,0)
+            dial=page.locator('.couple-item .cp38-dial').first
+            box=dial.bounding_box()
+            before=float(dial.get_attribute('aria-valuenow'))
+            x,y=box['x']+box['width']/2,box['y']+box['height']/2
+            page.mouse.move(x,y)
+            page.mouse.down()
+            direction=1 if before<50 else -1
+            page.mouse.move(x,y-40*direction,steps=5)
+            page.mouse.up()
+            after=float(dial.get_attribute('aria-valuenow'))
+            assert abs(after-before)>=25,(before,after)
+            check_value(2200,after)
+            assert page.locator('.couple-item output').first.inner_text()==str(round(after))+'%'
+            print('CP47 compiled parameter round trips and coupling drag passed')
     finally:
         proc.kill()
         proc.wait()

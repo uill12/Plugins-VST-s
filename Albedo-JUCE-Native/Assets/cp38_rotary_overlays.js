@@ -25,10 +25,10 @@ function decorate(input){
   const b=bounds(input);drag={x:e.clientX,y:e.clientY,id:e.pointerId,value:Number(input.value),range:b.max-b.min};
   dial.setPointerCapture(e.pointerId);notify('pointerdown',e);
  });
- dial.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const change=(drag.y-e.clientY+(e.clientX-drag.x)*.12)*drag.range*(e.shiftKey?.0007:.0035);write(input,drag.value+change)});
+ dial.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const change=(drag.y-e.clientY+(e.clientX-drag.x)*.12)*drag.range*(e.shiftKey?.001:.008);write(input,drag.value+change)});
  const stop=e=>{if(!drag||e?.pointerId!==undefined&&e.pointerId!==drag.id)return;drag=null;notify('pointerup',e);input.dispatchEvent(new Event('change',{bubbles:true}))};
  dial.addEventListener('pointerup',stop);dial.addEventListener('pointercancel',stop);dial.addEventListener('lostpointercapture',stop);
- dial.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();const b=bounds(input),step=Math.max(b.step||.01,(b.max-b.min)*(e.shiftKey?.001:.008));write(input,Number(input.value)+(e.deltaY<0?step:-step))},{passive:false});
+ dial.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();const b=bounds(input),step=Math.max(b.step||.01,(b.max-b.min)*(e.shiftKey?.004:.025));write(input,Number(input.value)+(e.deltaY<0?step:-step))},{passive:false});
  dial.addEventListener('keydown',e=>{const b=bounds(input),step=Math.max(b.step||.01,(b.max-b.min)*(e.shiftKey?.001:.01));let v=Number(input.value);if(e.key==='ArrowRight'||e.key==='ArrowUp')v+=step;else if(e.key==='ArrowLeft'||e.key==='ArrowDown')v-=step;else if(e.key==='PageUp')v+=10*step;else if(e.key==='PageDown')v-=10*step;else if(e.key==='Home')v=b.min;else if(e.key==='End')v=b.max;else return;e.preventDefault();e.stopPropagation();write(input,v)});
  dial.addEventListener('dblclick',e=>{e.preventDefault();write(input,Number(input.defaultValue))});
  input.addEventListener('input',()=>reflect(input));
