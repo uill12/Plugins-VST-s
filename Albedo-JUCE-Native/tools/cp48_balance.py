@@ -13,7 +13,7 @@ def measure(stage, index):
     assert np.isfinite(audio).all() and len(audio)==124800
     blocks=audio[:124800].reshape(-1,4800,2).astype(float)
     power=np.mean(blocks**2,axis=(1,2))
-    active=10*np.log10(max(1e-15,np.percentile(power,85)))
+    active=10*np.log10(max(1e-15,np.mean(power[power >= np.max(power)*0.1])))
     peak=20*np.log10(max(1e-10,np.max(abs(audio))))
     return audio,round(float(active),3),round(float(peak),3)
 if sys.argv[1]=="trim":
