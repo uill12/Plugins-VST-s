@@ -32,7 +32,13 @@ def main():
             ctx=browser.contexts[0]
             page=ctx.pages[0] if ctx.pages else ctx.wait_for_event('page')
             page.wait_for_function('() => !!window.ALBEDO_CP35_WINDOW',timeout=45000)
-            for w,h in ((900,600),(720,480),(1020,680)):
+            user.GetPropW.argtypes=[wintypes.HWND,wintypes.LPCWSTR]
+            user.GetPropW.restype=wintypes.HANDLE
+            maximum=user.GetPropW(hwnd,'AlbedoFixtureMaxWidth')
+            assert maximum
+            for requested in (900,720,1020):
+                w=min(requested,maximum)//6*6
+                h=w*2//3
                 assert user.SetWindowPos(hwnd,None,0,0,w,h,0x0014)
                 page.wait_for_function("""([w,h])=>{
                     const r=document.querySelector('#page').getBoundingClientRect(),d=devicePixelRatio;

@@ -38,7 +38,10 @@ int main(int argc,char** argv)
     const auto* gui=static_cast<const clap_plugin_gui_t*>(plugin->get_extension(plugin,CLAP_EXT_GUI));
     if(!gui || !gui->create(plugin,CLAP_WINDOW_API_WIN32,false)) return 7;
     clap_window_t parent{}; parent.api=CLAP_WINDOW_API_WIN32;parent.win32=window;
-    if(!gui->set_parent(plugin,&parent) || !gui->set_size(plugin,1200,800) || !gui->show(plugin)) return 8;
+    uint32_t w=1200,h=800;
+    if(!gui->set_parent(plugin,&parent) || !gui->adjust_size(plugin,&w,&h)
+        || !gui->set_size(plugin,w,h) || !gui->show(plugin)) return 8;
+    SetPropW(window,L"AlbedoFixtureMaxWidth",reinterpret_cast<HANDLE>(static_cast<uintptr_t>(w)));
     // The embedder intentionally grants fewer physical pixels than the editor requests.
     std::printf("HWND %llu\n",static_cast<unsigned long long>(reinterpret_cast<uintptr_t>(window)));
     std::fflush(stdout);
