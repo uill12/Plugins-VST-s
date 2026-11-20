@@ -17,13 +17,13 @@ h=h.replace('double unisonPhase','double sampleSide[4]{};double unisonPhase')
 h=h.replace('materialBank_{}','materialBank_{},materialSide_{}').replace('double normalizedPhase)const','double normalizedPhase,double& side)const')
 hdr.write_text(h)
 p=params.read_text()
-p=change(p,' add(6020,',''' add(6024,"Arp Character","Nereida Rhythmic Characters",0,3,2,"",true);
- add(6025,"Arp Octaves","Nereida Rhythmic Characters",1,3,1,"",true);
- add(6026,"Arp Swing","Nereida Rhythmic Characters",0,45,0,"%");
- add(6027,"Arp Steps","Nereida Rhythmic Characters",4,16,8,"",true);
- add(6028,"Arp Rotate","Nereida Rhythmic Characters",0,7,0,"",true);
- add(6029,"Arp Tempo","Nereida Rhythmic Characters",40,240,120,"BPM");
- add(6030,"Arp DAW Sync","Nereida Rhythmic Characters",0,1,1,"",true);
+p=change(p,' add(6020,',''' add(6024,"Arp Character","Cellular Arpeggiator",0,3,2,"",true);
+ add(6025,"Arp Octaves","Cellular Arpeggiator",1,3,1,"",true);
+ add(6026,"Arp Swing","Cellular Arpeggiator",0,45,0,"%");
+ add(6027,"Arp Steps","Cellular Arpeggiator",4,16,8,"",true);
+ add(6028,"Arp Rotate","Cellular Arpeggiator",0,7,0,"",true);
+ add(6029,"Arp Tempo","Cellular Arpeggiator",40,240,120,"BPM");
+ add(6030,"Arp DAW Sync","Cellular Arpeggiator",0,1,1,"",true);
  add(6020,''')
 # Retain prior ID ownership for 6020-6023 (existing DAW state and automation).
 # Use Nereida's gate/velocity defaults and units instead of CP50's pulse nomenclature.
@@ -38,7 +38,7 @@ for ident,old_name,new_name,default in (
     assert match is not None,('missing legacy arp parameter',ident)
     item=match.group(0)
     assert old_name in item,(ident,item)
-    modified=item.replace(old_name,new_name).replace('"Pulsus"','"Nereida Rhythmic Characters"')
+    modified=item.replace(old_name,new_name).replace('"Pulsus"','"Cellular Arpeggiator"')
     if ident==6021:
         modified=modified.replace(',"s")',',"beats")')
     if default is not None:
@@ -46,6 +46,7 @@ for ident,old_name,new_name,default in (
         fields=modified.split(',')
         assert len(fields)>=7,(ident,modified)
         fields[5]=str(default)
+        if ident==6023:fields[3],fields[4]='10','95'
         modified=','.join(fields)
     p=p.replace(item,modified)
 params.write_text(p)
