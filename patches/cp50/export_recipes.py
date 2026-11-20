@@ -13,6 +13,8 @@ for p in rows:
         a=1000+i*32;m=int(v[str(a)])
         layers.append(dict(layer='ABCD'[i],engine=methods[m],material=materials[int(v[str(a+10)])] if m in (2,3,7) else None,
                            level=v[str(a+2)],semitones=v[str(a+3)],pan=v[str(a+4)],character=[v[str(a+j)] for j in (6,7,8,9)]))
-    r.update(layers=layers,ampEnvelope=[v[str(j)] for j in (3100,3101,3102,3103)],filterACutoff=v['3000'],cellArpeggiator=bool(v['6020']))
+    r.update(layers=layers,ampEnvelope=[v[str(j)] for j in (3100,3101,3102,3103)],filterACutoff=v['3000'],cellArpeggiator=bool(v['6020']),
+             morphTree=p.get('morphTree'),generationPath=p.get('ideaPath'),
+             auditionMetrics=p.get('morphTree',{}).get('renderSelection'))
     out.append(dict(slot=p['index'],name=p['name'],recipe=r))
 Path(sys.argv[2]).write_text(json.dumps(out,indent=1,ensure_ascii=False),encoding='utf8')
