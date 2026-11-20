@@ -14,7 +14,7 @@ int main()
     static_assert(albedo_morph::patches.size()==64);
     bool ok=true;
     int audible=0;
-    for (int index=0; index<128; ++index)
+    for (int index=0; index<192; ++index)
     {
         auto s=std::make_unique<vitriol::Synth>();
         albedo_programs::apply(index,[&](uint32_t id,float value){ s->setParam(id,value); });
@@ -42,12 +42,12 @@ int main()
         for(int n=48;n<60;++n)s->noteOff(n);
         s->process64(left.data(),right.data(),(uint32_t)N);
         for(size_t j=0;j<N;++j)ok&=std::isfinite(left[j])&&std::isfinite(right[j]);
-        std::cout<<"CP38 program "<<index
+        std::cout<< "CP51 program " <<index
                  <<" rate "<<sr<<"Hz poly "<<poly
                  <<" RMS "<<std::sqrt(energy)<<" peak "<<peak
                  <<" finite "<<finite<<"\n";
     }
-    std::cout<<"CP48 audible programs "
+    std::cout<<"CP51 audible programs "
              <<audible<<"/192; finite/polyphonic "<<ok<<"\n";
     return ok && audible==192 ? 0 : 1;
 }
