@@ -83,12 +83,24 @@ def main():
             assert abs(after-before)>=25,(before,after)
             check_value(2200,after)
             assert page.locator('.couple-item output').first.inner_text()==str(round(after))+'%'
+            def sweep_knob(selector,pid):
+                knob=page.locator(selector).first
+                knob.focus()
+                knob.press('Home')
+                knob.press('End')
+                page.wait_for_function("id=>Number.isFinite(cp47Echo[id])",arg=pid)
+            sweep_knob('.dial[data-key="engine:0"]',1006)
+            check_value(1006,100)
+            sweep_knob('.dial[data-key="macro:bright"]',2000)
+            check_value(2000,100)
             xy=page.locator('#xy')
             rect=xy.bounding_box()
             for nx,ny in ((.35,.66),(.71,.28)):
                 page.mouse.click(rect['x']+nx*rect['width'],rect['y']+ny*rect['height'])
                 page.wait_for_function("([x,y])=>Math.abs(cp47Echo[2100]-x)<4 && Math.abs(cp47Echo[2101]-y)<4",arg=[100*nx,100*ny])
             page.locator('#cp04LabOpen').click()
+            sweep_knob('#cp04Lab .cp-knob[data-cp-id="3120"]',3120)
+            check_value(3120,100)
             frame=page.locator('#cp04Lab .cp-frame').bounding_box()
             assert frame['width']<=page.evaluate('innerWidth')*.85
             assert frame['height']<=page.evaluate('innerHeight')*.80
