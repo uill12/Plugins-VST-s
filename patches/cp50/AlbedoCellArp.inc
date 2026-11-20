@@ -60,8 +60,8 @@ void Synth::arpTick(){
  const bool active=get(6000+step)>.5&&!obliqueGap&&!asymmetricGap;
  if(arpCount_>0 && active){
   std::array<int,128> sorted{};for(int i=0;i<arpCount_;++i)sorted[i]=i;
-  std::stable_sort(sorted.begin(),sorted.begin()+arpCount_,[&](int a,int b){
-   return arpKeys_[a].note<arpKeys_[b].note;
+  std::sort(sorted.begin(),sorted.begin()+arpCount_,[&](int a,int b){
+   return std::make_pair(arpKeys_[a].note,a)<std::make_pair(arpKeys_[b].note,b);
   });
   const int span=arpCount_*octaves;
   const unsigned cursor=arpIndex_;
