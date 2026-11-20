@@ -80,7 +80,7 @@ def main():
             if len(data)!=n*8:raise RuntimeError('Renderer stopped before completing the note.')
             return np.frombuffer(data,'<f4').reshape(n,2).astype(float)
         ranked=[]
-        for slot in range(128):ranked.append((error(ref,features(run(slot,{})),stereo),slot))
+        for slot in range(192):ranked.append((error(ref,features(run(slot,{})),stereo),slot))
         ranked.sort();initial,slot=ranked[0];best=initial;edits={};state=run(slot,{},True)
         # Fit two promising origins independently. Use the settings the chosen engine actually reads.
         winner=(best,slot,edits)
