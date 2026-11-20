@@ -652,11 +652,16 @@ jobs:
       - name: CP51 generate 4 full-bank morph candidates
         shell: pwsh
         run: |
+          New-Item -ItemType Directory -Path cp51-original-128 -Force | Out-Null
+          Copy-Item Albedo-JUCE-Native/Metadata/material_factory_bank.json cp51-original-128/material_factory_bank.json -Force
+          Copy-Item Albedo-JUCE-Native/Metadata/recursive_forms_bank.json cp51-original-128/recursive_forms_bank.json -Force
           foreach ($variant in 0..3) {
             python patches/cp51/morph_tree.py --out "cp51-candidates/$variant" --variant $variant
             if ($LASTEXITCODE -ne 0) { throw 'CP51 morph candidate generation failed' }
             python Albedo-JUCE-Native/tests/check_cp51_morph.py --metadata "cp51-candidates/$variant"
             if ($LASTEXITCODE -ne 0) { throw 'CP51 candidate provenance failed' }
+            python Albedo-JUCE-Native/tests/check_cp51_regenerated_existing.py --original cp51-original-128 --updated "cp51-candidates/$variant"
+            if ($LASTEXITCODE -ne 0) { throw 'All 128 existing presets must have distinct DSP regeneration' }
           }
           Copy-Item cp51-candidates/0/material_factory_bank.json Albedo-JUCE-Native/Metadata/material_factory_bank.json -Force
           Copy-Item cp51-candidates/0/recursive_forms_bank.json Albedo-JUCE-Native/Metadata/recursive_forms_bank.json -Force
@@ -748,6 +753,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP51 render-based diversity/amp selection failed' }
           python Albedo-JUCE-Native/tests/check_cp51_morph.py --metadata cp51-selected --selected
           if ($LASTEXITCODE -ne 0) { throw 'CP51 selected 192-preset audit failed' }
+          python Albedo-JUCE-Native/tests/check_cp51_regenerated_existing.py --original cp51-original-128 --updated cp51-selected --selected
+          if ($LASTEXITCODE -ne 0) { throw 'Regenerated existing 128 sound bank or gain calibration regression' }
           foreach ($name in @('material_factory_bank.json','recursive_forms_bank.json','morph_expansion_bank.json')) {
             Copy-Item "cp51-selected/$name" "Albedo-JUCE-Native/Metadata/$name" -Force
           }
@@ -818,6 +825,7 @@ jobs:
             cp51-selected/material_factory_bank.json
             cp51-selected/recursive_forms_bank.json
             cp51-selected/morph_expansion_bank.json
+            cp51-selected/cp51_existing_preset_regeneration.json
           if-no-files-found: error
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
