@@ -32,7 +32,7 @@ for i in range(count):
         band_percent=[round(float(v*100),3) for v in fractions]))
 # The source pool must span very different spectral categories; *each* sample
 # is not required to have as much bass as a kick or a long-pad oscillator.
-assert len({tuple(np.asarray(r["band_percent"]).argmax().reshape(1)) for r in rows})>=3,"Low spectral diversity"
+assert len({int(np.argmax(r["band_percent"])) for r in rows})>=3,"Low spectral diversity"
 report=dict(bank=str(p),format="PCM24 96k mid/side",materials=count,
             frequency_bands_hz=["35-180","180-450","450-1600","1600-7000","7000-19000"],
             checks=["finite","-0.9..0.9 peak","mid louder than side","nonzero body","diverse dominant bands"],
