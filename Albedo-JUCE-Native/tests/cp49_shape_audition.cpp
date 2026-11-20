@@ -13,7 +13,7 @@ int main(int argc, char** argv)
     if(argc != 2) return 2;
     const std::filesystem::path directory(argv[1]);
     std::filesystem::create_directories(directory);
-    for(int index=0;index<128;++index) {
+    for(int index=0;index<192;++index) {
         auto synth=std::make_unique<vitriol::Synth>();
         albedo_programs::apply(index,[&](uint32_t id,float value){synth->setParam(id,value);});
         synth->prepare(48000);
