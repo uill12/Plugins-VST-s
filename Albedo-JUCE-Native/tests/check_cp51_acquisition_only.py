@@ -36,7 +36,7 @@ with tempfile.TemporaryDirectory() as td:
         assert p["pitch"]["method"]=="advisory_fft_autocorrelation"
     b,a=profiles
     assert b["frequency_distribution_percent"]["sub"]+b["frequency_distribution_percent"]["bass"] > 85
-    assert a["frequency_distribution_percent"]["upper_mid"] > 65
+    assert a["frequency_distribution_percent"]["mid"] > 65
     assert b["spectral"]["centroid_hz"] < a["spectral"]["centroid_hz"]/3
     assert b["stereo"]["side_to_mid_db"] < -90
     assert len(list(folder.glob("*.wav")))==2, "Do not create rendered/derived WAVs"
