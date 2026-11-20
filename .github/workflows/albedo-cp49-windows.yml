@@ -710,7 +710,7 @@ jobs:
       - name: Build JUCE VST3 and CLAP plugins
         shell: pwsh
         run: |
-          cmake --build build-cp38-juce --config Release --target AlbedoNative_VST3 AlbedoNative_CLAP AlbedoPresetTaxonomyTest AlbedoCP36HifiDspTest AlbedoCP38CreativeAudioTest AlbedoRearFieldTest AlbedoControlResponseTest AlbedoViewportHost --parallel 4
+          cmake --build build-cp38-juce --config Release --target AlbedoNative_VST3 AlbedoNative_CLAP AlbedoPresetTaxonomyTest AlbedoCP36HifiDspTest AlbedoCP38CreativeAudioTest AlbedoRearFieldTest AlbedoControlResponseTest AlbedoShapeAudition AlbedoViewportHost --parallel 4
           if ($LASTEXITCODE -ne 0) { throw 'Native VST3/CLAP compile failed' }
       - name: Test native plugin and verify binary exports
         shell: pwsh
@@ -737,6 +737,18 @@ jobs:
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
           Get-ChildItem 'dist-cp38' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
+      - name: Compare all 8128 pairs of rendered preset outputs
+        shell: pwsh
+        run: |
+          $renderer=(Get-ChildItem build-cp38-juce -Recurse -Filter AlbedoShapeAudition.exe)[0].FullName
+          & $renderer cp49-shape-audio
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python Albedo-JUCE-Native/tools/cp49_compare_shapes.py cp49-shape-audio CP49_Output_Pairs.csv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP49_Output_Pairs
+          path: CP49_Output_Pairs.csv
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:

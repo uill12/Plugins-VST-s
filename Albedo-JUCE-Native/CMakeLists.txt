@@ -154,3 +154,10 @@ if(BUILD_TESTING AND WIN32)
   target_include_directories(AlbedoControlResponseTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
   add_test(NAME cp49_control_audio_response COMMAND AlbedoControlResponseTest)
 endif()
+
+if(BUILD_TESTING AND WIN32)
+  add_executable(AlbedoShapeAudition tests/cp49_shape_audition.cpp
+    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp" "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
+  target_compile_features(AlbedoShapeAudition PRIVATE cxx_std_20)
+  target_include_directories(AlbedoShapeAudition PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Source" "${ALBEDO_DSP_ROOT}/include")
+endif()
