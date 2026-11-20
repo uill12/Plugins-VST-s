@@ -39,6 +39,7 @@ public:
     const std::vector<vitriol::ParamDef>& definitions() const noexcept { return definitions_; }
     void loadFactoryPreset (int index);
     float paramValue (uint32_t id) const noexcept;
+    int arpStep() const noexcept {return synth->arpStep();}
     int activeVoices() const noexcept { return activeVoiceCount.load(); }
 
 private:
@@ -49,6 +50,7 @@ private:
     std::vector<double> lastValues;
     std::atomic<int> currentProgram { 0 };
     std::atomic<int> activeVoiceCount { 0 };
+    bool transportPlaying=false;
     AlbedoRearField rearField;
     std::atomic<bool> parametersChanged { true };
     void parameterValueChanged(int, float) override { parametersChanged.store(true, std::memory_order_release); }

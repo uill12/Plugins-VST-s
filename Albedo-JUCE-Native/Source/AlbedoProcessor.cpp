@@ -40,6 +40,14 @@ bool AlbedoProcessor::isBusesLayoutSupported (const BusesLayout& l) const
 { return l.getMainOutputChannelSet() == juce::AudioChannelSet::stereo() || l.getMainOutputChannelSet() == juce::AudioChannelSet::quadraphonic(); }
 void AlbedoProcessor::updateSynthParameters()
 {
+    if (auto* transport=getPlayHead()) {
+        if(auto position=transport->getPosition()) {
+            if(auto bpm=position->getBpm()) synth->setArpTempo(*bpm);
+            const bool playing=position->getIsPlaying();
+            if(transportPlaying && !playing && synth->getParam(6020)>.5) synth->allNotesOff();
+            transportPlaying=playing;
+        }
+    }
     if (!parametersChanged.exchange(false, std::memory_order_acq_rel)) return;
     // Audio-thread-owned lastValues; no locks, GUI operations, or allocations.
     for (size_t i = 0; i < parameterList.size(); ++i)

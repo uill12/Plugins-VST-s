@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(AlbedoJUCE VERSION 1.0.49 LANGUAGES C CXX RC)
+project(AlbedoJUCE VERSION 1.0.50 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -160,4 +160,11 @@ if(BUILD_TESTING AND WIN32)
     "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp" "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
   target_compile_features(AlbedoShapeAudition PRIVATE cxx_std_20)
   target_include_directories(AlbedoShapeAudition PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Source" "${ALBEDO_DSP_ROOT}/include")
+endif()
+
+if(BUILD_TESTING AND WIN32)
+  add_executable(AlbedoArpTest ../patches/cp50/arp_test.cpp "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp")
+  target_compile_features(AlbedoArpTest PRIVATE cxx_std_20)
+  target_include_directories(AlbedoArpTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
+  add_test(NAME cp50_arpeggiator COMMAND AlbedoArpTest)
 endif()

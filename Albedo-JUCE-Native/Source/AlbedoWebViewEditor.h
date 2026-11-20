@@ -17,6 +17,7 @@ public:
     void paint(juce::Graphics&) override;
 
 private:
+    int lastArpStep=-2;
     struct Browser final : juce::WebBrowserComponent
     {
         AlbedoWebViewEditor& owner;

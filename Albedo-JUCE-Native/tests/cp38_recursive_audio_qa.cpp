@@ -18,6 +18,7 @@ int main()
         auto s=std::make_unique<vitriol::Synth>();
         albedo_programs::apply(index,[&](uint32_t id,float value){ s->setParam(id,value); });
         const int sr=index%2==0?48000:88200;
+        s->setParam(6020,0); // Verify the polyphonic instrument beneath each arp program.
         s->prepare(sr);
         for(int n=48;n<60;++n)s->noteOn(n,.57);
         const bool poly=s->activeVoices()>=12;

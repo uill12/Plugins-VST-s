@@ -399,6 +399,8 @@ void AlbedoWebViewEditor::timerCallback()
         return;
     }
     sendViewportSize();
+    const int step=processor.arpStep();
+    if(step!=lastArpStep){lastArpStep=step;browser.emitEventIfBrowserIsVisible("albedoArpStep",juce::var(step));}
     sendDelta(fullSyncPending);
     fullSyncPending=false;
     const int current=processor.getCurrentProgram();
