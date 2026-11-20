@@ -70,9 +70,16 @@ def evolve(seed_row,index,variant=0):
     instrument=INSTRUMENT[role][(branch//2+variant)%4]
     technique=TREATMENT[source][(branch+variant)%4]
     movement=GATES[(index+variant*3)%len(GATES)]
-    engine=ENGINE[role][0][(branch+variant)%4]
-    secondary=ENGINE[role][1][(branch//2+variant)%4]
-    third=ENGINE[role][1][(branch+variant+2)%4]
+    # For each new role, its two branches must explore DIFFERENT primary
+    # synthesis engines; avoid the modulo-8 alias that collapsed both to one.
+    if is_new:
+        engine=ENGINE[role][0][(group+2*(branch//8)+variant)%4]
+        secondary=ENGINE[role][1][(group+(branch//8)+variant)%4]
+        third=ENGINE[role][1][(2*group+(branch//8)+variant+2)%4]
+    else:
+        engine=ENGINE[role][0][(branch+variant)%4]
+        secondary=ENGINE[role][1][(branch//2+variant)%4]
+        third=ENGINE[role][1][(branch+variant+2)%4]
     if secondary==engine:secondary=(secondary+2)%10
     if third==engine:third=(third+3)%10
     p=row["overrides"]
