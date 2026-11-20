@@ -1,10 +1,11 @@
 """Build four candidates per leaf. Assign existing names and roles to compatible leaves."""
 import json,sys,shutil,itertools
+from briefs import brief_for,realize
 from pathlib import Path
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 here=Path(__file__).resolve().parents[2]
-native=here/'Albedo-JUCE-Native'
+native=Path(sys.argv[2]) if len(sys.argv)>2 else here/'Albedo-JUCE-Native'
 names=['material_factory_bank.json','recursive_forms_bank.json']
 rows=sum([json.loads((native/'Metadata'/n).read_text()) for n in names],[])
 roots=[('Voltage',(0,0,8,2)),('Vector',(1,8,0,7)),('Partial',(2,4,1,5)),('Particle',(3,7,6,2)),('Resonator',(5,2,6,0)),('Air',(6,3,5,4)),('Recorded motion',(7,3,1,0)),('Cellular phase',(9,8,1,2))]
@@ -20,6 +21,7 @@ assign=dict(zip(*linear_sum_assignment(cost)))
 for variant in range(4):
     out=Path(sys.argv[1])/str(variant);out.mkdir(parents=True,exist_ok=True)
     built=[]
+    seen={}
     for i,p in enumerate(rows):
         r,b,k=leaves[assign[i]];root,methods=roots[r];role=p['role'];v=dict(p['overrides'])
         # Keep the root audible. Permute the supporting layer, register and articulation independently.
@@ -41,6 +43,8 @@ for variant in range(4):
           6020:int(arp),6024:(r+k+variant)%5,6025:1+(r+k)%3,6026:[0,12,0,34][k],6027:[16,7,12,15][k],6021:[.25,.25,.5,.125][k],6022:30+15*k,6023:40+k*14,
           5004:[5,26,15,8][b]+variant*2,5005:1,4003:(r+k)%4}.items():v[str(pid)]=val
         for step in range(16):v[str(6000+step)]=int(step==0 or ((step*(k+2)+r)%7)<5)
-        built.append(dict(p,overrides=v,ideaPath=[root,branches[b],styles[k]],voicing=f'{root} / {branches[b]} / {styles[k]}',permutation=variant))
+        ordinal=seen.get(role,0);seen[role]=ordinal+1
+        brief=brief_for(p,ordinal);recipe=realize(p,brief,v,k,variant)
+        built.append(dict(p,overrides=v,recipe=recipe,ideaPath=[role,recipe['function'],recipe['instrument'],recipe['transformation']],voicing=f'{root} / {branches[b]} / {styles[k]}',permutation=variant))
     for n,bank in zip(names,(built[:64],built[64:])):(out/n).write_text(json.dumps(bank))
     for n in ['AlbedoPrograms.hpp','AlbedoProgramTrim.hpp']:shutil.copy(native/'Source'/n,out/n)

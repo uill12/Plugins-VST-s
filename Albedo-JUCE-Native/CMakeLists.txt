@@ -168,3 +168,10 @@ if(BUILD_TESTING AND WIN32)
   target_include_directories(AlbedoArpTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
   add_test(NAME cp50_arpeggiator COMMAND AlbedoArpTest)
 endif()
+
+if(BUILD_TESTING AND WIN32)
+  add_executable(AlbedoTargetRenderer tools/target/render_target.cpp
+    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp" "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
+  target_compile_features(AlbedoTargetRenderer PRIVATE cxx_std_20)
+  target_include_directories(AlbedoTargetRenderer PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Source" "${ALBEDO_DSP_ROOT}/include")
+endif()
