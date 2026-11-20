@@ -83,6 +83,20 @@ def main():
             assert abs(after-before)>=25,(before,after)
             check_value(2200,after)
             assert page.locator('.couple-item output').first.inner_text()==str(round(after))+'%'
+            xy=page.locator('#xy')
+            rect=xy.bounding_box()
+            for nx,ny in ((.35,.66),(.71,.28)):
+                page.mouse.click(rect['x']+nx*rect['width'],rect['y']+ny*rect['height'])
+                page.wait_for_function("([x,y])=>Math.abs(cp47Echo[2100]-x)<4 && Math.abs(cp47Echo[2101]-y)<4",arg=[100*nx,100*ny])
+            page.locator('#cp04LabOpen').click()
+            frame=page.locator('#cp04Lab .cp-frame').bounding_box()
+            assert frame['width']<=page.evaluate('innerWidth')*.85
+            assert frame['height']<=page.evaluate('innerHeight')*.80
+            page.locator('#cp04LabClose').click()
+            page.locator('#addRoute').click()
+            count=page.locator('#routes .route-row').count()
+            check_value(8300,count)
+            print('CP49 Arbor pointer, Lab bounds and active route count passed')
             print('CP47 compiled parameter round trips and coupling drag passed')
     finally:
         proc.kill()

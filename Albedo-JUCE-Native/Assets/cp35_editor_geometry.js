@@ -188,7 +188,7 @@
    send(w,w*2/3);
  }
  controls.querySelector('#albedo-cp35-smaller').addEventListener('click',()=>{
-   ask((nativeW||measured().w)-96);
+   ask((nativeW||measured().w)-36);
  });
  controls.querySelector('#albedo-cp35-reset').addEventListener('click',()=>ask(1200));
  const grip=controls.querySelector('#albedo-cp35-resize-grip');
@@ -204,7 +204,7 @@
    if(!start || event.pointerId!==start.pointerId)return;
    const dx=event.clientX-start.x,dy=(event.clientY-start.y)*1.5;
    const delta=Math.abs(dx)>=Math.abs(dy)?dx:dy;
-   start.requested=clampWidth(start.w+delta);
+   start.requested=clampWidth(start.w+delta*.7);
    const sizeDisplay=document.getElementById('albedo-cp35-size-value');
    if(sizeDisplay)sizeDisplay.textContent=start.requested+'×'+(start.requested*2/3);
    // Do not move the host's HWND while its WebView2 pointer capture is active.

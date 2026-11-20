@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(AlbedoJUCE VERSION 1.0.48 LANGUAGES C CXX RC)
+project(AlbedoJUCE VERSION 1.0.49 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -146,4 +146,11 @@ if(BUILD_TESTING AND WIN32 AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Source/Albedo
     "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp" "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
   target_compile_features(AlbedoBankAudition PRIVATE cxx_std_20)
   target_include_directories(AlbedoBankAudition PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Source" "${ALBEDO_DSP_ROOT}/include")
+endif()
+
+if(BUILD_TESTING AND WIN32)
+  add_executable(AlbedoControlResponseTest tests/cp49_response.cpp "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp" "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
+  target_compile_features(AlbedoControlResponseTest PRIVATE cxx_std_20)
+  target_include_directories(AlbedoControlResponseTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
+  add_test(NAME cp49_control_audio_response COMMAND AlbedoControlResponseTest)
 endif()
