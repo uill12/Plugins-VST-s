@@ -33,7 +33,7 @@ for ident,old_name,new_name,default in (
     (6022,"Pulse Depth","Arp Cellular Accent",30),
     (6023,"Pulse Gate","Arp Gate",68),
 ):
-    pat=rf'add\\({ident},[^;]+;'
+    pat=rf'add\({ident},[^;]+;'
     match=re.search(pat,p)
     assert match is not None,('missing legacy arp parameter',ident)
     item=match.group(0)
@@ -43,13 +43,10 @@ for ident,old_name,new_name,default in (
         modified=modified.replace(',"s")',',"beats")')
     if default is not None:
         # Keep original exposed min/max and update just default.
-        vals=modified.rsplit(',',2)
-        assert len(vals)==3,(ident,modified)
-        front=vals[0]
-        last=front.rfind(',')
-        assert last>0
-        front=front[:last+1]+str(default)
-        modified=front+','+vals[1]+','+vals[2]
+        fields=modified.split(',')
+        assert len(fields)>=7,(ident,modified)
+        fields[5]=str(default)
+        modified=','.join(fields)
     p=p.replace(item,modified)
 params.write_text(p)
 s=src.read_text()
