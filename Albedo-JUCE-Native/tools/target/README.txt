@@ -1,12 +1,27 @@
-Albedo CP51 | Reproduce a reference note
+Albedo CP51 — Reference Acquisition ONLY
 
-Open Match_Target.exe and select an isolated mono or stereo WAV note, up to eight seconds. Keep AlbedoTargetRenderer.exe and recipes.json beside the matcher. Use a dry recording when you want to reproduce the instrument itself.
+Use Acquire_Reference.exe to select an isolated WAV note. For best character
+extraction, select a dry tonal instrument without percussion, mastered effects,
+or layered accompaniment. User-supplied references are analyzed locally.
 
-For a known performance, give the MIDI note, velocity (0 to 1), and seconds until note-off. Example:
-Match_Target.exe "reference.wav" --note 57 --velocity 0.8 --hold 0.65
+Example:
+  Acquire_Reference.exe "reference.wav" --artist "Reference" --track "Track" --instrument "tonal synthesizer"
 
-The matcher compares the envelope, evolving spectrum and stereo width against all 192 rendered instruments. It refines the closest two by changing the synth parameters, then matches level. Tonal inputs support automatic pitch estimation. For percussive or ambiguous targets use --note. The default hold estimate is 72 percent of the clip.
+Output:
+  reference_Reference_Profile.json — frequency bands (sub, bass, low-mid,
+  mid, upper-mid, presence, air), tonal estimate with confidence, spectral
+  centroid/rolloff/flatness, dynamic envelope, RMS and peak, and stereo width.
 
-In the output folder, import Reconstructed.albedopatch using Albedo's IMPORT button. Play the note, velocity, hold time and tempo in Recipe.json. Reconstructed.wav is the synthesized result. Recipe.json lists the reference traits, source layers, transformations and fitted control settings. The patch contains the complete parameter state.
+No .albedopatch, synthesized WAV, waveform copies, preset matching or
+selection, audio embedding, or parameter changes are produced.
 
-This is a single-note instrument matching tool. Different oscillator, filter and effect combinations can produce similar waveforms. The result is an approximation using Albedo's synthesis resources.
+The Morph Tree remains exclusively in the development-time sound-generation
+pipeline and independently creates/compares the 192 factory presets.
+This tool provides reference measurements for human-guided study, not
+automatic reproduction of a recording or an artist's exact sound.
+
+The old Match_Target entrypoint is deprecated and now aliases acquisition.
+References should be lawfully supplied. Neither the uploaded source
+recording nor any samples are included in the output JSON.
+
+Requirements for Python source use: Python 3.12+, numpy, scipy.
