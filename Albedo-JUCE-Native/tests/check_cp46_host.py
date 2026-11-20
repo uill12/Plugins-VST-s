@@ -96,6 +96,10 @@ def main():
             check_value(1006,100)
             sweep_knob('.dial[data-key="macro:bright"]',2000)
             check_value(2000,100)
+            page.locator('[data-arp="6024"]').select_option('4')
+            check_value(6024,4)
+            page.locator('[data-arp="6025"]').select_option('4')
+            check_value(6025,4)
             xy=page.locator('#xy')
             rect=xy.bounding_box()
             for nx,ny in ((.35,.66),(.71,.28)):

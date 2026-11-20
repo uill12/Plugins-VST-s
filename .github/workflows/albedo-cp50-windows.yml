@@ -6,6 +6,7 @@ on:
       - '.github/workflows/albedo-cp50-windows.yml'
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
       - 'Albedo-JUCE-Native/**'
+      - 'patches/cp50/**'
       - 'patches/cp15_apply_part*.txt'
       - 'patches/cp15_hotfix.py'
       - 'patches/cp16_part*.txt'
