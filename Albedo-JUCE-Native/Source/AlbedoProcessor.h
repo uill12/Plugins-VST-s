@@ -27,7 +27,7 @@ public:
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
     double getTailLengthSeconds() const override { return 18.0; }
-    int getNumPrograms() override { return 64 + (int) albedo_creative::patches.size(); }
+    int getNumPrograms() override { return 64 + (int) albedo_creative::patches.size() + (int) albedo_morph::patches.size(); }
     int getCurrentProgram() override { return currentProgram.load(); }
     void setCurrentProgram (int index) override;
     const juce::String getProgramName (int index) override;
