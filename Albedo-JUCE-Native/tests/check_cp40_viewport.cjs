@@ -41,6 +41,14 @@ check(1200,800,1200/1320); // VisualViewport=1000x675 and host size differ: must
 hostListeners.albedoViewport('1122,748');
 window.ALBEDO_CP35_WINDOW.fit();
 check(1200,800,1200/1320); // JUCE logical size must not cap the CSS canvas.
+rootNode.clientWidth=942;rootNode.clientHeight=628;
+hostListeners.albedoViewport('900,600,900,600');
+// Real CI failure before CP51: painted 900×600 inside an actual 942×628
+// client because the JS capped the viewport using physicalWidth / DPR.
+window.ALBEDO_CP35_WINDOW.fit();
+check(942,628,942/1320);
+assert(!source.includes('Math.min(w,physicalWidth/dpr)'),
+  'Never cap actual CSS viewport with stale native physical pixels');
 rootNode.clientWidth=900;rootNode.clientHeight=600;
 window.ALBEDO_CP35_WINDOW.fit();check(900,600,900/1320);
 rootNode.clientWidth=1500;rootNode.clientHeight=1000;
