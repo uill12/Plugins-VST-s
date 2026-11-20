@@ -1,0 +1,17 @@
+name: Inspect bundled Albedo DSP sources
+on:
+  push:
+    branches: [albedo/cp49-instrument-response]
+    paths: ['.github/workflows/albedo-cp49-inspect.yml']
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: unzip -q build-sources/Albedo_CP13_CI_Source_NoBank.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Albedo-DSP-reference
+          path: |
+            Albedo-Quintessential-Synth/src/vitriol_dsp.cpp
+            Albedo-Quintessential-Synth/include/vitriol_dsp.hpp
