@@ -50,7 +50,8 @@ required=[
     "min-height:0!important","overflow-y:auto!important",
     "albedo-cp35-resize-grip","setPointerCapture",
     "requestAnimationFrame","resize|",
-    "albedo-cp35-reset","Math.min(w/page.offsetWidth,h/page.offsetHeight)"
+    "albedo-cp35-reset","const scale=Math.min(sx,sy)",
+    "--fit-scale-x","--fit-scale-y"
 ]
 for value in required:assert value in js, value
 assert "document.body.innerHTML" not in js and "location.reload" not in js
