@@ -14,10 +14,16 @@ def pack(x):
     return np.stack([v&255,v>>8&255,v>>16&255],axis=-1).astype('u1').tobytes()
 out=bytearray(b'VTRB2\0\0\0'+data[8:20])
 for i,original in enumerate(x):
-    # Parallel saturation adds harmonics to the original material. Keep its attack.
-    body=np.tanh(original*(1.45+.12*(i%5)))
-    mid=.80*original+.23*body
-    upper=sosfilt(butter(3,260+i%7*24,fs=sr,btype='highpass',output='sos'),mid)
+    # CP51: oversampled gentle harmonic enrichment, band-controlled low-mid body.
+    # PCM24 96k source stays untouched in the input; no external copyrighted audio.
+    # Oversample the NONLINEAR stage before bringing it back to 96 kHz.
+    from scipy.signal import resample_poly
+    up=resample_poly(original,4,1,window=('kaiser',8.6))
+    harmonic=resample_poly(np.tanh(up*(1.30+.12*(i%5))),1,4,window=('kaiser',8.6))[:n]
+    lowmid=sosfilt(butter(3,(88,370+i%7*30),fs=sr,btype='bandpass',output='sos'),original)
+    mid=.79*original+.21*harmonic+.10*lowmid
+    # Widen only the upper harmonics; sub and bass fundamentals remain mono-safe.
+    upper=sosfilt(butter(3,300+i%7*24,fs=sr,btype='highpass',output='sos'),mid)
     side=np.zeros_like(mid)
     for ms,g in [(4.7+i%3,.52),(10.3+i%7,-.39),(19.1+i%11,.26)]:
         dt=round(ms*.001*sr);side[dt:]+=g*upper[:-dt]
