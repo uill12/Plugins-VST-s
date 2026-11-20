@@ -54,7 +54,7 @@ void AlbedoProcessor::syncArpClock()
         if(auto position=transport->getPosition()) {
             if(auto bpm=position->getBpm()) synth->setArpTempo(*bpm);
             const bool playing=position->getIsPlaying();
-            if(transportPlaying && !playing && synth->getParam(6020)>.5) synth->allNotesOff();
+            if(transportPlaying && !playing && synth->getParam(6020)>.5 && synth->getParam(6030)>.5) synth->allNotesOff();
             transportPlaying=playing;
         }
     }
