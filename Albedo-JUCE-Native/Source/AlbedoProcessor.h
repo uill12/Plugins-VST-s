@@ -3,6 +3,7 @@
 #include <vitriol_dsp.hpp>
 #include <albedo_factory_patches.hpp>
 #include "AlbedoCreativeBank.hpp"
+#include "AlbedoMorphBank.hpp"
 #include "AlbedoRearField.hpp"
 #include <memory>
 #include <unordered_map>
