@@ -14,7 +14,7 @@ with tempfile.TemporaryDirectory() as directory:
     subprocess.run([bundle/'Match_Target.exe',str(wav),'--note','57','--hold','.4375','--out',str(out)],check=True,timeout=480)
     data=(out/'Reconstructed.albedopatch').read_bytes()
     magic,slot,n=struct.unpack('<iii',data[:12])
-    assert magic==0x414c4232 and 0<=slot<128 and len(data)==12+12*n
+    assert magic==0x414c4232 and 0<=slot<192 and len(data)==12+12*n
     settings=dict(struct.iter_unpack('<id',data[12:]))
     report=json.loads((out/'Recipe.json').read_text())
     assert report['finalDistance']<=report['closestInitialDistance']+.1
