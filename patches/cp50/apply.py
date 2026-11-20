@@ -1,4 +1,4 @@
-import sys,shutil
+import sys,shutil,re
 from pathlib import Path
 root=Path(sys.argv[1]);src=root/'src/vitriol_dsp.cpp';hdr=root/'include/vitriol_dsp.hpp';params=root/'include/vitriol_params.hpp'
 def change(s,a,b):
@@ -8,7 +8,7 @@ h=hdr.read_text();h=change(h,' void prepare(double',' void setArpTempo(double bp
 h=change(h,' struct Voice {',''' struct ArpKey {int note,ch,id;double vel;bool down;};
  std::array<ArpKey,128> arpKeys_{};std::array<bool,16> arpPedal_{};
  int arpCount_=0,arpSound_=-1,arpChannel_=0,arpStep_=0;unsigned arpIndex_=0,arpBits_=0x8421;
- bool arpEnabled_=false;double arpTempo_=120,arpClock_=0,arpGate_=0;
+ bool arpEnabled_=false,arpHostValid_=false;double arpHostTempo_=120,arpClock_=0,arpGate_=0;
  void arpMode();void arpTick();void arpClear();void arpPrune();void arpRelease();
  void voiceOn(int,double,int,int);void voiceOff(int,int,int);void voicePanic();
  template<typename Sample>void processArp(Sample*,Sample*,uint32_t);
@@ -16,8 +16,41 @@ h=change(h,' struct Voice {',''' struct ArpKey {int note,ch,id;double vel;bool d
 h=h.replace('double unisonPhase','double sampleSide[4]{};double unisonPhase')
 h=h.replace('materialBank_{}','materialBank_{},materialSide_{}').replace('double normalizedPhase)const','double normalizedPhase,double& side)const')
 hdr.write_text(h)
-p=params.read_text();p=change(p,' add(6020,',' add(6024,"Arp Order","Cellular Arpeggiator",0,4,0,"",true);add(6025,"Arp Octaves","Cellular Arpeggiator",1,4,1,"",true);add(6026,"Arp Swing","Cellular Arpeggiator",0,75,0,"%");add(6027,"Arp Length","Cellular Arpeggiator",1,16,16,"",true);\n add(6020,')
-p=p.replace('"Pulse Enabled"','"Arpeggiator Enabled"').replace('"Pulse Depth"','"Cell Accent"').replace('"Pulse Division","Pulsus",.05,1,.25,"s"','"Arp Division","Cellular Arpeggiator",.05,1,.25,"beats"')
+p=params.read_text()
+p=change(p,' add(6020,',''' add(6024,"Arp Character","Nereida Rhythmic Characters",0,3,2,"",true);
+ add(6025,"Arp Octaves","Nereida Rhythmic Characters",1,3,1,"",true);
+ add(6026,"Arp Swing","Nereida Rhythmic Characters",0,45,0,"%");
+ add(6027,"Arp Steps","Nereida Rhythmic Characters",4,16,8,"",true);
+ add(6028,"Arp Rotate","Nereida Rhythmic Characters",0,7,0,"",true);
+ add(6029,"Arp Tempo","Nereida Rhythmic Characters",40,240,120,"BPM");
+ add(6030,"Arp DAW Sync","Nereida Rhythmic Characters",0,1,1,"",true);
+ add(6020,''')
+# Retain prior ID ownership for 6020-6023 (existing DAW state and automation).
+# Use Nereida's gate/velocity defaults and units instead of CP50's pulse nomenclature.
+for ident,old_name,new_name,default in (
+    (6020,"Pulse Enabled","Arpeggiator Enabled",None),
+    (6021,"Pulse Division","Arp Division",None),
+    (6022,"Pulse Depth","Arp Cellular Accent",30),
+    (6023,"Pulse Gate","Arp Gate",68),
+):
+    pat=rf'add\\({ident},[^;]+;'
+    match=re.search(pat,p)
+    assert match is not None,('missing legacy arp parameter',ident)
+    item=match.group(0)
+    assert old_name in item,(ident,item)
+    modified=item.replace(old_name,new_name).replace('"Pulsus"','"Nereida Rhythmic Characters"')
+    if ident==6021:
+        modified=modified.replace(',"s")',',"beats")')
+    if default is not None:
+        # Keep original exposed min/max and update just default.
+        vals=modified.rsplit(',',2)
+        assert len(vals)==3,(ident,modified)
+        front=vals[0]
+        last=front.rfind(',')
+        assert last>0
+        front=front[:last+1]+str(default)
+        modified=front+','+vals[1]+','+vals[2]
+    p=p.replace(item,modified)
 params.write_text(p)
 s=src.read_text()
 s=s.replace('void Synth::noteOn(','void Synth::voiceOn(').replace('void Synth::noteOff(','void Synth::voiceOff(').replace('void Synth::allNotesOff(){','void Synth::voicePanic(){')
