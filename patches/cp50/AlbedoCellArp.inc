@@ -1,5 +1,7 @@
 // A single clock owns note selection, step rests and gate releases.
-void Synth::setArpTempo(double bpm){if(std::isfinite(bpm)&&bpm>0)arpTempo_=clamp(bpm,10.,999.);}
+// Keep host tempo separate from the free-running BPM parameter. No transport
+// callbacks, allocations, or UI calls are made in the scheduler.
+void Synth::setArpTempo(double bpm){if(std::isfinite(bpm)&&bpm>0){arpHostTempo_=clamp(bpm,40.,240.);arpHostValid_=true;}}
 void Synth::arpRelease(){
  if(arpSound_>=0){voiceOff(arpSound_,arpChannel_,-1);arpSound_=-1;}
 }
@@ -37,29 +39,63 @@ void Synth::arpPrune(){
 }
 void Synth::allNotesOff(){arpClear();voicePanic();}
 void Synth::arpTick(){
+ // Nereida CP-03B characters: Oblique / Symmetrical / Cyclical / Asymmetrical.
+ // Only note-event selection and deliberate octave additions affect pitch.
  arpRelease();
- const int length=std::clamp(int(get(6027)),1,16),step=arpStep_%length;
- arpDisplay_.store(step,std::memory_order_relaxed);
- const int mode=std::clamp(int(get(6024)),0,4),octaves=std::clamp(int(get(6025)),1,4);
- const double swing=get(6026)*.005;
- const double period=std::max(2.,fs_*(60./arpTempo_)*get(6021)*((step&1)?1.-swing:1.+swing));
- arpClock_+=period;arpGate_=std::max(1.,period*clamp(get(6023)*.01,.01,.99));
- if(arpCount_&&get(6000+step)>.5){
-  std::array<int,128> order{};for(int i=0;i<arpCount_;++i)order[i]=i;
-  if(mode!=3)std::sort(order.begin(),order.begin()+arpCount_,[&](int a,int b){return std::make_pair(arpKeys_[a].note,a)<std::make_pair(arpKeys_[b].note,b);});
+ const int length=std::clamp(int(get(6027)),4,16);
+ const unsigned step=unsigned(arpStep_%length);
+ arpDisplay_.store(int(step),std::memory_order_relaxed);
+ const int character=std::clamp(int(get(6024)),0,3);
+ const int octaves=std::clamp(int(get(6025)),1,3);
+ const int rotate=std::clamp(int(get(6028)),0,7);
+ const double swing=clamp(get(6026)*.01,0.,.45);
+ const double tempo=(get(6030)>.5&&arpHostValid_)?arpHostTempo_:clamp(get(6029),40.,240.);
+ const double division=get(6021); // 1, 1/2, 1/4, 1/8 beats for quarter ... thirty-second
+ const double period=std::max(2.,fs_*60./tempo*division*((step&1)?1.-swing:1.+swing));
+ arpClock_+=period;
+ arpGate_=std::max(1.,period*clamp(get(6023)*.01,.10,.95));
+ const bool obliqueGap=character==0 && (step%8==7);
+ // Fixed Bjorklund-like 5-of-8 pulse mask, deterministic for any step count.
+ const bool asymmetricGap=character==3 && ((step*5)%8)>=5;
+ const bool active=get(6000+step)>.5&&!obliqueGap&&!asymmetricGap;
+ if(arpCount_>0 && active){
+  std::array<int,128> sorted{};for(int i=0;i<arpCount_;++i)sorted[i]=i;
+  std::stable_sort(sorted.begin(),sorted.begin()+arpCount_,[&](int a,int b){
+   return arpKeys_[a].note<arpKeys_[b].note;
+  });
   const int span=arpCount_*octaves;
-  int pos=int(arpIndex_%span);
-  if(mode==1)pos=span-1-pos;
-  if(mode==2&&span>1){const int t=int(arpIndex_%(2*span-2));pos=t<span?t:2*span-2-t;}
-  if(mode==4)pos=(pos+int(arpBits_>>(step%12)))%span;
-  const auto& key=arpKeys_[order[pos%arpCount_]];
-  int note=key.note+12*(pos/arpCount_);while(note>127)note-=12;
-  const double accent=((arpBits_>>step)&1)?1.:1.-.65*get(6022)*.01;
-  voiceOn(note,key.vel*accent,key.ch,-1);arpSound_=note;arpChannel_=key.ch;++arpIndex_;
+  const unsigned cursor=arpIndex_;
+  int pos=0;
+  if(character==0)pos=int((2ull*cursor+cursor/2+unsigned(rotate))%unsigned(span));
+  else if(character==1){
+   const int cycle=std::max(1,2*span-2);
+   const int t=int((cursor+unsigned(rotate))%unsigned(cycle));
+   pos=t<span?t:cycle-t;
+  }else if(character==2)pos=int((cursor+unsigned(rotate))%unsigned(span));
+  else pos=int((5ull*cursor+cursor/3+unsigned(rotate))%unsigned(span));
+  const auto& key=arpKeys_[sorted[pos%arpCount_]];
+  const int note=key.note+12*(pos/arpCount_);
+  if(note<=127){
+   // Separate CA lattice shapes accents only; no pitch drift or random transpose.
+   const bool energetic=((arpBits_>>step)&1)!=0;
+   const double accent=clamp(get(6022)*.01,0.,1.);
+   const double velocityScale=energetic?1.:(1.-.70*accent);
+   voiceOn(note,clamp(key.vel*velocityScale,.001,1.),key.ch,-1);
+   arpSound_=note;arpChannel_=key.ch;
+  }
  }
+ ++arpIndex_; // Advance through rests as Nereida's note-event clock does.
  if(++arpStep_>=length){
-  arpStep_=0;const int rules[]={30,90,110,150};int rule=rules[std::clamp(int(get(4003)),0,3)];
-  unsigned next=0;for(int i=0;i<16;++i){int pattern=((arpBits_>>((i+15)%16)&1)<<2)|((arpBits_>>i&1)<<1)|(arpBits_>>((i+1)%16)&1);next|=((rule>>pattern)&1)<<i;}arpBits_=next?next:1;
+  arpStep_=0;const int rules[]={30,90,110,150};
+  const int rule=rules[std::clamp(int(get(4003)),0,3)];
+  unsigned next=0;
+  for(int i=0;i<16;++i){
+   const int pattern=(((arpBits_>>((i+15)%16))&1)<<2)
+                    |(((arpBits_>>i)&1)<<1)
+                    |((arpBits_>>((i+1)%16))&1);
+   next|=unsigned((rule>>pattern)&1)<<i;
+  }
+  arpBits_=next?next:1u;
  }
 }
 template<typename Sample>void Synth::processArp(Sample* l,Sample* r,uint32_t n){
