@@ -18,7 +18,7 @@ int main(){
  auto s=std::make_unique<vitriol::Synth>();std::string line;
  while(std::getline(std::cin,line)){
   std::istringstream in(line);int program,note,total,held,state;double velocity;
-  if(!(in>>program>>note>>velocity>>held>>total>>state)||program<0||program>=128||note<0||note>127||total<1||total>384000||held<1||held>total)return 2;
+  if(!(in>>program>>note>>velocity>>held>>total>>state)||program<0||program>=192||note<0||note>127||total<1||total>384000||held<1||held>total)return 2;
   albedo_programs::apply(program,[&](uint32_t id,float v){s->setParam(id,v);});
   unsigned id;double v;while(in>>id>>v)if(!std::isfinite(v)||!s->setParam(id,v))return 3;
   s->prepare(48000);
