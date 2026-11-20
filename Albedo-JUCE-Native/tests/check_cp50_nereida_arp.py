@@ -11,7 +11,7 @@ apply=(root/"patches/cp50/apply.py").read_text(encoding="utf-8")
 test=(root/"patches/cp50/arp_test.cpp").read_text(encoding="utf-8")
 cmake=(root/"Albedo-JUCE-Native/CMakeLists.txt").read_text(encoding="utf-8")
 processor=(root/"Albedo-JUCE-Native/Source/AlbedoProcessor.cpp").read_text(encoding="utf-8")
-assert "VERSION 1.0.50.1" in cmake
+assert "VERSION 1.0.51" in cmake
 assert "BUNDLE_ID \"org.vitriol.albedo.juce32\"" in cmake
 for i,character in enumerate(("Oblique","Symmetrical","Cyclical","Asymmetrical")):
     assert f'<option value="{i}"' in html and character in html
