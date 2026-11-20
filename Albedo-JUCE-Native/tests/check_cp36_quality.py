@@ -14,8 +14,10 @@ b=bridge.read_text(encoding="utf-8")
 ui=layout.read_text(encoding="utf-8")
 t=json.loads(data.read_text(encoding="utf-8"))
 for token in ["catmullRom(","decimLen_=64;","processTyped(Sample*",
-              "void Synth::process64(double* l,double* r,uint32_t n){processTyped(l,r,n);"]:
+              "void Synth::process64(double* l,double* r,uint32_t n){processArp(l,r,n);"]:
     assert token in s,token
+arp=(head.parent/"AlbedoCellArp.inc").read_text(encoding="utf-8")
+assert "processTyped(l+offset,r+offset,count)" in arp and "processTyped(l,r,n)" in arp
 assert "template<typename Sample> void processTyped" in h
 assert "std::array<float,256> a{},b{}" not in s
 assert "pb-juce-extra" not in b and "pb-juce-extra" not in ui

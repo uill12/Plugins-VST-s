@@ -61,6 +61,7 @@ private:
             rearField.render(b.getReadPointer(0), b.getReadPointer(1), b.getWritePointer(2),
                              b.getWritePointer(3), b.getNumSamples());
     }
+    void syncArpClock();
     void updateSynthParameters();
     void handleMidi (const juce::MidiMessage&);
     void processRegion (juce::AudioBuffer<float>& buffer, int start, int length);

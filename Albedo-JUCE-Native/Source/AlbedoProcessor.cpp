@@ -40,6 +40,16 @@ bool AlbedoProcessor::isBusesLayoutSupported (const BusesLayout& l) const
 { return l.getMainOutputChannelSet() == juce::AudioChannelSet::stereo() || l.getMainOutputChannelSet() == juce::AudioChannelSet::quadraphonic(); }
 void AlbedoProcessor::updateSynthParameters()
 {
+    if (!parametersChanged.exchange(false, std::memory_order_acq_rel)) return;
+    // Audio-thread-owned lastValues; no locks, GUI operations, or allocations.
+    for (size_t i = 0; i < parameterList.size(); ++i)
+    {
+        const auto val = (double) parameterList[i].second->get();
+        if (val != lastValues[i]) { synth->setParam (parameterList[i].first, val); lastValues[i] = val; }
+    }
+}
+void AlbedoProcessor::syncArpClock()
+{
     if (auto* transport=getPlayHead()) {
         if(auto position=transport->getPosition()) {
             if(auto bpm=position->getBpm()) synth->setArpTempo(*bpm);
@@ -47,13 +57,6 @@ void AlbedoProcessor::updateSynthParameters()
             if(transportPlaying && !playing && synth->getParam(6020)>.5) synth->allNotesOff();
             transportPlaying=playing;
         }
-    }
-    if (!parametersChanged.exchange(false, std::memory_order_acq_rel)) return;
-    // Audio-thread-owned lastValues; no locks, GUI operations, or allocations.
-    for (size_t i = 0; i < parameterList.size(); ++i)
-    {
-        const auto val = (double) parameterList[i].second->get();
-        if (val != lastValues[i]) { synth->setParam (parameterList[i].first, val); lastValues[i] = val; }
     }
 }
 void AlbedoProcessor::handleMidi (const juce::MidiMessage& m)
@@ -73,6 +76,7 @@ void AlbedoProcessor::processRegion (juce::AudioBuffer<float>& b, int start, int
 void AlbedoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
+    syncArpClock();
     updateSynthParameters();
     int pos = 0;
     for (const auto metadata : midi)
@@ -89,6 +93,7 @@ void AlbedoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
 void AlbedoProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
+    syncArpClock();
     updateSynthParameters();
     int pos=0;
     for (const auto metadata : midi)
