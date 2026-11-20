@@ -7,6 +7,7 @@ on:
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
       - 'Albedo-JUCE-Native/**'
       - 'patches/cp50/**'
+      - 'patches/cp51/**'
       - 'patches/cp15_apply_part*.txt'
       - 'patches/cp15_hotfix.py'
       - 'patches/cp16_part*.txt'
@@ -642,6 +643,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python patches/cp50/bank.py Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb
           if ($LASTEXITCODE -ne 0) { throw 'CP49 DSP integration failed' }
+          python patches/cp51/material_qa.py Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb CP51_Material_Spectral_QA.json
+          if ($LASTEXITCODE -ne 0) { throw 'CP51 spectral-material/mono-safe width test failed' }
           python Albedo-JUCE-Native/tools/generate_recursive_forms.py --bank material --metadata Albedo-JUCE-Native/Metadata/material_factory_bank.json --output Albedo-JUCE-Native/Source/AlbedoMaterialBank.hpp
           if ($LASTEXITCODE -ne 0) { throw 'Material factory generation failed' }
           python Albedo-JUCE-Native/tools/generate_recursive_forms.py
@@ -802,6 +805,11 @@ jobs:
         with:
           name: Albedo_CP51_192_Output_Pairs
           path: CP49_Output_Pairs.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP51_OriginalMaterial_PCM24_Quality
+          path: CP51_Material_Spectral_QA.json
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: Albedo_CP51_MorphTree_192_Generation_QA
