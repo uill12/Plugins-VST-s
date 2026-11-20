@@ -7,6 +7,7 @@
  const page=document.getElementById('page');
  if(!page)return;
  let nativeW=0,nativeH=0,lastW=-1,lastH=-1,lastScale=-1;
+ let lastScaleX=-1,lastScaleY=-1;
  let frame=0,physicalWidth=0,physicalHeight=0;
  const clampWidth=w=>Math.max(720,Math.min(1500,Math.round(w/6)*6));
  const send=(w,h)=>{
@@ -29,13 +30,20 @@
  }
  function fit(){
    const {w,h}=measured();
-   const scale=Math.max(.1,Math.min(w/page.offsetWidth,h/page.offsetHeight));
-   if(w===lastW&&h===lastH&&Math.abs(lastScale-scale)<.0002)return;
-   lastW=w;lastH=h;lastScale=scale;
+   const pw=Math.max(1,page.offsetWidth),ph=Math.max(1,page.offsetHeight);
+   const sx=Math.max(.1,w/pw),sy=Math.max(.1,h/ph);
+   const scale=Math.min(sx,sy);
+   // Fill the granted WebView2 client rectangle, including small DPI / Bitwig
+   // geometry disagreements. Preserve undistorted content for large ratio gaps.
+   const mismatch=Math.abs(sx-sy)/Math.max(.1,scale);
+   const scaleX=mismatch<=.075?sx:scale,scaleY=mismatch<=.075?sy:scale;
+   if(w===lastW&&h===lastH&&Math.abs(lastScaleX-scaleX)<.0002
+      &&Math.abs(lastScaleY-scaleY)<.0002)return;
+   lastW=w;lastH=h;lastScale=scale;lastScaleX=scaleX;lastScaleY=scaleY;
    root.style.setProperty('--albedo-viewport-w',w+'px');
    root.style.setProperty('--albedo-viewport-h',h+'px');
-   root.style.setProperty('--albedo-offset-x',Math.max(0,(w-page.offsetWidth*scale)/2)+'px');
-   root.style.setProperty('--albedo-offset-y',Math.max(0,(h-page.offsetHeight*scale)/2)+'px');
+   root.style.setProperty('--albedo-offset-x',Math.max(0,(w-pw*scaleX)/2)+'px');
+   root.style.setProperty('--albedo-offset-y',Math.max(0,(h-ph*scaleY)/2)+'px');
    // CP36: the Atlas uses most of the available editor area. Removing the
    // secondary filter row adds room for readable factory-patch list entries.
    const atlasW=Math.min(960,Math.floor(w*.96),Math.max(320,w-22));
@@ -43,6 +51,8 @@
    root.style.setProperty('--albedo-atlas-width',atlasW+'px');
    root.style.setProperty('--albedo-atlas-height',atlasH+'px');
    root.style.setProperty('--fit-scale',String(scale));
+   root.style.setProperty('--fit-scale-x',String(scaleX));
+   root.style.setProperty('--fit-scale-y',String(scaleY));
    const sizeDisplay=document.getElementById('albedo-cp35-size-value');
    if(sizeDisplay)sizeDisplay.textContent=Math.round((nativeW||w))+'×'+Math.round(nativeH||h);
  }
@@ -55,7 +65,7 @@
  style.textContent=`
  html.albedo-fit body #page.page{
    position:fixed!important;margin:0!important;transform-origin:0 0!important;
-   transform:scale(var(--fit-scale,1))!important;
+   transform:scale(var(--fit-scale-x,var(--fit-scale,1)),var(--fit-scale-y,var(--fit-scale,1)))!important;
    left:var(--albedo-offset-x,0px)!important;
    top:var(--albedo-offset-y,0px)!important;
  }
