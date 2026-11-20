@@ -40,11 +40,27 @@ def main():
                 w=min(requested,maximum)//6*6
                 h=w*2//3
                 assert user.SetWindowPos(hwnd,None,0,0,w,h,0x0014)
-                page.wait_for_function("""([w,h])=>{
-                    const r=document.querySelector('#page').getBoundingClientRect(),d=devicePixelRatio;
-                    return Math.abs(r.right*d-w)<3 && Math.abs(r.bottom*d-h)<3
-                        && Math.abs(r.left*d)<3 && Math.abs(r.top*d)<3;
-                }""",arg=[w,h],timeout=10000)
+                # Verify the actual WebView2 client canvas. On Windows the HWND
+                # outer coordinates and Edge CSS pixels need not share a DPR unit.
+                # An exact comparison to SetWindowPos's outer width can falsely
+                # reject a correctly fitted client on mixed-DPI host displays.
+                page.wait_for_function("""()=>{
+                    const root=document.documentElement;
+                    const rect=document.querySelector('#page').getBoundingClientRect();
+                    const g=window.ALBEDO_CP35_WINDOW?.geometry;
+                    return g && root.clientWidth>0 && root.clientHeight>0
+                       && Math.abs(rect.left)<3 && Math.abs(rect.top)<3
+                       && Math.abs(rect.right-root.clientWidth)<3
+                       && Math.abs(rect.bottom-root.clientHeight)<3
+                       && Math.abs(g.width-root.clientWidth)<3
+                       && Math.abs(g.height-root.clientHeight)<3;
+                }""",timeout=20000)
+                visible=page.evaluate("""()=>({
+                    viewport:[document.documentElement.clientWidth,document.documentElement.clientHeight],
+                    page:(()=>{const x=document.querySelector('#page').getBoundingClientRect();return [x.width,x.height,x.left,x.top]})(),
+                    scale:window.ALBEDO_CP35_WINDOW.geometry.scale
+                })""")
+                print('Compiled CLAP WebView2 client/render geometry',requested,visible,flush=True)
                 page.locator('#presetBrowseOpen').click()
                 assert page.locator('#presetBrowser').is_visible()
                 page.keyboard.press('Escape')
@@ -96,11 +112,18 @@ def main():
             check_value(1006,100)
             sweep_knob('.dial[data-key="macro:bright"]',2000)
             check_value(2000,100)
-            for pid in (6024,6025):
+            # The Nereida-style engine has precisely four characters (0..3).
+            # Never query the retired CP50 order 4 from the new UI.
+            for pid,valid in ((6024,['0','1','2','3']),(6025,['1','2','3']),
+                              (6028,[str(n) for n in range(8)]),(6030,['0','1'])):
                 control=page.locator('[data-arp="'+str(pid)+'"]')
-                option='3' if control.input_value()=='4' else '4'
+                current=control.input_value()
+                option=next(v for v in valid if v!=current)
                 control.select_option(option)
                 check_value(pid,int(option))
+            page.locator('[data-arp="6029"]').fill('134')
+            page.locator('[data-arp="6029"]').press('Tab')
+            check_value(6029,134)
             xy=page.locator('#xy')
             rect=xy.bounding_box()
             for nx,ny in ((.35,.66),(.71,.28)):
