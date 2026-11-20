@@ -63,8 +63,11 @@ def main():
                                         ('filterRoute',3012,[('SERIAL A-B',1),('SERIAL B-A',2)]),
                                         ('division',6021,[('125',.125),('500',.5)]),
                                         ('tuning',3112,[('19-TET',3),('24-TET',4)])]:
+                if page.locator('#'+control).input_value()==options[0][0]:
+                    options=list(reversed(options))
                 for option,value in options:
                     page.locator('#'+control).select_option(option,force=True)
+                    print('Checking',control,pid,value,flush=True)
                     check_value(pid,value)
             page.locator('#play').click()
             check_value(6020,1)
