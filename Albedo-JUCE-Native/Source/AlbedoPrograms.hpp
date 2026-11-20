@@ -1,6 +1,7 @@
 #pragma once
 #include "AlbedoCreativeBank.hpp"
 #include "AlbedoMaterialBank.hpp"
+#include "AlbedoMorphBank.hpp"
 #include "AlbedoProgramTrim.hpp"
 namespace albedo_programs {
 template<typename Set>
@@ -13,6 +14,7 @@ void apply(int index, Set&& set)
         }
     };
     if(index<64) load(albedo_material::patches[index]);
-    else load(albedo_creative::patches[index-64]);
+    else if(index<128) load(albedo_creative::patches[index-64]);
+    else if(index<192) load(albedo_morph::patches[index-128]);
 }
 }
