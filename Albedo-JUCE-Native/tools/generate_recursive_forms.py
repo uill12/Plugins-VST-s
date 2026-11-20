@@ -7,15 +7,15 @@ import argparse, json, math
 p=argparse.ArgumentParser()
 p.add_argument("--metadata",type=Path,default=Path("Albedo-JUCE-Native/Metadata/recursive_forms_bank.json"))
 p.add_argument("--output",type=Path,default=Path("Albedo-JUCE-Native/Source/AlbedoCreativeBank.hpp"))
-p.add_argument("--bank", choices=["creative","material","previous"], default="creative")
+p.add_argument("--bank", choices=["creative","material","previous","morph"], default="creative")
 args=p.parse_args()
-namespace = {"creative":"albedo_creative","material":"albedo_material","previous":"albedo_previous"}[args.bank]
-first = 0 if args.bank == "material" else 64
+namespace = {"creative":"albedo_creative","material":"albedo_material","previous":"albedo_previous","morph":"albedo_morph"}[args.bank]
+first = {"material":0,"creative":64,"previous":64,"morph":128}[args.bank]
 rows=json.loads(args.metadata.read_text(encoding="utf-8"))
 assert len(rows)==64
 assert [p["index"] for p in rows]==list(range(first, first+64))
 assert len({p["name"] for p in rows})==64
-if args.bank != "material": assert {p["family"] for p in rows}=={"Resynthesis Forms","Repetition Fields","Phase Studies"}
+if args.bank in ("creative","previous"): assert {p["family"] for p in rows}=={"Resynthesis Forms","Repetition Fields","Phase Studies"}
 assert all(p["baseIndex"] in range(64) for p in rows)
 for p in rows:
     assert len(p["overrides"])>=35
@@ -34,8 +34,8 @@ def cfloat(v):
     if "e" not in s and "." not in s:s+=".0"
     return s+"f"
 out=["#pragma once",
-     "// Generated from Metadata/recursive_forms_bank.json. 64 historical factory",
-     "// program IDs, preset names, audio samples and existing state are untouched.",
+     "// Generated from preset metadata. 64 sound slots per bank; index identity is stable.",
+     "// No embedded artist samples; compiled changes refer only to internal DSP resources.",
      "#include <array>",
      "#include <cstddef>",
      "#include <cstdint>",
@@ -55,7 +55,7 @@ for p in rows:
 out+=["}};","static_assert(patches.size()==64);","} // namespace albedo_creative",""]
 args.output.parent.mkdir(parents=True,exist_ok=True)
 args.output.write_text("\n".join(out),encoding="utf-8")
-print("CP38: generated 64 unique native factory additions, indexes 64..127; source metadata:",args.metadata)
+print("Generated",args.bank,"bank with 64 indexed programs:",first,"through",first+63,"metadata:",args.metadata)
 
 # Keep both program tables in sync for local builds that use the default entry point.
 if args.bank=="creative" and args.metadata.name=="recursive_forms_bank.json":
