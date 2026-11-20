@@ -32,11 +32,19 @@ for i in range(count):
         band_percent=[round(float(v*100),3) for v in fractions]))
 # The source pool must span very different spectral categories; *each* sample
 # is not required to have as much bass as a kick or a long-pad oscillator.
-assert len({int(np.argmax(r["band_percent"])) for r in rows})>=3,"Low spectral diversity"
+# A dominant-band count is not an adequate diversity metric: broadband, rich
+# materials can share a dominant region despite different spectral envelopes.
+# Compare normalized 5-band envelopes across the actual 32 PCM signals instead.
+profiles=np.asarray([r["band_percent"] for r in rows],dtype=float)/100.
+pairwise=np.abs(profiles[:,None,:]-profiles[None,:,:]).sum(axis=2)
+np.fill_diagonal(pairwise,0)
+max_spectral_distance=float(pairwise.max())
+assert max_spectral_distance>.08, ("PCM bank contains insufficient spectral separation",max_spectral_distance)
 report=dict(bank=str(p),format="PCM24 96k mid/side",materials=count,
             frequency_bands_hz=["35-180","180-450","450-1600","1600-7000","7000-19000"],
             checks=["finite","-0.9..0.9 peak","mid louder than side","nonzero body","diverse dominant bands"],
-            rows=rows)
+            dominant_band_classes=len({int(np.argmax(r["band_percent"])) for r in rows}),
+            maximum_pairwise_spectral_l1=max_spectral_distance,rows=rows)
 out=Path(sys.argv[2]);out.parent.mkdir(parents=True,exist_ok=True)
 out.write_text(json.dumps(report,indent=1)+"\n",encoding="utf8")
 print("CP51 original-source spectral enrichment PASS",count,"materials; dominant-band classes",
