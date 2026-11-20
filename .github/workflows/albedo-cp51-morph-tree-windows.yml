@@ -766,6 +766,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP51 expanded bank header failed' }
           python patches/cp51/patch_atlas_catalog.py ui/Albedo_CP30_CP22_Landscape_3x2.html Albedo-JUCE-Native/Metadata/morph_expansion_bank.json Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
           if ($LASTEXITCODE -ne 0) { throw 'CP51 native Atlas/quick selection integration failed' }
+          python Albedo-JUCE-Native/tests/check_cp51_generator_atlas_boundary.py ui/Albedo_CP30_CP22_Landscape_3x2.html Albedo-JUCE-Native/Metadata/morph_expansion_bank.json
+          if ($LASTEXITCODE -ne 0) { throw 'Morph Tree must remain generation-only; UI must use finished-sound categories' }
           python Albedo-JUCE-Native/tests/check_cp41_atlas.py
           if ($LASTEXITCODE -ne 0) { throw 'CP41 compact Atlas regressed' }
           node --check Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
