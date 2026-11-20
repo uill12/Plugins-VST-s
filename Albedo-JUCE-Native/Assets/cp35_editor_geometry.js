@@ -21,9 +21,10 @@
    // it created a reduced canvas with empty borders in Bitwig.
    const w=Math.max(1,Math.floor(root.clientWidth||window.innerWidth||1));
    const h=Math.max(1,Math.floor(root.clientHeight||window.innerHeight||1));
-   const dpr=window.devicePixelRatio || 1;
-   if(physicalWidth>0 && physicalHeight>0)
-     return {w:Math.min(w,physicalWidth/dpr),h:Math.min(h,physicalHeight/dpr)};
+   // The WebView2 client viewport is authoritative for painted CSS geometry.
+   // Native physicalWidth / DPR may describe the HWND's previous size while
+   // Bitwig negotiates a resize. Capping here produced a 900x600 render inside
+   // a 942x628 CSS viewport (confirmed in Windows host QA).
    return {w,h};
  }
  function fit(){
