@@ -123,7 +123,8 @@ const juce::String AlbedoProcessor::getProgramName (int i)
     if (i < 0 || i >= getNumPrograms()) return {};
     if (i < (int) albedo_factory::patches.size())
         return juce::String (albedo_factory::patches[(size_t)i].name);
-    return juce::String (albedo_creative::patches[(size_t)(i-64)].name);
+    if(i<128) return juce::String (albedo_creative::patches[(size_t)(i-64)].name);
+    return juce::String (albedo_morph::patches[(size_t)(i-128)].name);
 }
 void AlbedoProcessor::loadFactoryPreset (int index)
 {
