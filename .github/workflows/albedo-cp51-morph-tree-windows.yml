@@ -1,7 +1,7 @@
 name: Albedo CP51 Morph Tree 192 Windows CLAP VST3
 on:
   push:
-    branches: [albedo/cp51-morph-tree-sound-generation]
+    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser]
     paths:
       - '.github/workflows/albedo-cp51-morph-tree-windows.yml'
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
@@ -709,6 +709,8 @@ jobs:
           node --check Albedo-JUCE-Native/Assets/cp38_rotary_overlays.js
           node --check Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
           if ($LASTEXITCODE -ne 0) { throw 'CP35 WebView2 resize controller syntax failed' }
+          node Albedo-JUCE-Native/tests/check_cp52_browser.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'CP52 render fit and Nereida browser contract failed' }
       - name: Fetch JUCE 8 and CLAP JUCE extensions
         shell: pwsh
         run: |
@@ -768,6 +770,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP51 native Atlas/quick selection integration failed' }
           python Albedo-JUCE-Native/tests/check_cp51_generator_atlas_boundary.py ui/Albedo_CP30_CP22_Landscape_3x2.html Albedo-JUCE-Native/Metadata/morph_expansion_bank.json
           if ($LASTEXITCODE -ne 0) { throw 'Morph Tree must remain generation-only; UI must use finished-sound categories' }
+          node Albedo-JUCE-Native/tests/check_cp52_browser.cjs --expanded
+          if ($LASTEXITCODE -ne 0) { throw 'CP52 192-sound library browser regression' }
           python Albedo-JUCE-Native/tests/check_cp41_atlas.py
           if ($LASTEXITCODE -ne 0) { throw 'CP41 compact Atlas regressed' }
           node --check Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
