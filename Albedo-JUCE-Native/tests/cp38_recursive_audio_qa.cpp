@@ -11,6 +11,7 @@ int main()
 {
     static_assert(albedo_factory::patches.size()==64);
     static_assert(albedo_creative::patches.size()==64);
+    static_assert(albedo_morph::patches.size()==64);
     bool ok=true;
     int audible=0;
     for (int index=0; index<128; ++index)
@@ -47,6 +48,6 @@ int main()
                  <<" finite "<<finite<<"\n";
     }
     std::cout<<"CP48 audible programs "
-             <<audible<<"/128; finite/polyphonic "<<ok<<"\n";
-    return ok && audible==128 ? 0 : 1;
+             <<audible<<"/192; finite/polyphonic "<<ok<<"\n";
+    return ok && audible==192 ? 0 : 1;
 }
