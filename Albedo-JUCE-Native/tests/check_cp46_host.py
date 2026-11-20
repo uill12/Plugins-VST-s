@@ -96,10 +96,11 @@ def main():
             check_value(1006,100)
             sweep_knob('.dial[data-key="macro:bright"]',2000)
             check_value(2000,100)
-            page.locator('[data-arp="6024"]').select_option('4')
-            check_value(6024,4)
-            page.locator('[data-arp="6025"]').select_option('4')
-            check_value(6025,4)
+            for pid in (6024,6025):
+                control=page.locator('[data-arp="'+str(pid)+'"]')
+                option='3' if control.input_value()=='4' else '4'
+                control.select_option(option)
+                check_value(pid,int(option))
             xy=page.locator('#xy')
             rect=xy.bounding_box()
             for nx,ny in ((.35,.66),(.71,.28)):

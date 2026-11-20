@@ -28,7 +28,7 @@ sel=best[1];print('minimum, median, under six:',best[2].min(),np.median(best[2])
 names=['material_factory_bank.json','recursive_forms_bank.json']
 banks=[sum([json.loads((p/n).read_text()) for n in names],[]) for p in options]
 rows=[banks[sel[i]][i] for i in range(128)]
-trim=[float(x) for x in re.findall(r'(-?[0-9.]+)f',(native/'Source/AlbedoProgramTrim.hpp').read_text())]
+trim=[float(x) for x in re.findall(r'(-?[0-9.]+)f',(options[0]/'AlbedoProgramTrim.hpp').read_text())]
 out=folder/'selected';out.mkdir(exist_ok=True)
 for i,p in enumerate(rows):
     a=np.fromfile(options[sel[i]]/'audio'/f'{i}.f32',np.float32)
