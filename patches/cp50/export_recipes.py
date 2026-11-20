@@ -2,7 +2,7 @@
 import json,sys
 from pathlib import Path
 folder=Path(sys.argv[1])
-rows=sum([json.loads((folder/n).read_text(encoding='utf8')) for n in ['material_factory_bank.json','recursive_forms_bank.json']],[])
+rows=sum([json.loads((folder/n).read_text(encoding='utf8')) for n in ['material_factory_bank.json','recursive_forms_bank.json','morph_expansion_bank.json']],[])
 methods=['Analog','Wavetable','Harmonic additive','Granular','Spectral','Physical modal','Noise','Time-warp sampler','Phase distortion','Cellular']
 materials='Bronze Quiver|Hollow Glass|Copper Bloom|Bell Dust|Reed Current|Plucked Wire|Wooden Vein|Ceramic Grain|Felt Pulse|Membrane Ember|Air Column|Spring Alloy|Ice Lattice|Stone Ripple|Water Pearl|Electric Filament|Soft Machine|Sand Drift|Vowel Foam|Carbon Friction|Polyphonic Metal|Marimba Wood|Granular Resin|Light Ash|Vowel Foam|Shimmer Film|Mechanical Ember|Earth Drone|Azure Swell|Porcelain Bloom|Mineral Rain|Living Circuit'.split('|')
 materials[24]='Ink Falls'
