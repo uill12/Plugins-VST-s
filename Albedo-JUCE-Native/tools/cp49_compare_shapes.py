@@ -28,7 +28,9 @@ def output_shape(path):
     return np.r_[np.asarray(spec)*np.sqrt(.65/len(spec)),env*np.sqrt(.35/len(env))]
 
 def distances(folder):
-    return cdist(*[np.stack([output_shape(folder/f'{i}.f32') for i in range(128)])]*2)
+    n=len(list(folder.glob('*.f32')))
+    assert n in (128,192)
+    return cdist(*[np.stack([output_shape(folder/f'{i}.f32') for i in range(n)])]*2)
 
 if __name__=='__main__':
     import argparse,csv
@@ -39,4 +41,4 @@ if __name__=='__main__':
     d=distances(args.renders)
     with args.csv.open('w',newline='') as stream:
         writer=csv.writer(stream);writer.writerow(['slot_a','slot_b','output_shape_distance_db'])
-        writer.writerows(sorted(((i,j,round(d[i,j],3)) for i in range(128) for j in range(i+1,128)),key=lambda r:r[2]))
+        writer.writerows(sorted(((i,j,round(d[i,j],3)) for i in range(d.shape[0]) for j in range(i+1,d.shape[0])),key=lambda r:r[2]))
