@@ -102,7 +102,7 @@ def main():
                 ('New','New:191',191)
             ]:
                 page.locator('[data-collection="'+library+'"]').click()
-                page.locator('[data-pb-choose="'+selector+'"]').click()
+                page.locator('#pbItems [data-pb-choose="'+selector+'"]').click()
                 page.wait_for_function('program => window.cp52ProgramEvents.includes(program)',
                                        arg=program,timeout=10000)
                 assert page.locator('#presetBrowser').is_visible(), (
