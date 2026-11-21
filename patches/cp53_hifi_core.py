@@ -76,7 +76,7 @@ replace('case 3:v.env*=blockRates_.voiceRelease;if(v.env<.000035){',
 replace('blockRates_.voiceRelease=std::exp(-7./(std::max(.01,get(3103))*srInternal));',
         'blockRates_.voiceRelease=std::exp(-7./(std::max(.01,get(3103))*srInternal));\n   blockRates_.panicRelease=std::exp(-1./(.012*srInternal));',
         'precomputed panic release coefficient')
-h=a.root/'include/vitriol_dsp.hpp'
+h=args.root/'include/vitriol_dsp.hpp'
 header=h.read_text(encoding='utf-8')
 def replace_header(old,new):
  global header
