@@ -64,6 +64,9 @@ replace('void Synth::voicePanic(){sustain_.fill(false);for(auto&v:voices_)if(v.a
  '''void Synth::voicePanic(){sustain_.fill(false);for(auto&v:voices_)if(v.active){
   v.held=v.sustained=false;v.released=true;v.envStage=3;v.fastPanicRelease=true;
  }}''','panic ensures bounded release, not a stuck envelope')
+replace('v.active=v.released=v.held=v.sustained=false;v.noteId=-1;v.group=0;',
+        'v.active=v.released=v.held=v.sustained=v.fastPanicRelease=false;v.noteId=-1;v.group=0;',
+        'reset panic-release state')
 replace('voice->active=true;voice->released=false;voice->held=true;voice->sustained=false;',
         'voice->active=true;voice->released=false;voice->held=true;voice->sustained=false;voice->fastPanicRelease=false;',
         'clear fast release on voice reuse')
