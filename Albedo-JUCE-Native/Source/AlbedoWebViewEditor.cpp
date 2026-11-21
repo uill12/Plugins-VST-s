@@ -122,7 +122,7 @@ AlbedoWebViewEditor::resource(const juce::String& path) const
             "('albedoMessage',{payload:String(payload)})};";
         if(!html.contains(oldHost)) return std::nullopt; // fail closed on mismatched HTML
         html=html.replace(oldHost,juceHost);
-        html=html.replace("</body>","<script src=\"juce_cp33_bridge.js\"></script><script src=\"cp35_editor_geometry.js\"></script><script src=\"cp38_rotary_overlays.js\"></script><script src=\"cp52_nereida_browser.js\"></script><script src=\"cp54_essential_sound_layout.js\"></script></body>");
+        html=html.replace("</body>","<script src=\"juce_cp33_bridge.js\"></script><script src=\"cp35_editor_geometry.js\"></script><script src=\"cp38_rotary_overlays.js\"></script><script src=\"cp52_nereida_browser.js\"></script><script src=\"cp54_essential_sound_layout.js\"></script><script src=\"cp56_sound_priority.js\"></script></body>");
         return htmlResource(html);
     }
 
@@ -138,6 +138,8 @@ AlbedoWebViewEditor::resource(const juce::String& path) const
     { name="cp52_nereida_browser_js"; mime="text/javascript"; }
     else if(assetPath=="/cp54_essential_sound_layout.js")
     { name="cp54_essential_sound_layout_js"; mime="text/javascript"; }
+    else if(assetPath=="/cp56_sound_priority.js")
+    { name="cp56_sound_priority_js"; mime="text/javascript"; }
     else if(assetPath=="/factory_preset_taxonomy.json")
     { name="factory_preset_taxonomy_json"; mime="application/json"; }
     else return std::nullopt;
