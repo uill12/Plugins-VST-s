@@ -35,3 +35,11 @@ User's real Bitwig screenshot showed the old Preset Atlas clipped by the plugin 
 4. Promote source/binaries and upload to the Albedo project release folders only after passing compiled and host QA. Keep CP51 rollback intact.
 
 **Never label CP52 a binary release before compiled artifacts and host QA are verified.**
+
+## CP52 compact browser and build handoff (2026-11-21)
+
+- UI panel reduced to `min(1040px, 90vw)` by `min(730px, 90dvh)` with 14px+ safe viewport padding; 1080×720 layout renders at about 972×648. Preserve all 192 programs and native backend IDs.
+- [Compact browser Edge QA — PASS](https://github.com/uill12/Plugins-VST-s/actions/runs/44843562906), including 1080×720 / 900×600 / 720×480, controls in bounds, vertical scroll, library/role filtering and audition mode.
+- Windows optimized workflow now downloads the previously successful [CP51 selection artifact](https://github.com/uill12/Plugins-VST-s/actions/runs/44835756139), rather than reselecting 192 DSP sounds on every GUI change. Soundbank selected metadata is verified against the original 128 in the existing CI gates. The portable CLAP binary is renamed `Albedo_CP52_NereidaBrowser_JUCE_WebView2.clap` in the artifact. VST3 bundle keeps its internal compatibility name; artifact is labelled `Albedo_CP52_JUCE_NereidaBrowser_Windows_x64_CLAP_VST3` and ships `CP52_BUILD_PROVENANCE.txt`.
+- [Optimized native CP52 Windows CI](https://github.com/uill12/Plugins-VST-s/actions/runs/44843814431) was started; **native CLAP/VST3 output and host QA still require successful completion**.
+- No CP51 release artifact, preset IDs, internal plugin identity or DSP parameters have been overwritten.
