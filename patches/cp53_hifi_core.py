@@ -97,6 +97,49 @@ replace(' blockRates_.driveGain[0]=db(get(3002));blockRates_.driveGain[1]=db(get
    unisonRatios_[e][u]=std::exp2(position*detune);
   }
  }''','once-per-block unison detune cache')
+# CP53: 16K double sine LUT (<2e-8 worst-case linear interpolation error)
+# replaces four-point Catmull-Rom lookup only on the JUCE HiFi path. It uses
+# 128 KiB rather than 32 KiB per synth, but saves CPU in 20-partial spectral
+# sources, wavetable harmonics and other sine-heavy oscillator modes.
+replace('''double Synth::fastSinCycles(double cycles)const{
+ const double pos=fract(cycles)*4096.;const int i=int(pos);const double t=pos-double(i);
+ return catmullRom(sineLut_[(i-1)&4095],sineLut_[i&4095],
+                   sineLut_[(i+1)&4095],sineLut_[(i+2)&4095],t);
+}''',
+ '''double Synth::fastSinCycles(double cycles)const{
+#if defined(ALBEDO_CP53_TRANSPARENT_OUTPUT)
+ const double pos=fract(cycles)*16384.;const int i=int(pos);const double t=pos-double(i);
+ return lerp(sineLut_[i&16383],sineLut_[(i+1)&16383],t);
+#else
+ const double pos=fract(cycles)*4096.;const int i=int(pos);const double t=pos-double(i);
+ return catmullRom(sineLut_[(i-1)&4095],sineLut_[i&4095],
+                   sineLut_[(i+1)&4095],sineLut_[(i+2)&4095],t);
+#endif
+}''','fast 16K high-resolution sine interpolation')
+replace('for(int k=0;k<4096;k++)sineLut_[k]=std::sin(TAU*double(k)/4096.);',
+ '''#if defined(ALBEDO_CP53_TRANSPARENT_OUTPUT)
+ for(int k=0;k<16384;k++)sineLut_[k]=std::sin(TAU*double(k)/16384.);
+#else
+ for(int k=0;k<4096;k++)sineLut_[k]=std::sin(TAU*double(k)/4096.);
+#endif''','precomputed 16K high-resolution sine bank')
+replace('''  auto fastSin=[&](double cycles){
+   const double position=fract(cycles)*4096.;
+   const int j=int(position);const double t=position-j;
+   return catmullRom(sineLut_[(j-1)&4095],sineLut_[j&4095],
+                     sineLut_[(j+1)&4095],sineLut_[(j+2)&4095],t);
+  };''',
+ '''  auto fastSin=[&](double cycles){
+#if defined(ALBEDO_CP53_TRANSPARENT_OUTPUT)
+   const double position=fract(cycles)*16384.;
+   const int j=int(position);const double t=position-j;
+   return lerp(sineLut_[j&16383],sineLut_[(j+1)&16383],t);
+#else
+   const double position=fract(cycles)*4096.;
+   const int j=int(position);const double t=position-j;
+   return catmullRom(sineLut_[(j-1)&4095],sineLut_[j&4095],
+                     sineLut_[(j+1)&4095],sineLut_[(j+2)&4095],t);
+#endif
+  };''','spectral 20-partial sine fast path')
 h=args.root/'include/vitriol_dsp.hpp'
 header=h.read_text(encoding='utf-8')
 def replace_header(old,new):
@@ -111,6 +154,7 @@ replace_header('double voiceDecay=0,voiceRelease=1,filterDecay=0',
 replace_header(' std::array<std::array<double,2>,2049> panLaw_{};',
  ''' std::array<std::array<double,2>,2049> panLaw_{};
  std::array<std::array<double,8>,4> unisonRatios_{};''')
+replace_header('std::array<double,4096> sineLut_{};','std::array<double,16384> sineLut_{};')
 h.write_text(header,encoding='utf-8')
 cpp.write_text(s,encoding='utf-8')
 print('CP53: clean Corpus, mix, and master with transparent JUCE output headroom')
