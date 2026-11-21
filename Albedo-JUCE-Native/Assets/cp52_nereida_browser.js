@@ -23,6 +23,7 @@
     '#presetBrowser .cp52-window-controls{display:flex;align-items:center;flex:0 0 auto;gap:4px;margin-left:auto}',
     '#presetBrowser .cp52-window-controls button{display:flex;align-items:center;justify-content:center;min-width:32px;height:29px;padding:0 7px;border:1px solid #afbcac;border-radius:4px;background:linear-gradient(#faf5e6,#d8e5d8);color:#365748;font:800 11px Arial,sans-serif;cursor:pointer}',
     '#presetBrowser .cp52-window-controls button:hover{background:#fff5df;border-color:#a28a5d}',
+    '#presetBrowser .cp52-window-controls button[aria-label^="Keep preset"]{min-width:91px;font-size:9px;letter-spacing:.03em}',
     '#presetBrowser .cp52-window-size{font:700 10px Georgia,serif;min-width:79px;text-align:center;white-space:nowrap;color:#587569}',
     '#presetBrowser .preset-browser-titlebar{min-width:0;gap:7px!important}',
     '#presetBrowser .preset-browser-heading{min-width:0;flex:1}',
@@ -91,6 +92,30 @@
     sizing.appendChild(button);
   }
   titlebar?.insertBefore(sizing,close);
+  // Preset A/B workflow: clicking any sound loads it while leaving the
+  // browser open, so musicians can audition via MIDI without modal reopening.
+  window.ALBEDO_CP52_KEEP_BROWSER_OPEN=true;
+  const audition=document.createElement('button');
+  audition.type='button';audition.textContent='AUDITION ON';
+  audition.title='Keep browser open while loading presets to compare timbres';
+  audition.setAttribute('aria-pressed','true');
+  audition.setAttribute('aria-label','Keep preset browser open while auditioning');
+  audition.addEventListener('click',()=>{
+    window.ALBEDO_CP52_KEEP_BROWSER_OPEN=!window.ALBEDO_CP52_KEEP_BROWSER_OPEN;
+    audition.textContent=window.ALBEDO_CP52_KEEP_BROWSER_OPEN?'AUDITION ON':'AUDITION OFF';
+    audition.setAttribute('aria-pressed',String(window.ALBEDO_CP52_KEEP_BROWSER_OPEN));
+  });
+  sizing.appendChild(audition);
+  dialog.addEventListener('click',event=>{
+    const picked=event.target.closest?.('[data-pb-choose]');
+    if(!picked)return;
+    const key=picked.dataset.pbChoose;
+    queueMicrotask(()=>{
+      for(const button of result.querySelectorAll('[data-pb-choose]')){
+        button.classList.toggle('selected',button.dataset.pbChoose===key);
+      }
+    });
+  });
   function refreshWindowSize(){
     const g=window.ALBEDO_CP35_WINDOW?.geometry;
     if(g&&g.width>0&&g.height>0)sizeLabel.textContent=Math.round(g.nativeWidth||g.width)+' × '+Math.round(g.nativeHeight||g.height);
