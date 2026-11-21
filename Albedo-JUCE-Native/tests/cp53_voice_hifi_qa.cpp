@@ -58,8 +58,10 @@ int main()
         synth->midiCC(64,127,5);
         synth->noteOff(60,2);synth->noteOff(60,5);
         std::array<double,256> l{},r{};
-        for(int i=0;i<25;++i)synth->process64(l.data(),r.data(),256);
-        const bool sustain=synth->activeVoices()>=1;
+        // Hold long enough for channel 2's ordinary release to finish.
+        // Only the pedal-held channel 5 voice should remain active.
+        for(int i=0;i<int(sr*1.0/256+1);++i)synth->process64(l.data(),r.data(),256);
+        const bool sustain=synth->activeVoices()==1;
         synth->midiCC(64,0,5);
         for(int i=0;i<int(sr*1.0/256+1);++i)synth->process64(l.data(),r.data(),256);
         const bool released=synth->activeVoices()==0;
