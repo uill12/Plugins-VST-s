@@ -13,13 +13,13 @@
   const style=document.createElement('style');
   style.id='albedo-cp52-browser-style';
   style.textContent=[
-    'html.albedo-fit #presetBrowser .preset-browser-panel,#presetBrowser .preset-browser-panel{width:min(1140px,calc(var(--albedo-viewport-w,100vw) - 14px))!important;height:min(800px,calc(var(--albedo-viewport-h,100vh) - 14px))!important;max-height:calc(var(--albedo-viewport-h,100vh) - 14px)!important;min-height:0!important}',
+    'html.albedo-fit #presetBrowser .preset-browser-panel,#presetBrowser .preset-browser-panel{width:min(1040px,90vw,calc(100vw - 28px))!important;height:min(730px,90dvh,calc(100dvh - 28px))!important;max-height:calc(100dvh - 28px)!important;min-width:0!important;min-height:0!important;box-sizing:border-box!important}',
     '#presetBrowser .preset-browser-collections{flex:0 0 auto!important;min-height:33px!important;flex-wrap:wrap!important;white-space:normal!important}',
     '#presetBrowser .preset-browser-heading h2{font-size:23px!important}',
     '#presetBrowser .pb-filter-stack{display:none!important}',
     '#presetBrowser #albedo-cp52-workspace{display:flex;flex:1 1 auto;min-height:0;min-width:0;gap:0;overflow:hidden}',
     'html.albedo-fit #presetBrowser.preset-browser-backdrop{position:fixed!important;left:0!important;top:0!important;right:0!important;bottom:0!important;width:100vw!important;height:100dvh!important;max-width:100vw!important;max-height:100dvh!important;box-sizing:border-box!important;overflow:hidden!important;padding:7px!important}',
-    'html.albedo-fit #presetBrowser .preset-browser-panel{width:min(1140px,calc(100vw - 14px))!important;height:min(800px,calc(100dvh - 14px))!important;max-height:calc(100dvh - 14px)!important;min-width:0!important;min-height:0!important;box-sizing:border-box!important}',
+    'html.albedo-fit #presetBrowser .preset-browser-panel{width:min(1040px,90vw,calc(100vw - 28px))!important;height:min(730px,90dvh,calc(100dvh - 28px))!important;max-height:calc(100dvh - 28px)!important;min-width:0!important;min-height:0!important;box-sizing:border-box!important}',
     '#presetBrowser .cp52-window-controls{display:flex;align-items:center;flex:0 0 auto;gap:4px;margin-left:auto}',
     '#presetBrowser .cp52-window-controls button{display:flex;align-items:center;justify-content:center;min-width:32px;height:29px;padding:0 7px;border:1px solid #afbcac;border-radius:4px;background:linear-gradient(#faf5e6,#d8e5d8);color:#365748;font:800 11px Arial,sans-serif;cursor:pointer}',
     '#presetBrowser .cp52-window-controls button:hover{background:#fff5df;border-color:#a28a5d}',
