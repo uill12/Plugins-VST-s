@@ -32,3 +32,10 @@ Reported symptoms: unintentional distortion, clipping, lingering release/sustain
 3. Test host note-on/off for 12-note chords, retrigger, pedal release on channels 1–16, transport Stop, program switching and preset import; confirm no notes stuck.
 4. Test at 44.1/48/88.2/96/176.4/192 kHz and 64/128/256/512-sample block sizes; measure realtime load especially with 12 voices. Check both VST3 and CLAP in Bitwig.
 5. Publish as CP53 HiFi candidate only after successful native tests; preserve CP51 and CP52 as immutable rollback.
+
+## CP53 CPU / sine-cache refinement (2026-11-21)
+
+- JUCE HiFi uses a precomputed **16,384-sample double sine LUT** (128 KiB per synth instance) with linear interpolation; the legacy non-CP53 branch retains its original 4,096-point Catmull-Rom interpolation. The new table's theoretical maximum linear sine interpolation error is approximately 1.84e-8 (about -155 dBFS), below nominal 24-bit audio quantization noise.
+- Precomputed per-oscillator unison detune ratios refreshed **once per audio processing chunk**, not `pow(2, detune)` inside every unison voice and sample; avoids redundant transcendental operations.
+- A local 48 kHz, 12-voice, four-engine spectral worst-case render measured approximately 0.143 seconds previously and 0.091 seconds with the 16K LUT and cached unison ratios for 3,840 samples (**~36% faster** in that isolated test). This is not a host CPU benchmark and should be verified under actual Bitwig playback.
+- Both optimizations preserved the existing 192-preset local sound/voice safety test result. Final Windows CI and host tests are still required.
