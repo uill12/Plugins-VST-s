@@ -15,10 +15,7 @@ style.textContent=[
 'html.albedo-fit #page .source-panel .inspector-body>.divider,',
 'html.albedo-fit #page .source-panel .inspector-body>.callrow,',
 'html.albedo-fit #page #macros>.param:nth-child(n+5),',
-'html.albedo-fit #page #filterKnobsA>.param:nth-child(3),',
-'html.albedo-fit #page #filterKnobsB>.param:nth-child(3),',
 'html.albedo-fit #page #envKnobs>.param:nth-child(2),',
-'html.albedo-fit #page #envKnobs>.param:nth-child(3),',
 'html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .callrow,',
 'html.albedo-fit #page .lower>.surface:first-child:not(#cellArp),',
 'html.albedo-fit #page #cellArp .arp-lattice,',
@@ -27,7 +24,7 @@ style.textContent=[
 'html.albedo-fit #page .source-panel .inspector-body>.section-caption:has(+ #layerKnobs){display:none!important}',
 'html.albedo-fit #page #engineKnobs{grid-template-columns:repeat(2,minmax(0,1fr))!important}',
 'html.albedo-fit #page #macros{grid-template-columns:repeat(4,minmax(0,1fr))!important}',
-'html.albedo-fit #page #filterKnobsA,html.albedo-fit #page #filterKnobsB,html.albedo-fit #page #envKnobs{grid-template-columns:repeat(2,minmax(0,1fr))!important}',
+'html.albedo-fit #page #filterKnobsA,html.albedo-fit #page #filterKnobsB,html.albedo-fit #page #envKnobs{grid-template-columns:repeat(3,minmax(0,1fr))!important}',
 'html.albedo-fit #page .lower{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)!important;gap:9px!important}',
 'html.albedo-fit #page #cellArp .arp-body{display:block!important;grid-template-columns:none!important}',
 'html.albedo-fit #page #cellArp .arp-performance{width:100%!important}',
@@ -270,8 +267,7 @@ function sectionMacro(){
 }
 function sectionFilter(){
  heading('Body shaping and envelope character');
- cloned(['#filterKnobsA>.param:nth-child(3)','#filterKnobsB>.param:nth-child(3)',
-  '#envKnobs>.param:nth-child(2)','#envKnobs>.param:nth-child(3)']);
+ cloned(['#envKnobs>.param:nth-child(2)']);
  heading('Pitch and filter architecture');
  proxyOriginal('#filterRoute','Filter route');
  moveOriginal('#pitchMode'); // Segment retains its existing click handler on the document.
