@@ -29,6 +29,10 @@ with sync_playwright() as playwright:
         assert page.locator("#pbFactoryCount").inner_text() == "64"
         assert page.locator("#pbCreativeCount").inner_text() == "64"
         assert page.locator("#pbNewCount").inner_text() == "64"
+        # Tone Network Similar Permutation is for offline sound generation,
+        # not a visible similarity/idea-tree filter in the preset browser.
+        assert page.locator('[data-pb-sort="idea"]').count() == 0
+        assert page.locator("#pbSort option[value='idea']").count() == 0
         assert page.locator("#pbItems .pb-item").count() == 64
 
         dimensions = page.evaluate("""() => {
@@ -72,6 +76,27 @@ with sync_playwright() as playwright:
         shots.mkdir(exist_ok=True)
         page.screenshot(path=str(shots / f"Albedo_CP52_{width}x{height}_browser.png"))
 
+        # CP55 regression: Bitwig/WebView2 can report the 1500×1000
+        # content layout as the CSS root size even when its real HWND viewport
+        # is smaller. The JUCE albedoViewport measurement must prevent clipping
+        # instead of painting the entire 1500-px canvas outside the window.
+        dialog.locator('#presetBrowserClose').click()
+        overreported=page.evaluate("""({w,h}) => {
+            const root=document.documentElement;
+            Object.defineProperty(root,'clientWidth',{configurable:true,get:()=>Math.round(w*1.28)});
+            Object.defineProperty(root,'clientHeight',{configurable:true,get:()=>Math.round(h*1.28)});
+            window.ALBEDO_CP35_WINDOW.setHostGeometry(w,h);
+            const p=document.querySelector('#page').getBoundingClientRect();
+            const result={left:p.left,top:p.top,right:p.right,bottom:p.bottom};
+            delete root.clientWidth;delete root.clientHeight;
+            window.ALBEDO_CP35_WINDOW.setHostGeometry(0,0);
+            return result;
+        }""",{"w":width,"h":height})
+        assert overreported["left"]>=-2 and overreported["top"]>=-2,(width,height,overreported)
+        assert overreported["right"]<=width+2 and overreported["bottom"]<=height+2,(width,height,overreported)
+        open_button.click()
+        assert dialog.is_visible()
+
         # Window controls are available even while the preset browser is open.
         page.evaluate("""() => {
             window.cp52ResizeRequests=[];
@@ -79,15 +104,15 @@ with sync_playwright() as playwright:
         }""")
         page.locator('.cp52-window-controls button[aria-label="Enlarge plugin window"]').click()
         page.locator('.cp52-window-controls button[aria-label="Reduce plugin window"]').click()
-        page.locator('.cp52-window-controls button[aria-label="Comfortable 1080 × 720 window"]').click()
+        page.locator('.cp52-window-controls button[aria-label="Comfortable 1230 × 820 window"]').click()
         reqs = page.evaluate("window.cp52ResizeRequests")
-        assert len(reqs) == 3 and reqs[-1] == 1080, (width,height,reqs)
+        assert len(reqs) == 3 and reqs[-1] == 1230, (width,height,reqs)
 
         # Normal selection stays open in AUDITION mode.
         page.locator('#pbItems .pb-item').first.click()
         assert dialog.is_visible()
         assert page.locator('#pbItems .pb-item.selected').count() >= 1
-        page.get_by_role("tab", name="NEW SOUNDS").click()
+        page.get_by_role("tab", name="MORPHOGENIC FIELDS").click()
         assert page.locator("#pbItems .pb-item").count() == 64
         page.locator("#albedo-cp52-navigation .cp52-category").filter(has_text="Bass").first.click()
         count = page.locator("#pbItems .pb-item").count()

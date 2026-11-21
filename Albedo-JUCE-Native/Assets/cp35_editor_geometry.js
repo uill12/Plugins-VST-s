@@ -20,12 +20,40 @@
    // JUCE HWND logical dimensions and visualViewport can report different units
    // under Windows DPI scaling / host embedding. Never take their minimum:
    // it created a reduced canvas with empty borders in Bitwig.
-   const w=Math.max(1,Math.floor(root.clientWidth||window.innerWidth||1));
-   const h=Math.max(1,Math.floor(root.clientHeight||window.innerHeight||1));
-   // The WebView2 client viewport is authoritative for painted CSS geometry.
-   // Native physicalWidth / DPR may describe the HWND's previous size while
-   // Bitwig negotiates a resize. Capping here produced a 900x600 render inside
-   // a 942x628 CSS viewport (confirmed in Windows host QA).
+   let w=Math.max(1,Math.floor(root.clientWidth||window.innerWidth||1));
+   let h=Math.max(1,Math.floor(root.clientHeight||window.innerHeight||1));
+   // CP55R1: root.clientWidth can occasionally be the fixed 1500px design
+   // canvas rather than the visible WebView2 client rect. Cross-check it with
+   // window.innerWidth/Height and visualViewport BEFORE using JUCE's logical
+   // HWND dimensions. Comparing independent CSS measurements avoids a false
+   // "smaller window" at some Windows fractional-DPI scales.
+   const innerW=Math.floor(window.innerWidth||0),innerH=Math.floor(window.innerHeight||0);
+   if(innerW>=480 && w>innerW*1.08) w=innerW;
+   if(innerH>=320 && h>innerH*1.08) h=innerH;
+   // CP40 contract: visualViewport may be reduced by Bitwig/Windows DPI
+   // while documentElement and innerWidth describe the correctly granted
+   // client surface. Never shrink the canvas from visualViewport alone.
+   // A one-axis WebView2 over-report also clips the fourth source or Corpus.
+   // Previously only *both* axes triggered the fallback. Compare the aspect
+   // of the measured CSS viewport with the 3:2 HWND and use the already-sent
+   // physical client rectangle as additional evidence of a bad CSS report.
+   // Minor (<16%) CSS/native differences are left alone for DPI correctness.
+   const hostValid=nativeW>=480 && nativeH>=320;
+   if(hostValid){
+     const hostRatio=nativeW/nativeH;
+     const excessW=w>nativeW*1.16,excessH=h>nativeH*1.16;
+     const cssRatio=w/Math.max(1,h);
+     const badAspect=Math.abs(cssRatio-hostRatio)>.16;
+     const dpi=Math.max(.5,Math.min(4,Number(window.devicePixelRatio)||1));
+     const visibleCssW=physicalWidth>0?physicalWidth/dpi:0;
+     const visibleCssH=physicalHeight>0?physicalHeight/dpi:0;
+     const physicalEvidence=(visibleCssW>=480 && w>visibleCssW*1.22) ||
+                            (visibleCssH>=320 && h>visibleCssH*1.22);
+     if(hostRatio>1.35 && hostRatio<1.65 &&
+        ((excessW&&excessH)||((excessW||excessH)&&(badAspect||physicalEvidence)))){
+       w=Math.min(w,nativeW);h=Math.min(h,nativeH);
+     }
+   }
    return {w,h};
  }
  function fit(){
@@ -190,8 +218,8 @@
  controls.id='albedo-cp35-controls';
  controls.setAttribute('aria-label','Resize the Albedo plugin window');
  controls.innerHTML='<button type="button" id="albedo-cp35-smaller" title="Smaller 3:2 window">−</button>'+
-   '<span id="albedo-cp35-size-value">1080×720</span>'+
-   '<button type="button" id="albedo-cp35-reset" title="Request comfortable 1080×720 (limited by available screen area)">↔</button>'+
+   '<span id="albedo-cp35-size-value">1230×820</span>'+
+   '<button type="button" id="albedo-cp35-reset" title="Request comfortable 1230×820 (limited by available screen area)">↔</button>'+
    '<button type="button" id="albedo-cp35-resize-grip" title="Drag to resize the 3:2 plugin window">◢</button>';
  document.body.appendChild(controls);
  function ask(width){
@@ -201,7 +229,7 @@
  controls.querySelector('#albedo-cp35-smaller').addEventListener('click',()=>{
    ask((nativeW||measured().w)-36);
  });
- controls.querySelector('#albedo-cp35-reset').addEventListener('click',()=>ask(1080));
+ controls.querySelector('#albedo-cp35-reset').addEventListener('click',()=>ask(1230));
  const grip=controls.querySelector('#albedo-cp35-resize-grip');
  let start=null;
  grip.addEventListener('pointerdown',event=>{

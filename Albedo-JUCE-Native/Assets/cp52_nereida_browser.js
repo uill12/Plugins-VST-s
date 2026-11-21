@@ -81,10 +81,10 @@
     const controller=window.ALBEDO_CP35_WINDOW;
     if(!controller?.requestSize){sizeLabel.textContent='HOST RESIZE';return;}
     const g=controller.geometry;
-    const width=Math.max(720,Math.min(1500,Math.round((g.nativeWidth||g.width||1080)+delta)));
-    controller.requestSize(delta===0?1080:width);
+    const width=Math.max(720,Math.min(1500,Math.round((g.nativeWidth||g.width||1230)+delta)));
+    controller.requestSize(delta===0?1230:width);
   }
-  for(const [label,title,step] of [['−','Reduce plugin window',-72],['FIT','Comfortable 1080 × 720 window',0],['+','Enlarge plugin window',72]]){
+  for(const [label,title,step] of [['−','Reduce plugin window',-72],['FIT','Comfortable 1230 × 820 window',0],['+','Enlarge plugin window',72]]){
     const button=document.createElement('button');
     button.type='button';button.textContent=label;button.title=title;
     button.setAttribute('aria-label',title);
@@ -179,7 +179,7 @@
     const heading=document.createElement('div');
     heading.className='cp52-section';
     const h=document.createElement('h3');
-    h.textContent='LIBRARY / '+atlas.collection.toUpperCase();
+    h.textContent='LIBRARY / '+(atlas.collection==='New'?'MORPHOGENIC FIELDS':atlas.collection.toUpperCase());
     heading.appendChild(h);
     navigation.appendChild(heading);
     if(atlas.collection==='User'){

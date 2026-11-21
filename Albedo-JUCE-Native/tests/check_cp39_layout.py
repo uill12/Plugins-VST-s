@@ -26,8 +26,8 @@ assert "transform-origin:0 0!important" in geometry
 assert "const scale=Math.min(sx,sy)" in geometry
 assert "g.minWidth=std::min(720,g.maxWidth)" in fit
 assert "g.initialHeight=g.initialWidth*2/3" in fit
-assert "g.initialWidth=std::min(1080,g.maxWidth)" in fit
-assert "ask(1080)" in geometry
+assert "g.initialWidth=std::min(1230,g.maxWidth)" in fit
+assert "ask(1230)" in geometry
 assert "setResizable(true,false)" in editor
 assert "requestHostResize(requestedWidth)" in editor
 assert "safe->setSize(clipped,height)" in editor
