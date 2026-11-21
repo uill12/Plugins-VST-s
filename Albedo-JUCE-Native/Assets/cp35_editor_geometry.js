@@ -30,11 +30,9 @@
    const innerW=Math.floor(window.innerWidth||0),innerH=Math.floor(window.innerHeight||0);
    if(innerW>=480 && w>innerW*1.08) w=innerW;
    if(innerH>=320 && h>innerH*1.08) h=innerH;
-   const visual=window.visualViewport;
-   if(visual && Math.abs((visual.scale||1)-1)<.05){
-     if(visual.width>=480 && w>visual.width*1.10) w=Math.floor(visual.width);
-     if(visual.height>=320 && h>visual.height*1.10) h=Math.floor(visual.height);
-   }
+   // CP40 contract: visualViewport may be reduced by Bitwig/Windows DPI
+   // while documentElement and innerWidth describe the correctly granted
+   // client surface. Never shrink the canvas from visualViewport alone.
    // A one-axis WebView2 over-report also clips the fourth source or Corpus.
    // Previously only *both* axes triggered the fallback. Compare the aspect
    // of the measured CSS viewport with the 3:2 HWND and use the already-sent
@@ -49,8 +47,8 @@
      const dpi=Math.max(.5,Math.min(4,Number(window.devicePixelRatio)||1));
      const visibleCssW=physicalWidth>0?physicalWidth/dpi:0;
      const visibleCssH=physicalHeight>0?physicalHeight/dpi:0;
-     const physicalEvidence=(visibleCssW>=480 && w>visibleCssW*1.12) ||
-                            (visibleCssH>=320 && h>visibleCssH*1.12);
+     const physicalEvidence=(visibleCssW>=480 && w>visibleCssW*1.22) ||
+                            (visibleCssH>=320 && h>visibleCssH*1.22);
      if(hostRatio>1.35 && hostRatio<1.65 &&
         ((excessW&&excessH)||((excessW||excessH)&&(badAspect||physicalEvidence)))){
        w=Math.min(w,nativeW);h=Math.min(h,nativeH);
