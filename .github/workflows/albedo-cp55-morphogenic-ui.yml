@@ -45,6 +45,8 @@ jobs:
       - name: Test native window geometry and morphogenic library in Edge
         shell: pwsh
         run: |
+          python -m pip install playwright --quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python Albedo-JUCE-Native/tests/check_cp39_layout.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python Albedo-JUCE-Native/tests/check_cp52_browser_ui.py
