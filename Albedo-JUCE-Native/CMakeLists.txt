@@ -176,6 +176,18 @@ if(BUILD_TESTING AND WIN32)
 endif()
 
 if(BUILD_TESTING AND WIN32)
+  add_executable(AlbedoCP53VoiceHifiTest
+    tests/cp53_voice_hifi_qa.cpp
+    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
+  target_compile_features(AlbedoCP53VoiceHifiTest PRIVATE cxx_std_20)
+  target_compile_definitions(AlbedoCP53VoiceHifiTest PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
+  target_include_directories(AlbedoCP53VoiceHifiTest PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source" "${ALBEDO_DSP_ROOT}/include")
+  add_test(NAME cp53_192_programs_hifi_note_lifecycle_and_high_rates COMMAND AlbedoCP53VoiceHifiTest)
+endif()
+
+if(BUILD_TESTING AND WIN32)
   add_executable(AlbedoTargetRenderer tools/target/render_target.cpp
     "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp" "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
   target_compile_features(AlbedoTargetRenderer PRIVATE cxx_std_20)
