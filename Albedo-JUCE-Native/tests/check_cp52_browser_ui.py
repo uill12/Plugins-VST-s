@@ -104,9 +104,9 @@ with sync_playwright() as playwright:
         }""")
         page.locator('.cp52-window-controls button[aria-label="Enlarge plugin window"]').click()
         page.locator('.cp52-window-controls button[aria-label="Reduce plugin window"]').click()
-        page.locator('.cp52-window-controls button[aria-label="Comfortable 1080 × 720 window"]').click()
+        page.locator('.cp52-window-controls button[aria-label="Comfortable 1230 × 820 window"]').click()
         reqs = page.evaluate("window.cp52ResizeRequests")
-        assert len(reqs) == 3 and reqs[-1] == 1080, (width,height,reqs)
+        assert len(reqs) == 3 and reqs[-1] == 1230, (width,height,reqs)
 
         # Normal selection stays open in AUDITION mode.
         page.locator('#pbItems .pb-item').first.click()
