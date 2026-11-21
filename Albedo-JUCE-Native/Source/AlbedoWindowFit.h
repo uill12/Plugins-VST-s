@@ -9,8 +9,8 @@ namespace albedo_window_fit
 {
 struct Geometry
 {
-    int initialWidth=1200;
-    int initialHeight=800;
+    int initialWidth=1080;
+    int initialHeight=720;
     int minWidth=720;
     int minHeight=480;
     int maxWidth=1458;
