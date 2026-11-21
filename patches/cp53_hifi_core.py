@@ -82,7 +82,7 @@ replace('blockRates_.voiceRelease=std::exp(-7./(std::max(.01,get(3103))*srIntern
 replace('  double detune=get(1000+e*32+12),spread=get(1000+e*32+13)*.01,side=0,sides=0;',
         '  double spread=get(1000+e*32+13)*.01,side=0,sides=0;',
         'cache unison detune')
-replace('    double shift=position*detune/1200.;\\n    double f=freq*std::pow(2.,shift);',
+replace('    double shift=position*detune/1200.;\n    double f=freq*std::pow(2.,shift);',
         '    const double f=freq*unisonRatios_[e][u];',
         'eliminate unison pow inside every sample')
 replace(' blockRates_.driveGain[0]=db(get(3002));blockRates_.driveGain[1]=db(get(3005));',
