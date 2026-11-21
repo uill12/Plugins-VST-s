@@ -95,7 +95,7 @@ void AlbedoProcessor::handleMidi (const juce::MidiMessage& m)
     else if(m.isController()) {
         const int cc=m.getControllerNumber();
         if(cc==120||cc==123){panicVoices();return;}
-        synth->midiCC(cc,m.getControllerValue());
+        synth->midiCC(cc,m.getControllerValue(),ch); // Sustain and release belong to the event's MIDI channel.
     }
     else if(m.isPitchWheel()) synth->bend(m.getPitchWheelValue());
     else if(m.isChannelPressure()) synth->aftertouch(m.getChannelPressureValue()/127.0);
