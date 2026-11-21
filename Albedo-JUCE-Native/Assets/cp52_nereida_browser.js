@@ -179,7 +179,7 @@
     const heading=document.createElement('div');
     heading.className='cp52-section';
     const h=document.createElement('h3');
-    h.textContent='LIBRARY / '+atlas.collection.toUpperCase();
+    h.textContent='LIBRARY / '+(atlas.collection==='New'?'MORPHOGENIC FIELDS':atlas.collection.toUpperCase());
     heading.appendChild(h);
     navigation.appendChild(heading);
     if(atlas.collection==='User'){
