@@ -22,18 +22,37 @@
    // it created a reduced canvas with empty borders in Bitwig.
    let w=Math.max(1,Math.floor(root.clientWidth||window.innerWidth||1));
    let h=Math.max(1,Math.floor(root.clientHeight||window.innerHeight||1));
-   // CP55: a real Bitwig screenshot showed the 1500x1000 design canvas clipped
-   // inside a significantly smaller granted host window. In unusual WebView2
-   // embed/DPI cases root.clientWidth can describe the content layout instead
-   // of the host client rectangle. Use the JUCE-reported host dimensions ONLY
-   // for large, unambiguous over-reporting (>16% on both axes).
-   // Small disagreements are deliberately left alone: CP40 established that
-   // always taking min(css, native) causes whitespace on normal Windows DPI.
+   // CP55R1: root.clientWidth can occasionally be the fixed 1500px design
+   // canvas rather than the visible WebView2 client rect. Cross-check it with
+   // window.innerWidth/Height and visualViewport BEFORE using JUCE's logical
+   // HWND dimensions. Comparing independent CSS measurements avoids a false
+   // "smaller window" at some Windows fractional-DPI scales.
+   const innerW=Math.floor(window.innerWidth||0),innerH=Math.floor(window.innerHeight||0);
+   if(innerW>=480 && w>innerW*1.08) w=innerW;
+   if(innerH>=320 && h>innerH*1.08) h=innerH;
+   const visual=window.visualViewport;
+   if(visual && Math.abs((visual.scale||1)-1)<.05){
+     if(visual.width>=480 && w>visual.width*1.10) w=Math.floor(visual.width);
+     if(visual.height>=320 && h>visual.height*1.10) h=Math.floor(visual.height);
+   }
+   // A one-axis WebView2 over-report also clips the fourth source or Corpus.
+   // Previously only *both* axes triggered the fallback. Compare the aspect
+   // of the measured CSS viewport with the 3:2 HWND and use the already-sent
+   // physical client rectangle as additional evidence of a bad CSS report.
+   // Minor (<16%) CSS/native differences are left alone for DPI correctness.
    const hostValid=nativeW>=480 && nativeH>=320;
-   const mismatch=hostValid&&(w>nativeW*1.16 && h>nativeH*1.16);
-   if(mismatch){
+   if(hostValid){
      const hostRatio=nativeW/nativeH;
-     if(hostRatio>1.35 && hostRatio<1.65){
+     const excessW=w>nativeW*1.16,excessH=h>nativeH*1.16;
+     const cssRatio=w/Math.max(1,h);
+     const badAspect=Math.abs(cssRatio-hostRatio)>.16;
+     const dpi=Math.max(.5,Math.min(4,Number(window.devicePixelRatio)||1));
+     const visibleCssW=physicalWidth>0?physicalWidth/dpi:0;
+     const visibleCssH=physicalHeight>0?physicalHeight/dpi:0;
+     const physicalEvidence=(visibleCssW>=480 && w>visibleCssW*1.12) ||
+                            (visibleCssH>=320 && h>visibleCssH*1.12);
+     if(hostRatio>1.35 && hostRatio<1.65 &&
+        ((excessW&&excessH)||((excessW||excessH)&&(badAspect||physicalEvidence)))){
        w=Math.min(w,nativeW);h=Math.min(h,nativeH);
      }
    }
