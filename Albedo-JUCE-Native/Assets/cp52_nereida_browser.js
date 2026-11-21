@@ -81,7 +81,7 @@
     const controller=window.ALBEDO_CP35_WINDOW;
     if(!controller?.requestSize){sizeLabel.textContent='HOST RESIZE';return;}
     const g=controller.geometry;
-    const width=Math.max(720,Math.min(1500,Math.round((g.nativeWidth||g.width||1080)+delta)));
+    const width=Math.max(720,Math.min(1500,Math.round((g.nativeWidth||g.width||1230)+delta)));
     controller.requestSize(delta===0?1230:width);
   }
   for(const [label,title,step] of [['−','Reduce plugin window',-72],['FIT','Comfortable 1230 × 820 window',0],['+','Enlarge plugin window',72]]){
