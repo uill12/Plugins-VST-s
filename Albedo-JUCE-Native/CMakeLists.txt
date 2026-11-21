@@ -68,6 +68,7 @@ target_link_libraries(AlbedoNative PRIVATE
   juce::juce_recommended_warning_flags
 )
 target_compile_definitions(AlbedoNative PUBLIC JUCE_WEB_BROWSER=1 JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0)
+target_compile_definitions(AlbedoNative PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
 # Use the JUCE FindWebView2.cmake target directly: its include/library paths are
 # guaranteed to be identical and it correctly propagates to SharedCode.
 if(WIN32)
