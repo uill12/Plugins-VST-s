@@ -6,9 +6,19 @@
 #include <string>
 
 static std::atomic_bool callbackPending{false};
+static std::atomic_bool resizePending{false};
+static std::atomic<uint32_t> requestedWidth{0}, requestedHeight{0};
 static const clap_host_gui_t guiHost{
     [](const clap_host_t*) {},
-    [](const clap_host_t*, uint32_t, uint32_t) { return false; },
+    [](const clap_host_t*, uint32_t width, uint32_t height) {
+        // CP52: model a cooperative CLAP host that grants a safe resize request.
+        // Do not synchronously re-enter the plugin while it is calling the host.
+        if (width < 600 || height < 400 || width > 1920 || height > 1280) return false;
+        requestedWidth.store(width, std::memory_order_relaxed);
+        requestedHeight.store(height, std::memory_order_relaxed);
+        resizePending.store(true, std::memory_order_release);
+        return true;
+    },
     [](const clap_host_t*) { return true; },
     [](const clap_host_t*) { return true; },
     [](const clap_host_t*, bool) {}
@@ -50,6 +60,17 @@ int main(int argc,char** argv)
         while(PeekMessageW(&msg,nullptr,0,0,PM_REMOVE)) {
             if(msg.message==WM_QUIT) return 0;
             TranslateMessage(&msg);DispatchMessageW(&msg);
+        }
+        if(resizePending.exchange(false, std::memory_order_acq_rel)) {
+            const auto rw=requestedWidth.load(std::memory_order_relaxed);
+            const auto rh=requestedHeight.load(std::memory_order_relaxed);
+            if(rw>=600 && rh>=400) {
+                // The host grants the editor request by resizing its parent HWND,
+                // then informs the CLAP GUI about the granted dimensions.
+                SetWindowPos(window,nullptr,0,0,static_cast<int>(rw),static_cast<int>(rh),
+                             SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);
+                gui->set_size(plugin,rw,rh);
+            }
         }
         if(callbackPending.exchange(false)) plugin->on_main_thread(plugin);
         MsgWaitForMultipleObjects(0,nullptr,FALSE,10,QS_ALLINPUT);
