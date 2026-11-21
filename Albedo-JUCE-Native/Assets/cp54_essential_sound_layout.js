@@ -99,7 +99,7 @@ document.head.appendChild(style);
 
 // Dedicated, fixed main-stage selectors for the largest oscillator timbre changes.
 const method=$('#method'),inspector=method?.parentElement;
-let primary=null;
+let primary=null,syncPrimary=()=>{};
 if(method&&inspector){
  primary=document.createElement('div');primary.className='cp54-strong-selectors';
  primary.innerHTML='<label id="cp54MaterialWrap">MATERIAL<select id="cp54MaterialMain" aria-label="Source tonal material"></select></label><label id="cp54UnisonWrap">UNISON<select id="cp54UnisonMain" aria-label="Unison voice count"></select></label>';
@@ -119,6 +119,7 @@ if(method&&inspector){
   mat.value=String(Math.round(api.state.cp04[base+10]??0));
   uni.value=String(Math.round(api.state.cp04[base+11]??1));
  };
+ syncPrimary=synchronize;
  mat.addEventListener('change',()=>api.setExtraParam?.(1010+32*api.state.selected,+mat.value));
  uni.addEventListener('change',()=>api.setExtraParam?.(1011+32*api.state.selected,+uni.value));
  method.addEventListener('change',()=>queueMicrotask(synchronize));
@@ -193,9 +194,9 @@ function proxyOriginal(selector,label){
 }
 function getValue(id){const p=registry.get(id);return +(api.state.cp04[id]??p?.default??0)}
 function steppedValues(id,p){
- if(id%32===10&&id>=1010&&id<=1118)return api.materials.map((name,i)=>[i,name]);
- if(id%32===11&&id>=1011&&id<=1119)return Array.from({length:8},(_,i)=>[i+1,String(i+1)]);
- if(id%32===15&&id>=1015&&id<=1123)return ['HANN','SINE','TRAPEZOID','GAUSSIAN'].map((s,i)=>[i,s]);
+ if((id-1000)%32===10&&id>=1010&&id<=1118)return api.materials.map((name,i)=>[i,name]);
+ if((id-1000)%32===11&&id>=1011&&id<=1119)return Array.from({length:8},(_,i)=>[i+1,String(i+1)]);
+ if((id-1000)%32===15&&id>=1015&&id<=1123)return ['HANN','SINE','TRAPEZOID','GAUSSIAN'].map((s,i)=>[i,s]);
  if(id===4011||id===4012)return ['SINE','TRIANGLE','RAMP','SQUARE','COMPLEX'].map((s,i)=>[i,s]);
  const entries=[];for(let v=p.min;v<=p.max&&entries.length<=48;v++)entries.push([v,String(v)]);
  return entries;
@@ -203,7 +204,7 @@ function steppedValues(id,p){
 function displayValue(id){
  const p=registry.get(id),value=getValue(id);
  if(!p)return '';
- if(id%32===10&&id>=1010&&id<=1118)return api.materials[Math.round(value)]||String(Math.round(value));
+ if((id-1000)%32===10&&id>=1010&&id<=1118)return api.materials[Math.round(value)]||String(Math.round(value));
  if(p.stepped)return String(Math.round(value));
  return (Math.abs(value)<10?value.toFixed(2):value.toFixed(1))+(p.unit&&p.unit!=='x'?' '+p.unit:'');
 }
@@ -350,7 +351,7 @@ scrim.addEventListener('pointerdown',()=>close());
 window.addEventListener('resize',()=>{if(activeKey)place(activeButton)},{passive:true});
 window.__JUCE__?.backend?.addEventListener?.('albedoProgram',()=>{
  close(false);
- if(primary){const e=document.createEvent('Event');e.initEvent('change',false,false);method.dispatchEvent(e)}
+ queueMicrotask(syncPrimary)
 });
 document.addEventListener('keydown',e=>{
  if(activeKey===null)return;
