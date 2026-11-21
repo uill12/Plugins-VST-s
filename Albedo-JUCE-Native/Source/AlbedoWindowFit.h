@@ -3,7 +3,7 @@
 #include <algorithm>
 
 // CP39 — the live HTML design canvas is 1500x1000 (3:2).
-// Start at a comfortable 1200x800 viewport, subject to available screen space.
+// Start at a comfortable 1080x720 viewport, leaving room for Bitwig/OS window chrome.
 // Preserve the Bitwig chrome/taskbar clearance and the exact 3:2 ratio.
 namespace albedo_window_fit
 {
@@ -33,7 +33,7 @@ inline Geometry calculate()
     g.maxHeight=g.maxWidth*2/3;
     g.minWidth=std::min(720,g.maxWidth);
     g.minHeight=g.minWidth*2/3;
-    g.initialWidth=std::min(1200,g.maxWidth);
+    g.initialWidth=std::min(1080,g.maxWidth);
     g.initialWidth=(g.initialWidth/6)*6;
     g.initialHeight=g.initialWidth*2/3;
     return g;
