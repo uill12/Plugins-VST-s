@@ -21,6 +21,7 @@ AlbedoProcessor::AlbedoProcessor()
         parameterList.emplace_back (d.id, p);
         lastValues.push_back (d.def);
     }
+    pendingValues=lastValues; // Preallocate every source parameter snapshot before audio starts.
     loadFactoryPreset(0);
 }
 AlbedoProcessor::~AlbedoProcessor()
@@ -32,21 +33,38 @@ void AlbedoProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     synth->prepare (sampleRate);
     juce::ignoreUnused(samplesPerBlock);
     rearField.prepare(sampleRate);
+    outputGuard.prepare(sampleRate);
+    setLatencySamples(AlbedoOutputGuard::latency); // Fixed, accurately reported 63-sample lookahead
+    panicVoices();
     parametersChanged.store(true, std::memory_order_release);
     updateSynthParameters();
 }
-void AlbedoProcessor::releaseResources() { synth->allNotesOff(); }
+void AlbedoProcessor::releaseResources() { panicVoices(); outputGuard.reset(); }
 bool AlbedoProcessor::isBusesLayoutSupported (const BusesLayout& l) const
 { return l.getMainOutputChannelSet() == juce::AudioChannelSet::stereo() || l.getMainOutputChannelSet() == juce::AudioChannelSet::quadraphonic(); }
 void AlbedoProcessor::updateSynthParameters()
 {
     if (!parametersChanged.exchange(false, std::memory_order_acq_rel)) return;
-    // Audio-thread-owned lastValues; no locks, GUI operations, or allocations.
-    for (size_t i = 0; i < parameterList.size(); ++i)
-    {
-        const auto val = (double) parameterList[i].second->get();
-        if (val != lastValues[i]) { synth->setParam (parameterList[i].first, val); lastValues[i] = val; }
+    const unsigned version=presetGeneration.load(std::memory_order_acquire);
+    if(version&1u) { parametersChanged.store(true,std::memory_order_release); return; }
+    // Snapshot all parameters first. Do not apply half of a GUI preset swap.
+    // Both vectors were allocated in the constructor, never on the audio thread.
+    for(size_t i=0;i<parameterList.size();++i)
+        pendingValues[i]=double(parameterList[i].second->get());
+    if(presetGeneration.load(std::memory_order_acquire)!=version) {
+        parametersChanged.store(true,std::memory_order_release);return;
     }
+    for(size_t i=0;i<parameterList.size();++i) {
+        const double val=pendingValues[i];
+        if(std::isfinite(val)&&val!=lastValues[i]) {
+            synth->setParam(parameterList[i].first,val);lastValues[i]=val;
+        }
+    }
+}
+void AlbedoProcessor::panicVoices() noexcept
+{
+    synth->allNotesOff();
+    for(auto& channel:midiHeld)channel.fill(false);
 }
 void AlbedoProcessor::syncArpClock()
 {
@@ -54,19 +72,33 @@ void AlbedoProcessor::syncArpClock()
         if(auto position=transport->getPosition()) {
             if(auto bpm=position->getBpm()) synth->setArpTempo(*bpm);
             const bool playing=position->getIsPlaying();
-            if(transportPlaying && !playing && synth->getParam(6020)>.5 && synth->getParam(6030)>.5) synth->allNotesOff();
+            if(transportPlaying && !playing) panicVoices(); // Stop clears all voices, even without the arpeggiator
             transportPlaying=playing;
         }
     }
 }
 void AlbedoProcessor::handleMidi (const juce::MidiMessage& m)
 {
-    if (m.isNoteOn()) synth->noteOn (m.getNoteNumber(), m.getFloatVelocity(), m.getChannel() - 1);
-    else if (m.isNoteOff()) synth->noteOff (m.getNoteNumber(), m.getChannel() - 1);
-    else if (m.isAllNotesOff() || m.isAllSoundOff()) synth->allNotesOff();
-    else if (m.isController()) synth->midiCC (m.getControllerNumber(), m.getControllerValue());
-    else if (m.isPitchWheel()) synth->bend (m.getPitchWheelValue());
-    else if (m.isChannelPressure()) synth->aftertouch (m.getChannelPressureValue() / 127.0);
+    const int ch=juce::jlimit(0,15,m.getChannel()-1);
+    if(m.isNoteOn()) {
+        const int note=m.getNoteNumber();
+        if(midiHeld[(size_t)ch][(size_t)note]) synth->noteOff(note,ch); // Retrigger: never accumulate lost same-key voices.
+        midiHeld[(size_t)ch][(size_t)note]=true;
+        synth->noteOn(note,m.getFloatVelocity(),ch);
+    }
+    else if(m.isNoteOff()) {
+        const int note=m.getNoteNumber();
+        midiHeld[(size_t)ch][(size_t)note]=false;
+        synth->noteOff(note,ch);
+    }
+    else if(m.isAllNotesOff() || m.isAllSoundOff() || m.isMidiStop()) panicVoices();
+    else if(m.isController()) {
+        const int cc=m.getControllerNumber();
+        if(cc==120||cc==123){panicVoices();return;}
+        synth->midiCC(cc,m.getControllerValue(),ch); // Sustain and release belong to the event's MIDI channel.
+    }
+    else if(m.isPitchWheel()) synth->bend(m.getPitchWheelValue());
+    else if(m.isChannelPressure()) synth->aftertouch(m.getChannelPressureValue()/127.0);
 }
 void AlbedoProcessor::processRegion (juce::AudioBuffer<float>& b, int start, int length)
 {
@@ -76,6 +108,7 @@ void AlbedoProcessor::processRegion (juce::AudioBuffer<float>& b, int start, int
 void AlbedoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
+    if(pendingPanic.exchange(false,std::memory_order_acq_rel)) panicVoices();
     syncArpClock();
     updateSynthParameters();
     int pos = 0;
@@ -87,12 +120,14 @@ void AlbedoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
         handleMidi (metadata.getMessage());
     }
     processRegion (buffer, pos, buffer.getNumSamples() - pos);
+    outputGuard.process(buffer.getWritePointer(0),buffer.getWritePointer(1),buffer.getNumSamples());
     renderRear(buffer);
     activeVoiceCount.store (synth->activeVoices(), std::memory_order_relaxed);
 }
 void AlbedoProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
+    if(pendingPanic.exchange(false,std::memory_order_acq_rel)) panicVoices();
     syncArpClock();
     updateSynthParameters();
     int pos=0;
@@ -106,6 +141,7 @@ void AlbedoProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::Mid
     if (buffer.getNumSamples()>pos)
         synth->process64(buffer.getWritePointer(0,pos),buffer.getWritePointer(1,pos),
                          (uint32_t)(buffer.getNumSamples()-pos));
+    outputGuard.process(buffer.getWritePointer(0),buffer.getWritePointer(1),buffer.getNumSamples());
     renderRear(buffer);
     activeVoiceCount.store(synth->activeVoices(),std::memory_order_relaxed);
 }
@@ -128,12 +164,16 @@ const juce::String AlbedoProcessor::getProgramName (int i)
 }
 void AlbedoProcessor::loadFactoryPreset (int index)
 {
-    if (index < 0 || index >= getNumPrograms()) return;
-    albedo_programs::apply(index, [this](uint32_t id, float value) {
-        if (auto* p=parameter(id))
+    if(index<0 || index>=getNumPrograms())return;
+    presetGeneration.fetch_add(1u,std::memory_order_acq_rel); // odd: coherent preset write underway
+    albedo_programs::apply(index,[this](uint32_t id,float value){
+        if(auto* p=parameter(id))
             p->setValueNotifyingHost(p->convertTo0to1(juce::jlimit(p->range.start,p->range.end,value)));
     });
-    currentProgram.store (index);
+    currentProgram.store(index,std::memory_order_release);
+    presetGeneration.fetch_add(1u,std::memory_order_release); // even: complete
+    parametersChanged.store(true,std::memory_order_release);
+    pendingPanic.store(true,std::memory_order_release); // Old release/sustain may not cross new preset.
 }
 void AlbedoProcessor::getStateInformation (juce::MemoryBlock& dest)
 {
@@ -147,13 +187,18 @@ void AlbedoProcessor::setStateInformation (const void* data, int size)
 {
     juce::MemoryInputStream in (data, (size_t) juce::jmax (0, size), false);
     if (in.readInt() != 0x414C4232) return;
+    presetGeneration.fetch_add(1u,std::memory_order_acq_rel);
     currentProgram.store (juce::jlimit (0, getNumPrograms()-1, in.readInt()));
     const int count = juce::jlimit (0, 500, in.readInt());
     for (int i=0; i<count && !in.isExhausted(); ++i)
     {
         const auto id = (uint32_t) in.readInt(); const auto v = (float) in.readDouble();
-        if (auto* p = parameter (id)) p->setValueNotifyingHost (p->convertTo0to1 (v));
+        if(auto* p=parameter(id);p&&std::isfinite(v))
+            p->setValueNotifyingHost(p->convertTo0to1(juce::jlimit(p->range.start,p->range.end,v)));
     }
+    presetGeneration.fetch_add(1u,std::memory_order_release);
+    parametersChanged.store(true,std::memory_order_release);
+    pendingPanic.store(true,std::memory_order_release);
 }
 juce::AudioProcessorEditor* AlbedoProcessor::createEditor()
 {

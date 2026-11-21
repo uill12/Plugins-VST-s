@@ -5,6 +5,9 @@
 #include "AlbedoCreativeBank.hpp"
 #include "AlbedoMorphBank.hpp"
 #include "AlbedoRearField.hpp"
+#include "AlbedoOutputGuard.hpp"
+#include <array>
+#include <atomic>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -49,10 +52,15 @@ private:
     std::unordered_map<uint32_t,juce::AudioParameterFloat*> idParameters;
     std::vector<std::pair<uint32_t,juce::AudioParameterFloat*>> parameterList;
     std::vector<double> lastValues;
+    std::vector<double> pendingValues; // Preallocated audio-thread snapshot, never allocated in processBlock
     std::atomic<int> currentProgram { 0 };
     std::atomic<int> activeVoiceCount { 0 };
     bool transportPlaying=false;
     AlbedoRearField rearField;
+    AlbedoOutputGuard outputGuard;
+    std::array<std::array<bool,128>,16> midiHeld{};
+    std::atomic<unsigned> presetGeneration{0}; // odd=GUI editing, even=stable coherent preset
+    std::atomic<bool> pendingPanic{false};
     std::atomic<bool> parametersChanged { true };
     void parameterValueChanged(int, float) override { parametersChanged.store(true, std::memory_order_release); }
     void parameterGestureChanged(int, bool) override {}
@@ -63,6 +71,7 @@ private:
                              b.getWritePointer(3), b.getNumSamples());
     }
     void syncArpClock();
+    void panicVoices() noexcept;
     void updateSynthParameters();
     void handleMidi (const juce::MidiMessage&);
     void processRegion (juce::AudioBuffer<float>& buffer, int start, int length);

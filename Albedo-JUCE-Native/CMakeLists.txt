@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(AlbedoJUCE VERSION 1.0.51 LANGUAGES C CXX RC)
+project(AlbedoJUCE VERSION 1.0.53 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -68,6 +68,7 @@ target_link_libraries(AlbedoNative PRIVATE
   juce::juce_recommended_warning_flags
 )
 target_compile_definitions(AlbedoNative PUBLIC JUCE_WEB_BROWSER=1 JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0)
+target_compile_definitions(AlbedoNative PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
 # Use the JUCE FindWebView2.cmake target directly: its include/library paths are
 # guaranteed to be identical and it correctly propagates to SharedCode.
 if(WIN32)
@@ -105,6 +106,10 @@ endif()
 # Complete factory-taxonomy contract: standalone C++20, independent of JUCE/UI.
 include(CTest)
 if(BUILD_TESTING)
+  add_executable(AlbedoCP53OutputGuardTest tests/cp53_output_guard.cpp)
+  target_include_directories(AlbedoCP53OutputGuardTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Source")
+  target_compile_features(AlbedoCP53OutputGuardTest PRIVATE cxx_std_20)
+  add_test(NAME cp53_true_peak_guard_and_float64_integrity COMMAND AlbedoCP53OutputGuardTest)
   add_executable(AlbedoPresetTaxonomyTest tests/preset_taxonomy_compile.cpp)
   target_compile_features(AlbedoPresetTaxonomyTest PRIVATE cxx_std_20)
   target_include_directories(AlbedoPresetTaxonomyTest PRIVATE
@@ -168,6 +173,18 @@ if(BUILD_TESTING AND WIN32)
   target_compile_features(AlbedoArpTest PRIVATE cxx_std_20)
   target_include_directories(AlbedoArpTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
   add_test(NAME cp50_arpeggiator COMMAND AlbedoArpTest)
+endif()
+
+if(BUILD_TESTING AND WIN32)
+  add_executable(AlbedoCP53VoiceHifiTest
+    tests/cp53_voice_hifi_qa.cpp
+    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
+  target_compile_features(AlbedoCP53VoiceHifiTest PRIVATE cxx_std_20)
+  target_compile_definitions(AlbedoCP53VoiceHifiTest PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
+  target_include_directories(AlbedoCP53VoiceHifiTest PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source" "${ALBEDO_DSP_ROOT}/include")
+  add_test(NAME cp53_192_programs_hifi_note_lifecycle_and_high_rates COMMAND AlbedoCP53VoiceHifiTest)
 endif()
 
 if(BUILD_TESTING AND WIN32)
