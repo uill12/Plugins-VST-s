@@ -2,6 +2,7 @@
 #include "AlbedoEditor.h"
 #include "AlbedoWebViewEditor.h"
 #include <cmath>
+#include <limits>
 #include "AlbedoPrograms.hpp"
 
 AlbedoProcessor::AlbedoProcessor()
@@ -68,14 +69,19 @@ void AlbedoProcessor::panicVoices() noexcept
 }
 void AlbedoProcessor::syncArpClock()
 {
-    if (auto* transport=getPlayHead()) {
-        if(auto position=transport->getPosition()) {
-            if(auto bpm=position->getBpm()) synth->setArpTempo(*bpm);
-            const bool playing=position->getIsPlaying();
-            if(transportPlaying && !playing) panicVoices(); // Stop clears all voices, even without the arpeggiator
+    // Position belongs to the host. MIDI subregions are sample-accurate in DSP.
+    double ppq=std::numeric_limits<double>::quiet_NaN();
+    bool playing=false;
+    if(auto* transport=getPlayHead()){
+        if(auto position=transport->getPosition()){
+            if(auto bpm=position->getBpm())synth->setArpTempo(*bpm);
+            playing=position->getIsPlaying();
+            if(auto beat=position->getPpqPosition())ppq=*beat;
+            if(transportPlaying&&!playing)panicVoices();
             transportPlaying=playing;
         }
     }
+    synth->setArpTransport(ppq,playing);
 }
 void AlbedoProcessor::handleMidi (const juce::MidiMessage& m)
 {

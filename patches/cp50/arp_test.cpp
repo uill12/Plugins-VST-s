@@ -63,5 +63,24 @@ int main(){
  }
  if(got!=std::vector<int>{64,67,60})return 4;
  s->allNotesOff();
+ // CP57: an off-beat keypress waits for the next host-aligned sixteenth note.
+ for(int sr:{44100,48000,88200,96000}){
+  auto synced=std::make_unique<vitriol::Synth>();synced->prepare(sr);
+  synced->setParam(6020,1);synced->setParam(6021,.25);
+  synced->setParam(6030,1);synced->setParam(6026,0);
+  synced->setArpTempo(120);synced->setArpTransport(.0625,true);
+  synced->noteOn(60,.8);
+  std::array<double,128> sl{},rr{};
+  synced->process64(sl.data(),rr.data(),128);
+  if(synced->arpStep()!=-1){std::cerr<<"Arp started outside grid at "<<sr<<"\\n";return 5;}
+  for(int i=128;i<sr/8&&synced->arpStep()!=1;i+=128)
+   synced->process64(sl.data(),rr.data(),128);
+  if(synced->arpStep()!=1){std::cerr<<"Host grid tick missing at "<<sr<<"\\n";return 6;}
+  synced->setArpTransport(8.0,true);
+  synced->process64(sl.data(),rr.data(),128);
+  if(synced->arpStep()!=0){std::cerr<<"Transport seek not re-phased at "<<sr<<"\\n";return 7;}
+  synced->setArpTransport(8.0,false);
+  synced->allNotesOff();
+ }
  std::cout<<"Nereida character, silence mask, rotation, 1-octave pitch lock, sustain, bypass PASS at 44.1/48/88.2/96 kHz\n";
 }

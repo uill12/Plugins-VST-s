@@ -1,7 +1,34 @@
 // A single clock owns note selection, step rests and gate releases.
 // Keep host tempo separate from the free-running BPM parameter. No transport
 // callbacks, allocations, or UI calls are made in the scheduler.
-void Synth::setArpTempo(double bpm){if(std::isfinite(bpm)&&bpm>0){arpHostTempo_=clamp(bpm,40.,240.);arpHostValid_=true;}}
+void Synth::setArpTempo(double bpm){if(std::isfinite(bpm)&&bpm>0){arpHostTempo_=clamp(bpm,20.,400.);arpHostValid_=true;}}
+// Host PPQ time is sample-advanced between MIDI events and never driven by UI.
+void Synth::setArpTransport(double ppq,bool playing){
+ const bool valid=playing&&std::isfinite(ppq)&&ppq>=0.&&arpHostValid_;
+ if(!valid){arpTransportValid_=false;return;}
+ const bool jumped=arpTransportValid_&&std::abs(ppq-arpTransportBeat_)>0.02;
+ arpTransportBeat_=ppq;arpTransportValid_=true;
+ if(get(6030)>.5&&arpEnabled_&&arpCount_){
+  if(jumped){arpRelease();arpGate_=0.;}
+  arpSnap();
+ }
+}
+// Lock step phase to paired swung musical divisions, without changing pitch.
+void Synth::arpSnap(){
+ if(!arpTransportValid_||!arpHostValid_||get(6030)<.5)return;
+ const double division=clamp(get(6021),.05,1.);
+ const double phase=arpTransportBeat_/division;
+ const double pair=std::floor(phase*.5),pairStart=2.*pair;
+ const double swing=clamp(get(6026)*.01,0.,.45);
+ double nextBeat=pairStart;
+ uint64_t index=uint64_t(pairStart);
+ if(phase>nextBeat+1.e-9){nextBeat=pairStart+1.+swing;++index;}
+ if(phase>nextBeat+1.e-9){nextBeat=pairStart+2.;++index;}
+ const unsigned length=unsigned(std::clamp(int(get(6027)),4,16));
+ arpStep_=int(index%length);arpIndex_=unsigned(index);
+ arpClock_=std::max(0.,(nextBeat-phase)*division*fs_*60./arpHostTempo_);
+}
+
 void Synth::arpRelease(){
  if(arpSound_>=0){voiceOff(arpSound_,arpChannel_,-1);arpSound_=-1;}
 }
@@ -11,6 +38,7 @@ void Synth::arpMode(){
  if(enabled==arpEnabled_)return;
  arpDisplay_.store(-1,std::memory_order_relaxed);arpRelease();voicePanic();arpClock_=arpGate_=0;arpStep_=arpIndex_=0;arpBits_=0x8421;
  arpEnabled_=enabled;
+ if(enabled)arpSnap();
  if(!enabled){
   for(int ch=0;ch<16;++ch)sustain_[ch]=arpPedal_[ch];
   for(int i=0;i<arpCount_;++i){const auto& k=arpKeys_[i];voiceOn(k.note,k.vel,k.ch,k.id);if(!k.down)voiceOff(k.note,k.ch,k.id);}
@@ -20,7 +48,7 @@ void Synth::noteOn(int n,double vel,int ch,int id){
  if(n<0||n>127||ch<0||ch>15||!std::isfinite(vel))return;
  if(vel<=0){noteOff(n,ch,id);return;}
  arpMode();
- if(!arpCount_){arpClock_=0;arpStep_=arpIndex_=0;arpBits_=0x8421;}
+ if(!arpCount_){arpClock_=0;arpStep_=arpIndex_=0;arpBits_=0x8421;arpSnap();}
  if(arpCount_==int(arpKeys_.size())){for(int i=1;i<arpCount_;++i)arpKeys_[i-1]=arpKeys_[i];--arpCount_;}
  arpKeys_[arpCount_++]={n,ch,id,vel,true};
  if(!arpEnabled_)voiceOn(n,vel,ch,id);
@@ -99,7 +127,7 @@ void Synth::arpTick(){
  }
 }
 template<typename Sample>void Synth::processArp(Sample* l,Sample* r,uint32_t n){
- arpMode();if(!arpEnabled_||!arpCount_){processTyped(l,r,n);return;}
+ arpMode();if(!arpEnabled_||!arpCount_){processTyped(l,r,n);if(arpTransportValid_)arpTransportBeat_+=double(n)*arpHostTempo_/(60.*fs_);return;}
  unsigned offset=0;
  while(offset<n){
   if(arpClock_<=0)arpTick();
@@ -108,4 +136,5 @@ template<typename Sample>void Synth::processArp(Sample* l,Sample* r,uint32_t n){
   unsigned count=std::min(n-offset,unsigned(std::max(1.,std::ceil(boundary))));
   processTyped(l+offset,r+offset,count);offset+=count;arpClock_-=count;arpGate_-=count;
  }
+ if(arpTransportValid_)arpTransportBeat_+=double(n)*arpHostTempo_/(60.*fs_);
 }

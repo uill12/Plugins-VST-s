@@ -1,7 +1,7 @@
-name: Albedo CP56 Sound-Impact Density Windows CLAP VST3
+name: Albedo CP57 DAW Tempo Sync Windows CLAP VST3
 on:
   push:
-    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density]
+    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync]
     paths:
       - '.github/workflows/albedo-cp51-morph-tree-windows.yml'
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
@@ -709,6 +709,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP41 single window, labels, button APPLY, 88 voices or inline syntax regression' }
           python Albedo-JUCE-Native/tests/check_cp50_nereida_arp.py
           if ($LASTEXITCODE -ne 0) { throw 'CP50 Nereida rhythmic character/GUI/native clock contract failed' }
+          python Albedo-JUCE-Native/tests/check_cp57_tempo_sync.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP57 DAW PPQ tempo sync contract failed' }
           python -m py_compile patches/cp50/apply.py
           if ($LASTEXITCODE -ne 0) { throw 'CP50 arpeggiator patcher Python syntax failed' }
           node --check Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
@@ -829,21 +831,21 @@ jobs:
           python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB2'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in VST3'; print('VST3 PCM24 32-material bank present')" $vst.FullName
           if ($LASTEXITCODE -ne 0) { throw 'VST3 sound bank resource missing' }
           New-Item -ItemType Directory -Path 'dist-cp38' -Force | Out-Null
-          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP56_SoundPriority_HiFi_WebView2.clap'
+          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP57_TempoSync_HiFi_WebView2.clap'
           $bundle=Get-ChildItem -Path build-cp38-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
           @(
-            'Checkpoint: Albedo CP56 sound-impact controls, compact stage density and existing CP55 Bitwig viewport fit',
+            'Checkpoint: Albedo CP57 DAW PPQ tempo sync and rhythmic-preset clock; CP56 density preserved',
             'Preset parameters: CP51 192 programs, retained; DSP tonal processing upgraded for clarity',
             "Git SHA: $env:GITHUB_SHA",
             "GitHub Run: $env:GITHUB_RUN_ID",
             'Host plugin identifier and internal product name retained for DAW session compatibility',
             'Windows: CLAP + VST3, WebView2, JUCE native; 63-sample latency; 12 voices AUTO',
             'CP51, CP52, CP53 and CP54 remain intact as rollback'
-          ) | Set-Content -Path 'dist-cp38/CP56_BUILD_PROVENANCE.txt' -Encoding utf8
-          python Albedo-JUCE-Native/tools/cp56_package_metadata.py dist-cp38 --source $env:GITHUB_SHA
-          if ($LASTEXITCODE -ne 0) { throw 'CP56 VST3 strict JSON and binary package verification failed' }
+          ) | Set-Content -Path 'dist-cp38/CP57_BUILD_PROVENANCE.txt' -Encoding utf8
+          python Albedo-JUCE-Native/tools/cp57_package_metadata.py dist-cp38 --source $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'CP57 VST3 strict JSON and binary package verification failed' }
           Get-ChildItem 'dist-cp38' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
       - name: CP53 emit 192-program HiFi and MIDI lifecycle QA report
         shell: pwsh
@@ -854,7 +856,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP53 192-program clarity/sustain regression' }
       - uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP56_HiFi_DSP_192_Presets_QA
+          name: Albedo_CP57_HiFi_DSP_192_Presets_QA
           path: CP53_DSP_QA.txt
           if-no-files-found: error
       - name: Compare all 18336 pairs of rendered preset outputs
@@ -887,7 +889,7 @@ jobs:
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP56_SoundPriority_HiFi_Windows_x64_CLAP_VST3
+          name: Albedo_CP57_TempoSync_HiFi_Windows_x64_CLAP_VST3
           path: dist-cp38/*
           if-no-files-found: error
       - name: Package and exercise Windows target reconstruction

@@ -4,12 +4,12 @@ root=Path(sys.argv[1]);src=root/'src/vitriol_dsp.cpp';hdr=root/'include/vitriol_
 def change(s,a,b):
     assert s.count(a)==1,a
     return s.replace(a,b)
-h=hdr.read_text();h=change(h,' void prepare(double',' void setArpTempo(double bpm);\n void prepare(double')
+h=hdr.read_text();h=change(h,' void prepare(double',' void setArpTempo(double bpm);\n void setArpTransport(double ppq,bool playing);\n void prepare(double')
 h=change(h,' struct Voice {',''' struct ArpKey {int note,ch,id;double vel;bool down;};
  std::array<ArpKey,128> arpKeys_{};std::array<bool,16> arpPedal_{};
  int arpCount_=0,arpSound_=-1,arpChannel_=0,arpStep_=0;unsigned arpIndex_=0,arpBits_=0x8421;
- bool arpEnabled_=false,arpHostValid_=false;double arpHostTempo_=120,arpClock_=0,arpGate_=0;
- void arpMode();void arpTick();void arpClear();void arpPrune();void arpRelease();
+ bool arpEnabled_=false,arpHostValid_=false,arpTransportValid_=false;double arpHostTempo_=120,arpClock_=0,arpGate_=0,arpTransportBeat_=0;
+ void arpMode();void arpTick();void arpClear();void arpPrune();void arpRelease();void arpSnap();
  void voiceOn(int,double,int,int);void voiceOff(int,int,int);void voicePanic();
  template<typename Sample>void processArp(Sample*,Sample*,uint32_t);
  struct Voice {''')

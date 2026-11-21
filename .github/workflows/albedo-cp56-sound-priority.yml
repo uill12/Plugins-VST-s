@@ -1,7 +1,7 @@
-name: Albedo CP56 Sound-Impact Density + Window Fit QA
+name: Albedo CP57 Tempo Sync + CP56 Window Fit QA
 on:
   push:
-    branches: [albedo/cp56-sound-priority-density]
+    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync]
   workflow_dispatch:
 permissions:
   contents: read
@@ -38,6 +38,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --check Albedo-JUCE-Native/Assets/cp56_sound_priority.js
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --check Albedo-JUCE-Native/Assets/cp57_tempo_controls.js
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node Albedo-JUCE-Native/tests/check_cp52_browser.cjs --expanded
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $cpp=Get-Content -Raw Albedo-JUCE-Native/Source/AlbedoWebViewEditor.cpp
@@ -46,6 +48,8 @@ jobs:
           if (!$cmake.Contains('Assets/cp54_essential_sound_layout.js')) { throw 'CP54 embedded source missing' }
           if (!$cpp.Contains('cp56_sound_priority_js')) { throw 'CP56 resource handler missing' }
           if (!$cmake.Contains('Assets/cp56_sound_priority.js')) { throw 'CP56 embedded source missing' }
+          if (!$cpp.Contains('cp57_tempo_controls_js')) { throw 'CP57 resource handler missing' }
+          if (!$cmake.Contains('Assets/cp57_tempo_controls.js')) { throw 'CP57 embedded source missing' }
       - name: Test native window geometry and morphogenic library in Edge
         shell: pwsh
         run: |
@@ -69,11 +73,16 @@ jobs:
         run: |
           python Albedo-JUCE-Native/tests/check_cp56_sound_priority.py
           if ($LASTEXITCODE -ne 0) { throw 'CP56 live parameter controls or fit regression' }
+      - name: Test CP57 DAW sync GUI controls in Edge
+        shell: pwsh
+        run: |
+          python Albedo-JUCE-Native/tests/check_cp57_tempo_gui.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP57 real tempo parameter controls or window regression' }
       - name: Publish contextual GUI screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP56_Sound_Priority_Viewport_GUI
+          name: Albedo_CP57_Tempo_Sync_Viewport_GUI
           path: |
             qa-cp54-context/*.png
             qa-cp52-screenshots/*.png
