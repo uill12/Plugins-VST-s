@@ -2707,7 +2707,9 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
  };
 })();
 </script><script>
-// CP54: ARP refinements are reparented into a local popup while open.\n // Delegate from document so controls send native parameter events in either parent.\n document.addEventListener('change',e=>{if(e.target.matches?.('[data-arp]')&&e.target.value!==''){const id=Number(e.target.dataset.arp);window.ALBEDO_NATIVE_CP27?.onExtraParam(id,Number(e.target.value));}});
+// CP54: ARP refinements are reparented into a local popup while open. 
+ // Delegate from document so controls send native parameter events in either parent. 
+ document.addEventListener('change',e=>{if(e.target.matches?.('[data-arp]')&&e.target.value!==''){const id=Number(e.target.dataset.arp);window.ALBEDO_NATIVE_CP27?.onExtraParam(id,Number(e.target.value));}});
 window.__JUCE__?.backend?.addEventListener('albedoArpStep',step=>window.ALBEDO_CP04?.setArpStep(step));
 </script></body>
 </html>
