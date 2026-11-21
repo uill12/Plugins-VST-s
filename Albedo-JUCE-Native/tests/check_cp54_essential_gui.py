@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""CP54: primary controls only, all deep controls accessible, no redraw on edits.
-The CP51 192-program selection is injected in CI before this browser test.
+"""CP54 Edge QA: high-impact parameters remain fixed; contextual popups work.
+Run after verified CP51 catalog injection; no DSP sample/regeneration needed.
 """
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -8,67 +8,126 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[2]
 html=root/"ui/Albedo_CP30_CP22_Landscape_3x2.html"
 assets=root/"Albedo-JUCE-Native/Assets"
-out=root/"qa-cp54-screenshots"
-out.mkdir(exist_ok=True)
+output=root/"qa-cp54-context"
+output.mkdir(exist_ok=True)
 
-with sync_playwright() as playwright:
-    browser=playwright.chromium.launch(channel="msedge")
+def check_bounds(page,width,height):
+    rect=page.locator("#cp54Popover").evaluate("""el=>{
+        const r=el.getBoundingClientRect();
+        return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};
+    }""")
+    assert rect["left"] >= -2 and rect["top"] >= -2,(width,height,rect)
+    assert rect["right"] <= width+2 and rect["bottom"] <= height+2,(width,height,rect)
+
+with sync_playwright() as p:
+    browser=p.chromium.launch(channel="msedge")
     for width,height in [(1080,720),(900,600),(720,480)]:
         page=browser.new_page(viewport={"width":width,"height":height})
         page.goto(html.as_uri())
-        page.add_script_tag(path=str(assets/"cp35_editor_geometry.js"))
-        page.add_script_tag(path=str(assets/"cp52_nereida_browser.js"))
-        page.add_script_tag(path=str(assets/"cp54_essential_sound_layout.js"))
+        for js in ["cp35_editor_geometry.js",
+                   "cp52_nereida_browser.js",
+                   "cp54_essential_sound_layout.js"]:
+            page.add_script_tag(path=str(assets/js))
         page.wait_for_function("() => !!window.ALBEDO_CP54_ESSENTIAL && !!window.ALBEDO_CP52_BROWSER")
         assert page.evaluate("window.ALBEDO_CP52_BROWSER.total")==192
-        for selector,visible in [
+        assert page.locator("#cp04LabOpen").is_hidden()
+        assert page.locator("#cp04Lab").is_hidden()
+        assert page.locator('[data-cp54-context]').count()==7
+        assert page.evaluate("window.ALBEDO_CP54_ESSENTIAL.primaryControlsPermanent")
+        assert page.evaluate("window.ALBEDO_CP54_ESSENTIAL.advancedModeRemoved")
+        for selector,n in [
             ("#engineKnobs>.param",2),("#macros>.param",4),
             ("#filterKnobsA>.param",2),("#filterKnobsB>.param",2),
-            ("#envKnobs>.param",2)]:
-            count=page.locator(selector).evaluate_all("nodes => nodes.filter(n=>getComputedStyle(n).display!=='none').length")
-            assert count==visible,(width,height,selector,count)
-        for selector in [".lower>.surface:not(#cellArp):first-child", "#page .utility"]:
-            assert page.locator(selector).first.evaluate("el=>getComputedStyle(el).display==='none'"),selector
-        assert page.locator("#page #cellArp .steps").is_visible()
-        assert page.locator("#page #fx").is_visible()
-        assert page.locator("#page #xy").is_visible()
-        page.screenshot(path=str(out/f"Albedo_CP54_{width}x{height}_primary.png"))
-        page.locator("#cp54Open").click()
-        popup=page.locator("#cp54Popup")
-        assert popup.is_visible()
-        assert page.locator('#cp54Popup .dial[data-key="engine:2"]').count()==1
-        assert page.locator('#cp54Popup .dial[data-key="macro:memory"]').count()==1
-        assert page.locator('#cp54Popup .dial[data-key="envDecay"]').count()==1
-        assert page.locator('#cp54Popup .dial[data-key="filterAdrive"]').count()==1
-        for selector in ["#cp54Popup #routes","#cp54Popup #addRoute",
-                         "#cp54Popup .arp-options","#cp54Popup .arp-lattice",
-                         "#cp54Popup .utility","#cp54Popup #pitchMode"]:
-            assert page.locator(selector).count()==1,selector
-        dimensions=popup.locator(".cp54-panel").evaluate("""el=>{
-            const r=el.getBoundingClientRect();
-            return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};
-        }""")
-        assert dimensions["left"]>=0 and dimensions["top"]>=0
-        assert dimensions["right"]<=width+2 and dimensions["bottom"]<=height+2
-        before=page.evaluate("window.ALBEDO_CP04.state.engines[0].knobs[2]")
-        dial=page.locator('#cp54Popup .dial[data-key="engine:2"]')
+            ("#envKnobs>.param",2)
+        ]:
+            shown=page.locator(selector).evaluate_all(
+                "a=>a.filter(x=>getComputedStyle(x).display!=='none').length")
+            assert shown==n,(width,height,selector,shown)
+        for selector in ["#sources","#method","#xy","#filterTypeA","#filterTypeB",
+                         "#fx","#cellArp #steps","#cellArp #play"]:
+            assert page.locator(selector).is_visible(),(width,height,selector)
+        page.screenshot(path=str(output/f"CP54_{width}x{height}_sound_first.png"))
+
+        # Main Material/Unison is fixed wherever the synthesis algorithm uses it.
+        page.locator("#method").select_option(label="Harmonic / Additive")
+        assert page.locator("#cp54MaterialMain").is_visible()
+        assert page.locator("#cp54UnisonMain").is_visible()
+        page.locator("#cp54MaterialMain").select_option("3")
+        assert page.evaluate("window.ALBEDO_CP04.state.cp04[1010]")==3
+        page.locator("#cp54UnisonMain").select_option("3")
+        assert page.evaluate("window.ALBEDO_CP04.state.cp04[1011]")==3
+
+        def open_popup(context):
+            page.locator(f'[data-cp54-context="{context}"]').click()
+            assert page.locator("#cp54Popover").is_visible(),(context,width,height)
+            assert page.evaluate("window.ALBEDO_CP54_ESSENTIAL.activeContext")==context
+            check_bounds(page,width,height)
+
+        def close_popup():
+            page.locator("#cp54Close").click()
+            assert page.locator("#cp54Popover").is_hidden()
+            assert page.locator("#cp54Scrim").is_hidden()
+
+        open_popup("source")
+        assert page.locator('#cp54Popover .dial[data-key="engine:2"]').count()==1
+        assert page.locator('#cp54Popover [data-cp54-id="1017"]').count()==1
+        native_before=page.evaluate("window.ALBEDO_CP04.state.cp04[1017]")
+        dial=page.locator('#cp54Popover .cp54-rotary[data-cp54-id="1017"]')
         dial.scroll_into_view_if_needed()
         dial.hover()
-        page.mouse.wheel(0,-140)
-        after=page.evaluate("window.ALBEDO_CP04.state.engines[0].knobs[2]")
-        assert after!=before,(width,height,before,after)
-        before_routes=page.locator('#cp54Popup #routes .route-row').count()
-        page.locator('#cp54Popup #addRoute').click()
-        assert page.locator('#cp54Popup #routes .route-row').count()==before_routes+1
-        page.screenshot(path=str(out/f"Albedo_CP54_{width}x{height}_details.png"))
-        page.locator("#cp54Close").click()
-        assert not popup.is_visible()
-        assert page.locator("#page #routes .route-row").count()==before_routes+1
-        assert page.locator("#page .utility").count()==1
+        page.mouse.wheel(0,-90)
+        native_after=page.evaluate("window.ALBEDO_CP04.state.cp04[1017]")
+        assert native_before!=native_after,(native_before,native_after)
+        page.screenshot(path=str(output/f"CP54_{width}x{height}_source_popup.png"))
+        close_popup()
+
+        open_popup("macro")
+        assert page.locator('#cp54Popover .dial[data-key="macro:width"]').count()==1
+        close_popup()
+
+        open_popup("filter")
+        for key in ("filterAdrive","filterBdrive","envDecay","envSustain"):
+            assert page.locator(f'#cp54Popover .dial[data-key="{key}"]').count()==1,key
+        assert page.locator("#cp54Popover #pitchMode").count()==1
+        assert page.locator('#cp54Popover [data-cp54-id="3120"]').count()==1
+        close_popup()
+        assert page.locator("#page #pitchMode").count()==1
+
+        open_popup("mod")
+        assert page.locator("#cp54Popover #routes").count()==1
+        routes_before=page.locator("#cp54Popover .route-row").count()
+        page.locator("#cp54Popover #addRoute").click()
+        assert page.locator("#cp54Popover .route-row").count()==routes_before+1
+        page.screenshot(path=str(output/f"CP54_{width}x{height}_routes_popup.png"))
+        close_popup()
+        assert page.locator("#page #routes .route-row").count()==routes_before+1
+
+        open_popup("arp")
+        assert page.locator("#cp54Popover #rule").count()==1
+        assert page.locator("#cp54Popover .arp-options").count()==1
+        page.locator("#cp54Popover #rule").select_option("90")
+        assert page.evaluate("window.ALBEDO_CP04.state.motionRule")==90
+        close_popup()
+        assert page.locator("#page #rule").count()==1
+
+        open_popup("fx")
+        assert page.locator('#cp54Popover [data-cp54-id="5011"]').count()==1
+        close_popup()
+
+        open_popup("settings")
+        assert page.locator("#cp54Popover #oversample").count()==1
+        assert page.locator("#cp54Popover #safety").count()==1
+        page.locator("#cp54Popover #oversample").select_option(label="2×")
+        assert page.evaluate("window.ALBEDO_CP04.state.oversample")=="2×"
+        close_popup()
+        assert page.locator("#page #oversample").count()==1
+
+        # No global advanced mode or broken preset browser paths were introduced.
+        assert page.locator("#page #engineKnobs>.param").count()==4
         page.locator("#presetBrowseOpen").click()
         assert page.locator("#presetBrowser").is_visible()
         page.locator("#presetBrowserClose").click()
-        assert not page.locator("#presetBrowser").is_visible()
+        assert page.locator("#presetBrowser").is_hidden()
         page.close()
     browser.close()
-print("CP54 PASS: 192 programs; decisive controls only; 3 viewports; details interactive; original routing/restored DOM; browser intact")
+print("CP54 PASS: 192 presets; primary sound controls permanent; 7 local overlays; all parameters editable at 1080/900/720 widths")
