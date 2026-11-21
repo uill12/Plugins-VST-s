@@ -120,16 +120,36 @@ def main():
             }""")
             def check_value(pid, value):
                 page.wait_for_function("([id,v])=>Math.abs(window.cp47Echo[id]-v)<0.001",arg=[pid,value],timeout=5000)
-            for control,pid,options in [('oversample',9002,[('2×',2),('4×',3)]),
-                                        ('filterRoute',3012,[('SERIAL A-B',1),('SERIAL B-A',2)]),
-                                        ('division',6021,[('125',.125),('500',.5)]),
-                                        ('tuning',3112,[('19-TET',3),('24-TET',4)])]:
-                if page.locator('#'+control).input_value()==options[0][0]:
+            # CP54 deliberately hides secondary controls from the solid main
+            # stage. Test their real, visible contextual popups, not the old
+            # hidden controls or a retired global Advanced/Synthesis Lab.
+            def open_context(context):
+                page.locator('[data-cp54-context="'+context+'"]').click()
+                page.wait_for_function(
+                    'context => window.ALBEDO_CP54_ESSENTIAL?.activeContext === context',
+                    arg=context,timeout=10000)
+                assert page.locator('#cp54Popover').is_visible()
+            def close_context():
+                page.locator('#cp54Close').click()
+                assert page.locator('#cp54Popover').is_hidden()
+            for control,pid,options,context in [
+                    ('oversample',9002,[('2×',2),('4×',3)],'settings'),
+                    ('filterRoute',3012,[('SERIAL A-B',1),('SERIAL B-A',2)],'filter'),
+                    ('division',6021,[('125',.125),('500',.5)],None),
+                    ('tuning',3112,[('19-TET',3),('24-TET',4)],'settings')]:
+                if context:open_context(context)
+                # Filter routing uses a visible proxy that dispatches change
+                # to the original native-bound selector.
+                locator=(page.locator('#cp54Popover .cp54-choice select')
+                    if control=='filterRoute'
+                    else page.locator('#'+control))
+                if locator.input_value()==options[0][0]:
                     options=list(reversed(options))
                 for option,value in options:
-                    page.locator('#'+control).select_option(option,force=True)
+                    locator.select_option(option)
                     print('Checking',control,pid,value,flush=True)
                     check_value(pid,value)
+                if context:close_context()
             page.locator('#play').click()
             check_value(6020,1)
             page.locator('#play').click()
@@ -157,34 +177,39 @@ def main():
             check_value(1006,100)
             sweep_knob('.dial[data-key="macro:bright"]',2000)
             check_value(2000,100)
-            # The Nereida-style engine has precisely four characters (0..3).
-            # Never query the retired CP50 order 4 from the new UI.
+            # The Nereida-style engine has four characters. Secondary ARP
+            # articulation is intentionally moved to the RHYTHM popup.
+            open_context('arp')
             for pid,valid in ((6024,['0','1','2','3']),(6025,['1','2','3']),
                               (6028,[str(n) for n in range(8)]),(6030,['0','1'])):
-                control=page.locator('[data-arp="'+str(pid)+'"]')
+                control=page.locator('#cp54Popover [data-arp="'+str(pid)+'"]')
                 current=control.input_value()
                 option=next(v for v in valid if v!=current)
                 control.select_option(option)
                 check_value(pid,int(option))
-            page.locator('[data-arp="6029"]').fill('134')
-            page.locator('[data-arp="6029"]').press('Tab')
+            page.locator('#cp54Popover [data-arp="6029"]').fill('134')
+            page.locator('#cp54Popover [data-arp="6029"]').press('Tab')
             check_value(6029,134)
+            close_context()
             xy=page.locator('#xy')
             rect=xy.bounding_box()
             for nx,ny in ((.35,.66),(.71,.28)):
                 page.mouse.click(rect['x']+nx*rect['width'],rect['y']+ny*rect['height'])
                 page.wait_for_function("([x,y])=>Math.abs(cp47Echo[2100]-x)<4 && Math.abs(cp47Echo[2101]-y)<4",arg=[100*nx,100*ny])
-            page.locator('#cp04LabOpen').click()
-            sweep_knob('#cp04Lab .cp-knob[data-cp-id="3120"]',3120)
+            assert page.locator('#cp04LabOpen').is_hidden()
+            open_context('filter')
+            sweep_knob('#cp54Popover .cp54-rotary[data-cp54-id="3120"]',3120)
             check_value(3120,100)
-            frame=page.locator('#cp04Lab .cp-frame').bounding_box()
-            assert frame['width']<=page.evaluate('innerWidth')*.85
-            assert frame['height']<=page.evaluate('innerHeight')*.80
-            page.locator('#cp04LabClose').click()
-            page.locator('#addRoute').click()
-            count=page.locator('#routes .route-row').count()
+            frame=page.locator('#cp54Popover').bounding_box()
+            assert frame['width']<=page.evaluate('innerWidth')*.94
+            assert frame['height']<=page.evaluate('innerHeight')*.98
+            close_context()
+            open_context('mod')
+            page.locator('#cp54Popover #addRoute').click()
+            count=page.locator('#cp54Popover #routes .route-row').count()
             check_value(8300,count)
-            print('CP49 Arbor pointer, Lab bounds and active route count passed')
+            close_context()
+            print('CP54 native WebView2 contextual source/Corpus/ARP/Routes echo and bounds passed')
             print('CP47 compiled parameter round trips and coupling drag passed')
     finally:
         proc.kill()

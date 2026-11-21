@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(AlbedoJUCE VERSION 1.0.53 LANGUAGES C CXX RC)
+project(AlbedoJUCE VERSION 1.0.54 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -46,6 +46,7 @@ juce_add_binary_data(AlbedoArtwork SOURCES
   Assets/cp35_editor_geometry.js
   Assets/cp38_rotary_overlays.js
   Assets/cp52_nereida_browser.js
+  Assets/cp54_essential_sound_layout.js
   Metadata/factory_preset_taxonomy.json
   "${CMAKE_CURRENT_SOURCE_DIR}/../ui/Albedo_CP30_CP22_Landscape_3x2.html"
 )

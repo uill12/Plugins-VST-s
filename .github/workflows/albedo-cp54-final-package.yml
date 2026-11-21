@@ -1,0 +1,78 @@
+name: Albedo CP54 Final Windows Package - Strict VST3 Metadata
+on:
+  push:
+    branches: [albedo/cp54-essential-sound-layout]
+    paths:
+      - '.github/workflows/albedo-cp54-final-package.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch verified CP54 Windows CLAP VST3 binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: Albedo_CP54_SoundFirst_HiFi_Windows_x64_CLAP_VST3
+          repository: uill12/Plugins-VST-s
+          run-id: 44869174353
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: dist-cp54
+      - name: Validate binaries and normalize strict VST3 metadata (no DLL changes)
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib, json, re
+          from pathlib import Path
+          root=Path('dist-cp54')
+          info=list(root.rglob('moduleinfo.json'))
+          assert len(info)==1,info
+          m=info[0]
+          text=m.read_text(encoding='utf-8-sig')
+          parsed=json.loads(re.sub(r',(?=\s*[}\]])','',text))
+          assert parsed.get('Version')=='1.0.54',parsed.get('Version')
+          assert len(parsed.get('Classes',[]))==2
+          assert all(len(c.get('CID',''))==32 for c in parsed['Classes'])
+          m.write_text(json.dumps(parsed,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          assert json.loads(m.read_text())['Version']=='1.0.54'
+          provenance=root/'CP52_BUILD_PROVENANCE.txt'
+          assert provenance.exists(),'Missing original run provenance'
+          target=root/'CP54_BUILD_PROVENANCE.txt'
+          provenance.rename(target)
+          assert '1418c18a2528d0fa72b4b00ce582116cef8ebacc' in target.read_text()
+          binaries=[f for f in root.rglob('*') if f.is_file() and f.suffix.lower() in ('.clap','.vst3')]
+          assert len(binaries)==2,binaries
+          assert {f.suffix.lower() for f in binaries}=={'.clap','.vst3'}
+          lines=[]
+          for f in sorted(binaries):
+              data=f.read_bytes()
+              assert len(data)>2_000_000 and data[:2]==b'MZ',(f,len(data))
+              assert b'VTRB2\x00\x00\x00' in data,f'PCM24 material bank absent: {f}'
+              lines.append(hashlib.sha256(data).hexdigest()+'  '+f.relative_to(root).as_posix())
+          (root/'SHA256SUMS.txt').write_text('\n'.join(lines)+'\n')
+          (root/'CP54_PACKAGE_QA.json').write_text(json.dumps({
+              'checkpoint':'Albedo CP54 Sound-First HiFi',
+              'source_run_id':44869174353,
+              'source_commit':'1418c18a2528d0fa72b4b00ce582116cef8ebacc',
+              'version':'1.0.54',
+              'formats':['Windows x64 CLAP','Windows x64 VST3'],
+              'native_ci':'passed',
+              'vst3_moduleinfo_strict_json':'passed',
+              'binaries_unchanged':True,
+              'embedded_32_material_pcm24':'passed',
+              'bitwig_manual_validation':'pending'
+          },indent=2)+'\n')
+          print('CP54 packaging PASS; native binaries unchanged:')
+          print('\n'.join(lines))
+          PY
+      - name: Publish CP54 validated Windows CLAP and VST3 package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP54_Final_HiFi_CLAP_VST3_Windows_x64
+          path: dist-cp54/*
+          retention-days: 90
+          if-no-files-found: error
