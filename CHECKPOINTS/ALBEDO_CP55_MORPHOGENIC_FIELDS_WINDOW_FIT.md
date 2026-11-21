@@ -21,7 +21,7 @@ Renamed the *displayed bank title*, formerly **New Sounds/New Bank**, to **Morph
 The user-provided Windows Bitwig screenshot shows the canonical 1500×1000 renderer visibly clipped inside a smaller plugin editor HWND (fourth source panel and right-hand Corpus, as well as lower FX zone). A layout must fit the *granted native viewport*, not be clipped from the outside.
 
 - Default native editor now **1230×820** (3:2) when the available display area allows; on smaller screens it reduces proportionally within the original host constraints.
-- CP35 browser geometry normally respects the actual root CSS viewport, but now detects and repairs a WebView2/embed anomaly when measured CSS root width or height over-reports the JUCE host dimensions by **more than 16%** and a consistent 3:2 native host rectangle is available.
+- CP35 browser geometry normally respects the actual root CSS viewport, but now detects and repairs a WebView2/embed anomaly when measured CSS root width or height over-reports the JUCE host dimensions by **more than 16% on both axes** and a consistent 3:2 native host rectangle is available.
 - Do **not** always choose the smaller of native and CSS dimensions. Minor Windows DPI/host negotiation discrepancies remain handled by the verified CP40/CP52 path to avoid letterboxing.
 - Existing responsive scale and aspect preservation, mouse-wheel knobs, seven contextual popups and full preset browser remain untouched. No page reload or audio-thread geometry work.
 
