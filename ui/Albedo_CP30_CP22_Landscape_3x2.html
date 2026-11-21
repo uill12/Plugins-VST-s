@@ -2151,7 +2151,9 @@ function load(p){
     state.selectedUser=null;
   }
   else if(p.source==='User'){state.replaying=true;try{api.importPatch({format:'ALBEDO_GUI_PATCH',version:'0.7',...structuredClone(p.snapshot)});}finally{state.replaying=false;}state.selectedUser=p.id;}
-  hide();
+  // CP52: preserve audition browser while loading another sound; older GUIs
+  // without the CP52 asset retain the original close-after-select behavior.
+  if(window.ALBEDO_CP52_KEEP_BROWSER_OPEN!==true)hide();
 }
 get('presetBrowseOpen').addEventListener('click',show);get('presetBrowserClose').addEventListener('click',hide);
 dialog.addEventListener('click',e=>{if(e.target===dialog){hide();return;}const b=e.target.closest('[data-pb-choose]');if(!b)return;const [source,index]=b.dataset.pbChoose.split(':');const p=(source==='Factory'?catalog:source==='Creative'?creative:state.user).find(x=>String(x.id)===index);if(p)load(p);});
