@@ -60,5 +60,30 @@ replace('return fs_>=176400.?8:12; // CP28: 12 independent keys through 96 kHz, 
 #else
  return fs_>=176400.?8:12;
 #endif''','12-voice default for high-rate AUTO with safe manual-oversampling budget')
+replace('void Synth::voicePanic(){sustain_.fill(false);for(auto&v:voices_)if(v.active){v.held=v.sustained=false;v.released=true;v.envStage=3;}}',
+ '''void Synth::voicePanic(){sustain_.fill(false);for(auto&v:voices_)if(v.active){
+  v.held=v.sustained=false;v.released=true;v.envStage=3;v.fastPanicRelease=true;
+ }}''','panic ensures bounded release, not a stuck envelope')
+replace('voice->active=true;voice->released=false;voice->held=true;voice->sustained=false;',
+        'voice->active=true;voice->released=false;voice->held=true;voice->sustained=false;voice->fastPanicRelease=false;',
+        'clear fast release on voice reuse')
+replace('case 3:v.env*=blockRates_.voiceRelease;if(v.env<.000035){',
+        'case 3:v.env*=v.fastPanicRelease?blockRates_.panicRelease:blockRates_.voiceRelease;if(v.env<.000035){',
+        'bounded 120ms release for all-notes-off')
+replace('blockRates_.voiceRelease=std::exp(-7./(std::max(.01,get(3103))*srInternal));',
+        'blockRates_.voiceRelease=std::exp(-7./(std::max(.01,get(3103))*srInternal));\\n   blockRates_.panicRelease=std::exp(-1./(.012*srInternal));',
+        'precomputed panic release coefficient')
+h=a.root/'include/vitriol_dsp.hpp'
+header=h.read_text(encoding='utf-8')
+def replace_header(old,new):
+ global header
+ n=header.count(old)
+ if n!=1:raise RuntimeError(f'CP53 header: expected exactly one {old!r}, saw {n}')
+ header=header.replace(old,new)
+replace_header('bool active=false,released=false,held=false,sustained=false;',
+               'bool active=false,released=false,held=false,sustained=false,fastPanicRelease=false;')
+replace_header('double voiceDecay=0,voiceRelease=1,filterDecay=0',
+               'double voiceDecay=0,voiceRelease=1,panicRelease=1,filterDecay=0')
+h.write_text(header,encoding='utf-8')
 cpp.write_text(s,encoding='utf-8')
 print('CP53: clean Corpus, mix, and master with transparent JUCE output headroom')
