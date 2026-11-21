@@ -1,7 +1,7 @@
 name: Albedo CP52 Windows CLAP VST3 (verified CP51 sounds)
 on:
   push:
-    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser]
+    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety]
     paths:
       - '.github/workflows/albedo-cp51-morph-tree-windows.yml'
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
@@ -788,6 +788,17 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP41 compact Atlas regressed' }
           node --check Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
           if ($LASTEXITCODE -ne 0) { throw 'CP51 program sync script syntax failed' }
+      - name: Preserve reconstructed CP53 DSP source for voice/audio audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP53_Reconstructed_DSP_Audit
+          path: |
+            Albedo-Quintessential-Synth/src/vitriol_dsp.cpp
+            Albedo-Quintessential-Synth/include/vitriol_dsp.hpp
+            Albedo-Quintessential-Synth/include/vitriol_params.hpp
+            Albedo-Quintessential-Synth/include/AlbedoCellArp.inc
+          retention-days: 14
+          if-no-files-found: error
       - name: Build JUCE VST3 and CLAP plugins
         shell: pwsh
         run: |
