@@ -18,6 +18,13 @@
     '#presetBrowser .preset-browser-heading h2{font-size:23px!important}',
     '#presetBrowser .pb-filter-stack{display:none!important}',
     '#presetBrowser #albedo-cp52-workspace{display:flex;flex:1 1 auto;min-height:0;min-width:0;gap:0;overflow:hidden}',
+    '#presetBrowser .cp52-window-controls{display:flex;align-items:center;flex:0 0 auto;gap:4px;margin-left:auto}',
+    '#presetBrowser .cp52-window-controls button{display:flex;align-items:center;justify-content:center;min-width:32px;height:29px;padding:0 7px;border:1px solid #afbcac;border-radius:4px;background:linear-gradient(#faf5e6,#d8e5d8);color:#365748;font:800 11px Arial,sans-serif;cursor:pointer}',
+    '#presetBrowser .cp52-window-controls button:hover{background:#fff5df;border-color:#a28a5d}',
+    '#presetBrowser .cp52-window-size{font:700 10px Georgia,serif;min-width:79px;text-align:center;white-space:nowrap;color:#587569}',
+    '#presetBrowser .preset-browser-titlebar{min-width:0;gap:7px!important}',
+    '#presetBrowser .preset-browser-heading{min-width:0;flex:1}',
+    '#presetBrowser .preset-browser-titlebar #presetBrowserClose{flex:0 0 auto;min-width:56px}',
     '#presetBrowser #albedo-cp52-navigation{flex:0 0 clamp(166px,21%,240px);min-width:0;overflow-y:auto;overscroll-behavior:contain;border-right:1px solid #aab5a3;background:linear-gradient(145deg,#d8e3d6,#e8e7d6);padding:10px 8px;scrollbar-color:#a1b6a5 #d6e2d6}',
     '#presetBrowser .cp52-section{margin:0 0 14px}',
     '#presetBrowser .cp52-section h3{font:800 10px Arial,sans-serif;letter-spacing:.13em;color:#507160;padding:3px 6px 8px;margin:0}',
@@ -54,6 +61,41 @@
   navigation.setAttribute('aria-label','Preset library, families and instrument roles');
   workspace.append(navigation,result);
   panel.insertBefore(workspace,panel.querySelector('.preset-browser-footer'));
+  // CP52: explicit resizer controls stay visible while the modal is open.
+  // The original CP35 corner grip is hidden by an active modal, so it cannot
+  // be the user's only way to negotiate window size with Bitwig.
+  const titlebar=panel.querySelector('.preset-browser-titlebar');
+  const close=document.getElementById('presetBrowserClose');
+  const sizing=document.createElement('div');
+  sizing.className='cp52-window-controls';
+  sizing.setAttribute('role','group');
+  sizing.setAttribute('aria-label','Resize Albedo plugin window');
+  const sizeLabel=document.createElement('output');
+  sizeLabel.className='cp52-window-size';
+  sizeLabel.textContent='WINDOW';
+  sizing.appendChild(sizeLabel);
+  function requestSize(delta){
+    const controller=window.ALBEDO_CP35_WINDOW;
+    if(!controller?.requestSize){sizeLabel.textContent='HOST RESIZE';return;}
+    const g=controller.geometry;
+    const width=Math.max(720,Math.min(1500,Math.round((g.nativeWidth||g.width||1080)+delta)));
+    controller.requestSize(delta===0?1080:width);
+  }
+  for(const [label,title,step] of [['−','Reduce plugin window',-72],['FIT','Comfortable 1080 × 720 window',0],['+','Enlarge plugin window',72]]){
+    const button=document.createElement('button');
+    button.type='button';button.textContent=label;button.title=title;
+    button.setAttribute('aria-label',title);
+    button.addEventListener('click',()=>requestSize(step));
+    sizing.appendChild(button);
+  }
+  titlebar?.insertBefore(sizing,close);
+  function refreshWindowSize(){
+    const g=window.ALBEDO_CP35_WINDOW?.geometry;
+    if(g&&g.width>0&&g.height>0)sizeLabel.textContent=Math.round(g.nativeWidth||g.width)+' × '+Math.round(g.nativeHeight||g.height);
+  }
+  window.addEventListener('resize',refreshWindowSize,{passive:true});
+  window.__JUCE__?.backend?.addEventListener?.('albedoViewport',refreshWindowSize);
+  refreshWindowSize();
 
   const family=document.getElementById('pbFamily');
   const role=document.getElementById('pbRole');
@@ -104,6 +146,7 @@
     navigation.appendChild(section);
   }
   function refresh(){
+    refreshWindowSize();
     const items=currentItems();
     navigation.replaceChildren();
     const heading=document.createElement('div');
