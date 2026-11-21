@@ -42,7 +42,7 @@ $configure=@('-S',$juce,'-B',$target,'-G','Visual Studio 17 2022','-A','x64',
  "-DALBEDO_DSP_ROOT=$dsp","-DJUCE_WEBVIEW2_PACKAGE_LOCATION=$webview")
 & cmake @configure
 if($LASTEXITCODE -ne 0){throw 'CMake JUCE configuration failed'}
-& cmake --build $target --config Release --parallel 4 --target AlbedoNative_VST3 AlbedoNative_CLAP AlbedoArpTest AlbedoCP58AsioBlocks AlbedoCP53VoiceHifiTest AlbedoCP53OutputGuardTest
+& cmake --build $target --config Release --parallel 4 --target AlbedoNative_VST3 AlbedoNative_CLAP AlbedoPresetTaxonomyTest AlbedoCP36HifiDspTest AlbedoCP38CreativeAudioTest AlbedoRearFieldTest AlbedoTargetRenderer AlbedoArpTest AlbedoControlResponseTest AlbedoShapeAudition AlbedoViewportHost AlbedoCP53OutputGuardTest AlbedoCP53VoiceHifiTest AlbedoCP58AsioBlocks
 if($LASTEXITCODE -ne 0){throw 'CLAP/VST3 compile failed'}
 if(!$NoTests) {
  & ctest --test-dir $target -C Release --output-on-failure

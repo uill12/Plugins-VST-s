@@ -74,7 +74,7 @@ binroot=root/'Binaries'
 for release,source in [('CP58','Binaries58'),('CP57_rollback','Binaries57')]:
     copyall(inputs/source,binroot/release)
 assert len(list((binroot/'CP58').rglob('*.clap')))==1
-assert len(list((binroot/'CP58').rglob('*.vst3')))==1
+assert len([p for p in (binroot/'CP58').rglob('*.vst3') if p.is_file()])==1
 # Native QA and metadata reports (not a claim of hardware ASIO certification).
 qa=root/'QA'
 for report in ['ASIO_20_cursors','Presets192','PresetPairs','PCMQuality']:
