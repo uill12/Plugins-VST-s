@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(AlbedoJUCE VERSION 1.0.57 LANGUAGES C CXX RC)
+project(AlbedoJUCE VERSION 1.0.58 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -188,6 +188,16 @@ if(BUILD_TESTING AND WIN32)
   target_include_directories(AlbedoCP53VoiceHifiTest PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/Source" "${ALBEDO_DSP_ROOT}/include")
   add_test(NAME cp53_192_programs_hifi_note_lifecycle_and_high_rates COMMAND AlbedoCP53VoiceHifiTest)
+endif()
+
+if(BUILD_TESTING AND WIN32)
+  add_executable(AlbedoCP58AsioBlocks
+    tests/cp58_asio_blocks.cpp
+    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp")
+  target_compile_features(AlbedoCP58AsioBlocks PRIVATE cxx_std_20)
+  target_compile_definitions(AlbedoCP58AsioBlocks PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
+  target_include_directories(AlbedoCP58AsioBlocks PRIVATE "${ALBEDO_DSP_ROOT}/include")
+  add_test(NAME cp58_asio_realtime_block_sizes COMMAND AlbedoCP58AsioBlocks)
 endif()
 
 if(BUILD_TESTING AND WIN32)

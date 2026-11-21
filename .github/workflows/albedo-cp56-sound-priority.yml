@@ -1,7 +1,7 @@
-name: Albedo CP57 Tempo Sync + CP56 Window Fit QA
+name: Albedo CP58 ASIO Optimization + CP57 GUI Regression
 on:
   push:
-    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync]
+    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp]
   workflow_dispatch:
 permissions:
   contents: read
@@ -82,7 +82,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP57_Tempo_Sync_Viewport_GUI
+          name: Albedo_CP58_GUI_Window_Regression
           path: |
             qa-cp54-context/*.png
             qa-cp52-screenshots/*.png
