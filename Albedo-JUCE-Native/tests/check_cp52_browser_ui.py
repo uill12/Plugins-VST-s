@@ -46,6 +46,9 @@ with sync_playwright() as playwright:
             assert bounds["right"] <= width+2 and bounds["bottom"] <= height+2, (width,height,box,dimensions)
         assert dimensions["overflowX"] <= 3, (width,height,dimensions)
         assert dimensions["scrollable"], "Preset list must scroll vertically"
+        shots = root / "qa-cp52-screenshots"
+        shots.mkdir(exist_ok=True)
+        page.screenshot(path=str(shots / f"Albedo_CP52_{width}x{height}_browser.png"))
 
         # Window controls are available even while the preset browser is open.
         page.evaluate("""() => {
