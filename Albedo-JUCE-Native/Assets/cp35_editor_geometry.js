@@ -26,11 +26,11 @@
    // inside a significantly smaller granted host window. In unusual WebView2
    // embed/DPI cases root.clientWidth can describe the content layout instead
    // of the host client rectangle. Use the JUCE-reported host dimensions ONLY
-   // for large, unambiguous over-reporting (>16% on either axis).
+   // for large, unambiguous over-reporting (>16% on both axes).
    // Small disagreements are deliberately left alone: CP40 established that
    // always taking min(css, native) causes whitespace on normal Windows DPI.
    const hostValid=nativeW>=480 && nativeH>=320;
-   const mismatch=hostValid&&(w>nativeW*1.16 || h>nativeH*1.16);
+   const mismatch=hostValid&&(w>nativeW*1.16 && h>nativeH*1.16);
    if(mismatch){
      const hostRatio=nativeW/nativeH;
      if(hostRatio>1.35 && hostRatio<1.65){
