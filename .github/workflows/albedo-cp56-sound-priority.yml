@@ -1,0 +1,82 @@
+name: Albedo CP56 Sound-Impact Density + Window Fit QA
+on:
+  push:
+    branches: [albedo/cp56-sound-priority-density]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  edge-gui:
+    runs-on: windows-2022
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch verified CP51 factory catalog
+        uses: actions/download-artifact@v4
+        with:
+          name: Albedo_CP51_MorphTree_192_Generation_QA
+          repository: uill12/Plugins-VST-s
+          run-id: 44835756139
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: cp55-selected
+      - name: Expand the 192-preset catalog in canonical HTML
+        shell: pwsh
+        run: |
+          $bank=Get-ChildItem cp55-selected -Recurse -File -Filter morph_expansion_bank.json | Select-Object -First 1
+          if (!$bank) { throw 'CP51 verified catalog not found' }
+          python patches/cp51/patch_atlas_catalog.py ui/Albedo_CP30_CP22_Landscape_3x2.html "$($bank.FullName)" Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify native asset registration and JS syntax
+        shell: pwsh
+        run: |
+          node --check Albedo-JUCE-Native/Assets/cp54_essential_sound_layout.js
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --check Albedo-JUCE-Native/Assets/cp56_sound_priority.js
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node Albedo-JUCE-Native/tests/check_cp52_browser.cjs --expanded
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $cpp=Get-Content -Raw Albedo-JUCE-Native/Source/AlbedoWebViewEditor.cpp
+          $cmake=Get-Content -Raw Albedo-JUCE-Native/CMakeLists.txt
+          if (!$cpp.Contains('cp54_essential_sound_layout_js')) { throw 'CP54 resource handler missing' }
+          if (!$cmake.Contains('Assets/cp54_essential_sound_layout.js')) { throw 'CP54 embedded source missing' }
+          if (!$cpp.Contains('cp56_sound_priority_js')) { throw 'CP56 resource handler missing' }
+          if (!$cmake.Contains('Assets/cp56_sound_priority.js')) { throw 'CP56 embedded source missing' }
+      - name: Test native window geometry and morphogenic library in Edge
+        shell: pwsh
+        run: |
+          python -m pip install playwright --quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python Albedo-JUCE-Native/tests/check_cp39_layout.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python Albedo-JUCE-Native/tests/check_cp52_browser_ui.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python Albedo-JUCE-Native/tests/check_cp55_stage_visibility.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP55 all-four-sources / Corpus / lower FX stage-fit regression' }
+      - name: Test context popups and permanently visible sound controls in Edge
+        shell: pwsh
+        run: |
+          python -m pip install playwright --quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python Albedo-JUCE-Native/tests/check_cp54_essential_gui.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Test live CP56 stage control priorities and host fit
+        shell: pwsh
+        run: |
+          python Albedo-JUCE-Native/tests/check_cp56_sound_priority.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP56 live parameter controls or fit regression' }
+      - name: Publish contextual GUI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP56_Sound_Priority_Viewport_GUI
+          path: |
+            qa-cp54-context/*.png
+            qa-cp52-screenshots/*.png
+            qa-cp55-stage-fit/*.png
+            qa-cp56-sound-priority/*.png
+          if-no-files-found: ignore
