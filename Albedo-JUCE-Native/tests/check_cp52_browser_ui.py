@@ -29,6 +29,10 @@ with sync_playwright() as playwright:
         assert page.locator("#pbFactoryCount").inner_text() == "64"
         assert page.locator("#pbCreativeCount").inner_text() == "64"
         assert page.locator("#pbNewCount").inner_text() == "64"
+        # Tone Network Similar Permutation is for offline sound generation,
+        # not a visible similarity/idea-tree filter in the preset browser.
+        assert page.locator('[data-pb-sort="idea"]').count() == 0
+        assert page.locator("#pbSort option[value='idea']").count() == 0
         assert page.locator("#pbItems .pb-item").count() == 64
 
         dimensions = page.evaluate("""() => {
