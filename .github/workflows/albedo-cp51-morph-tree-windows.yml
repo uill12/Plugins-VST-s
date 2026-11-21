@@ -1,4 +1,4 @@
-name: Albedo CP52 Windows CLAP VST3 (verified CP51 sounds)
+name: Albedo CP53 HiFi Safe Voices Windows CLAP VST3
 on:
   push:
     branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety]
@@ -8,6 +8,7 @@ on:
       - 'Albedo-JUCE-Native/**'
       - 'patches/cp50/**'
       - 'patches/cp51/**'
+      - 'patches/cp53_*.py'
       - 'patches/cp15_apply_part*.txt'
       - 'patches/cp15_hotfix.py'
       - 'patches/cp16_part*.txt'
@@ -642,6 +643,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python patches/cp50/apply.py Albedo-Quintessential-Synth
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python patches/cp53_hifi_core.py --root Albedo-Quintessential-Synth
+          if ($LASTEXITCODE -ne 0) { throw 'CP53 high fidelity DSP core patch failed' }
           python patches/cp50/bank.py Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb
           if ($LASTEXITCODE -ne 0) { throw 'CP49 DSP integration failed' }
           python patches/cp51/material_qa.py Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb CP51_Material_Spectral_QA.json
@@ -802,7 +805,7 @@ jobs:
       - name: Build JUCE VST3 and CLAP plugins
         shell: pwsh
         run: |
-          cmake --build build-cp38-juce --config Release --target AlbedoNative_VST3 AlbedoNative_CLAP AlbedoPresetTaxonomyTest AlbedoCP36HifiDspTest AlbedoCP38CreativeAudioTest AlbedoRearFieldTest AlbedoTargetRenderer AlbedoArpTest AlbedoControlResponseTest AlbedoShapeAudition AlbedoViewportHost --parallel 4
+          cmake --build build-cp38-juce --config Release --target AlbedoNative_VST3 AlbedoNative_CLAP AlbedoPresetTaxonomyTest AlbedoCP36HifiDspTest AlbedoCP38CreativeAudioTest AlbedoRearFieldTest AlbedoTargetRenderer AlbedoArpTest AlbedoControlResponseTest AlbedoShapeAudition AlbedoViewportHost AlbedoCP53OutputGuardTest AlbedoCP53VoiceHifiTest --parallel 4
           if ($LASTEXITCODE -ne 0) { throw 'Native VST3/CLAP compile failed' }
       - name: Test native plugin and verify binary exports
         shell: pwsh
@@ -824,20 +827,32 @@ jobs:
           python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB2'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in VST3'; print('VST3 PCM24 32-material bank present')" $vst.FullName
           if ($LASTEXITCODE -ne 0) { throw 'VST3 sound bank resource missing' }
           New-Item -ItemType Directory -Path 'dist-cp38' -Force | Out-Null
-          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP52_NereidaBrowser_JUCE_WebView2.clap'
+          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP53_HiFi_SafeVoices_JUCE_WebView2.clap'
           $bundle=Get-ChildItem -Path build-cp38-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
           @(
-            'Checkpoint: Albedo CP52 responsive preset browser and window-size improvements',
-            'Sound bank: verified CP51 192 programs, no sound modifications',
+            'Checkpoint: Albedo CP53 HiFi sound clarity, true-peak guard and stuck-note safety',
+            'Preset parameters: CP51 192 programs, retained; DSP tonal processing upgraded for clarity',
             "Git SHA: $env:GITHUB_SHA",
             "GitHub Run: $env:GITHUB_RUN_ID",
             'Host plugin identifier and internal product name retained for DAW session compatibility',
-            'Windows: CLAP + VST3, WebView2, JUCE native',
-            'CP51 remains intact as rollback'
+            'Windows: CLAP + VST3, WebView2, JUCE native; 63-sample latency; 12 voices AUTO',
+            'CP51 and CP52 remain intact as rollback'
           ) | Set-Content -Path 'dist-cp38/CP52_BUILD_PROVENANCE.txt' -Encoding utf8
           Get-ChildItem 'dist-cp38' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
+      - name: CP53 emit 192-program HiFi and MIDI lifecycle QA report
+        shell: pwsh
+        run: |
+          $qa=Get-ChildItem build-cp38-juce -Recurse -File -Filter 'AlbedoCP53VoiceHifiTest.exe' | Select-Object -First 1
+          if (!$qa) { throw 'CP53 voice/HiFi test executable missing' }
+          & $qa.FullName | Tee-Object -FilePath 'CP53_DSP_QA.txt'
+          if ($LASTEXITCODE -ne 0) { throw 'CP53 192-program clarity/sustain regression' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP53_HiFi_DSP_192_Presets_QA
+          path: CP53_DSP_QA.txt
+          if-no-files-found: error
       - name: Compare all 18336 pairs of rendered preset outputs
         shell: pwsh
         run: |
@@ -868,7 +883,7 @@ jobs:
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP52_JUCE_NereidaBrowser_Windows_x64_CLAP_VST3
+          name: Albedo_CP53_HiFi_SafeVoices_Windows_x64_CLAP_VST3
           path: dist-cp38/*
           if-no-files-found: error
       - name: Package and exercise Windows target reconstruction
