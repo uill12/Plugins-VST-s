@@ -1,7 +1,7 @@
 name: Albedo CP58 ASIO Realtime Windows CLAP VST3
 on:
   push:
-    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp]
+    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp58r1-bounce-audio]
     paths:
       - '.github/workflows/albedo-cp51-morph-tree-windows.yml'
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
@@ -647,6 +647,8 @@ jobs:
           python patches/cp53_hifi_core.py --root Albedo-Quintessential-Synth
           if ($LASTEXITCODE -ne 0) { throw 'CP53 high fidelity DSP core patch failed' }
           python patches/cp58_realtime_cache.py --root Albedo-Quintessential-Synth
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python patches/cp58r1_material.py Albedo-Quintessential-Synth
           if ($LASTEXITCODE -ne 0) { throw 'CP58 realtime source cache patch failed' }
           python patches/cp50/bank.py Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb
           if ($LASTEXITCODE -ne 0) { throw 'CP49 DSP integration failed' }
@@ -831,17 +833,17 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CLAP export missing' }
           python Albedo-Quintessential-Synth/tools/verify_pe_exports.py $vst.FullName --require GetPluginFactory
           if ($LASTEXITCODE -ne 0) { throw 'VST3 export missing' }
-          python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB2'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in CLAP'; print('CLAP PCM24 32-material bank present')" $clap.FullName
-          if ($LASTEXITCODE -ne 0) { throw 'CLAP sound bank resource missing' }
-          python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB2'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in VST3'; print('VST3 PCM24 32-material bank present')" $vst.FullName
-          if ($LASTEXITCODE -ne 0) { throw 'VST3 sound bank resource missing' }
+          python -m pip install pefile
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python Albedo-JUCE-Native/tests/cp58r1_bank_check.py Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb $clap.FullName $vst.FullName
+          if ($LASTEXITCODE -ne 0) { throw 'Final plugin PCM resource 102 mismatch' }
           New-Item -ItemType Directory -Path 'dist-cp38' -Force | Out-Null
-          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP58_ASIO_Optimized_WebView2.clap'
+          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP58R1_Bounce_Audio.clap'
           $bundle=Get-ChildItem -Path build-cp38-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
           @(
-            'Checkpoint: Albedo CP58 bit-identical realtime DSP CPU optimization; CP57 DAW sync and CP56 GUI preserved',
+            'Checkpoint: Albedo CP58R1 corrected limiter, material playback and resource linkage; CP57 DAW sync and CP56 GUI preserved',
             'Preset parameters: CP51 192 programs, retained; DSP tonal processing upgraded for clarity',
             "Git SHA: $env:GITHUB_SHA",
             "GitHub Run: $env:GITHUB_RUN_ID",
@@ -906,7 +908,7 @@ jobs:
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP58_ASIO_HiFi_Windows_x64_CLAP_VST3
+          name: Albedo_CP58R1_Bounce_Audio_Windows_x64_CLAP_VST3
           path: dist-cp38/*
           if-no-files-found: error
       - name: Package and exercise Windows target reconstruction

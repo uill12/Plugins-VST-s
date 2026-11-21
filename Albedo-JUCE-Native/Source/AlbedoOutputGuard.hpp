@@ -47,11 +47,12 @@ public:
 
             const double peak=std::max(estimatePeak(l,historyL),estimatePeak(r,historyR));
             // Linked sliding peak maximum; monotonic deque O(1) amortized.
+            // Expire the oldest sample before its ring slot can be reused.
+            while(back>front && queueIndex[front%lookahead]+lookahead<=clock) ++front;
             while(back>front && queuePeak[(back-1)%lookahead]<=peak) --back;
             queuePeak[back%lookahead]=peak;
             queueIndex[back%lookahead]=clock;
             ++back;
-            while(back>front && queueIndex[front%lookahead]+lookahead<=clock) ++front;
             const double maximum=queuePeak[front%lookahead];
             const double target=maximum>ceiling ? ceiling/maximum : 1.0;
             gain=target<gain ? target : releasePole*gain+(1.0-releasePole)*target;
