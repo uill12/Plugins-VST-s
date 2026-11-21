@@ -105,6 +105,10 @@ endif()
 # Complete factory-taxonomy contract: standalone C++20, independent of JUCE/UI.
 include(CTest)
 if(BUILD_TESTING)
+  add_executable(AlbedoCP53OutputGuardTest tests/cp53_output_guard.cpp)
+  target_include_directories(AlbedoCP53OutputGuardTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Source")
+  target_compile_features(AlbedoCP53OutputGuardTest PRIVATE cxx_std_20)
+  add_test(NAME cp53_true_peak_guard_and_float64_integrity COMMAND AlbedoCP53OutputGuardTest)
   add_executable(AlbedoPresetTaxonomyTest tests/preset_taxonomy_compile.cpp)
   target_compile_features(AlbedoPresetTaxonomyTest PRIVATE cxx_std_20)
   target_include_directories(AlbedoPresetTaxonomyTest PRIVATE
