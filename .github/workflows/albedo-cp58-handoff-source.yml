@@ -1,0 +1,70 @@
+name: Albedo CP58 Portable Handoff Full Source and Dependencies
+
+on:
+  push:
+    branches: [albedo/cp58-asio-realtime-dsp]
+    paths:
+      - '.github/workflows/albedo-cp58-handoff-source.yml'
+      - 'handoff/cp58/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  portable-source:
+    name: package-verified-cp58-source-and-dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - name: Check out exact handoff source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Prepare Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deterministic bank generator dependencies
+        run: python -m pip install --disable-pip-version-check numpy scipy
+      - name: Retrieve verified CP58 binaries source snapshots and sound selection
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _handoff_inputs/{DSP,SelectedPresets,Binaries58,Binaries57,ASIO_20_cursors,Presets192,PresetPairs,PCMQuality}
+          gh run download 44879814659 -R uill12/Plugins-VST-s -n Albedo_CP58_Reconstructed_DSP_Audit -D _handoff_inputs/DSP
+          gh run download 44879814659 -R uill12/Plugins-VST-s -n Albedo_CP51_MorphTree_192_Generation_QA -D _handoff_inputs/SelectedPresets
+          gh run download 44879814659 -R uill12/Plugins-VST-s -n Albedo_CP58_ASIO_HiFi_Windows_x64_CLAP_VST3 -D _handoff_inputs/Binaries58
+          gh run download 44877299798 -R uill12/Plugins-VST-s -n Albedo_CP57_TempoSync_HiFi_Windows_x64_CLAP_VST3 -D _handoff_inputs/Binaries57
+          gh run download 44879814659 -R uill12/Plugins-VST-s -n Albedo_CP58_ASIO_64_1024_4Rates_QA -D _handoff_inputs/ASIO_20_cursors
+          gh run download 44879814659 -R uill12/Plugins-VST-s -n Albedo_CP58_HiFi_DSP_192_Presets_QA -D _handoff_inputs/Presets192
+          gh run download 44879814659 -R uill12/Plugins-VST-s -n Albedo_CP51_192_Output_Pairs -D _handoff_inputs/PresetPairs
+          gh run download 44879814659 -R uill12/Plugins-VST-s -n Albedo_CP51_OriginalMaterial_PCM24_Quality -D _handoff_inputs/PCMQuality
+          test -s _handoff_inputs/DSP/src/vitriol_dsp.cpp
+      - name: Bundle source dependencies and pinned WebView2 SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _handoff_deps/cp33-webview2-sdk/Microsoft.Web.WebView2.1.0.4258.31
+          git clone --depth 1 --branch 8.0.17-security https://github.com/juce-framework/JUCE.git _handoff_deps/JUCE
+          git clone --depth 1 --recurse-submodules https://github.com/free-audio/clap-juce-extensions.git _handoff_deps/clap-juce-extensions
+          curl --fail --location --retry 4 --retry-delay 3 https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/1.0.4258.31/microsoft.web.webview2.1.0.4258.31.nupkg --output _handoff_webview2.nupkg
+          python -m zipfile -e _handoff_webview2.nupkg _handoff_deps/cp33-webview2-sdk/Microsoft.Web.WebView2.1.0.4258.31
+          test -s _handoff_deps/cp33-webview2-sdk/Microsoft.Web.WebView2.1.0.4258.31/build/native/x64/WebView2LoaderStatic.lib
+          test -s _handoff_deps/clap-juce-extensions/clap-libs/clap/CMakeLists.txt
+      - name: Construct and verify complete handoff archive
+        run: |
+          python handoff/cp58/build_bundle.py
+          test -s _handoff_export/Albedo_CP58_Complete_Source_Dependencies_Handoff.zip
+          python -c "from zipfile import ZipFile; p='_handoff_export/Albedo_CP58_Complete_Source_Dependencies_Handoff.zip'; z=ZipFile(p); assert z.testzip() is None; assert len(z.namelist())>500; print('Archive validated',len(z.namelist()))"
+      - name: Publish complete source and vendor dependencies
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP58_Complete_Source_Dependencies_Handoff
+          path: _handoff_export/Albedo_CP58_Complete_Source_Dependencies_Handoff.zip
+          retention-days: 90
+          compression-level: 0
+          if-no-files-found: error
