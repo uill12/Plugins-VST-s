@@ -87,7 +87,7 @@ with sync_playwright() as playwright:
         page.locator('#pbItems .pb-item').first.click()
         assert dialog.is_visible()
         assert page.locator('#pbItems .pb-item.selected').count() >= 1
-        page.get_by_role("tab", name="NEW SOUNDS").click()
+        page.get_by_role("tab", name="MORPHOGENIC FIELDS").click()
         assert page.locator("#pbItems .pb-item").count() == 64
         page.locator("#albedo-cp52-navigation .cp52-category").filter(has_text="Bass").first.click()
         count = page.locator("#pbItems .pb-item").count()
