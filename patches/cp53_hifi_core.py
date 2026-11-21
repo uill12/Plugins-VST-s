@@ -51,5 +51,14 @@ replace('l[i]=static_cast<Sample>(clamp(x,-1,1));r[i]=static_cast<Sample>(clamp(
    l[i]=static_cast<Sample>(clamp(x,-1,1));r[i]=static_cast<Sample>(clamp(y,-1,1));
 #endif
    clock_++;''','master hard clip before JUCE lookahead')
+replace('return fs_>=176400.?8:12; // CP28: 12 independent keys through 96 kHz, legacy 8-voice cap at 176.4/192 kHz.', '''#if defined(ALBEDO_CP53_TRANSPARENT_OUTPUT)
+ // AUTO high-rate audio is already rendered internally at half the host rate.
+ // Budget based on actual DSP workload, not an outdated host-rate threshold.
+ const double internal=fs_*oversamplingFactor()*
+     ((fs_>=176400. && int(get(9002))==0) ? .5 : 1.);
+ return internal>240000.?8:12;
+#else
+ return fs_>=176400.?8:12;
+#endif''','12-voice default for high-rate AUTO with safe manual-oversampling budget')
 cpp.write_text(s,encoding='utf-8')
 print('CP53: clean Corpus, mix, and master with transparent JUCE output headroom')
