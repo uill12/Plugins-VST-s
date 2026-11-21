@@ -87,6 +87,7 @@ style.textContent=[
 '#cp54Popover .cp54-original .callrow label{font:700 10px Arial,sans-serif}',
 '#cp54Popover .cp54-original .motion-controls{display:flex;justify-content:space-around;gap:6px}',
 '#cp54Popover button.tiny-button,#cp54Popover button.add-route{border:1px solid #a5b8a2;border-radius:4px;padding:5px 7px;background:#e8edde;color:#3d5f4c;cursor:pointer}',
+'#cp54Popover .cp54-keytrack{display:block;margin:9px 0;padding:7px 11px;font:800 10px Arial,sans-serif;letter-spacing:.04em}',
 '#cp54Popover .cp54-choice{display:flex;align-items:center;gap:8px;margin:7px 0}',
 '#cp54Popover .cp54-choice label{min-width:88px;font:700 10px Arial,sans-serif;color:#466653}',
 '#cp54Popover .cp54-choice select{flex:1;min-width:0;padding:5px;border:1px solid #adbea8;border-radius:4px;background:#f7f2e2;color:#375b46}',
@@ -251,6 +252,22 @@ function sectionSource(){
  heading('Selected oscillator character');
  cloned(['#engineKnobs>.param:nth-child(3)','#engineKnobs>.param:nth-child(4)',
  '#layerKnobs>.param:nth-child(1)','#layerKnobs>.param:nth-child(2)','#layerKnobs>.param:nth-child(3)']);
+ // Keyboard tracking is a voice-critical switch. Keep one authoritative
+ // HTML/native state and make it accessible beside the other source refinements.
+ const keytrack=$('#keytrack');
+ if(keytrack){
+  const toggle=document.createElement('button');
+  toggle.type='button';toggle.className='tiny-button cp54-keytrack';
+  toggle.setAttribute('aria-label','Keyboard tracking for selected oscillator');
+  const sync=()=>{
+   const enabled=api.state.engines[api.state.selected].keytrack;
+   toggle.textContent=enabled?'KEYTRACK ON':'FREE PITCH';
+   toggle.setAttribute('aria-pressed',String(enabled));
+  };
+  sync();
+  toggle.addEventListener('click',()=>{keytrack.click();sync()});
+  body.appendChild(toggle);
+ }
  const base=1000+32*api.state.selected;
  heading('Synthesis-specific options');
  const method=api.state.engines[api.state.selected].method.split(' / ')[0];
