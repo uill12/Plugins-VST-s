@@ -37,8 +37,8 @@ with sync_playwright() as p:
         assert page.evaluate("window.ALBEDO_CP54_ESSENTIAL.advancedModeRemoved")
         for selector,n in [
             ("#engineKnobs>.param",2),("#macros>.param",4),
-            ("#filterKnobsA>.param",2),("#filterKnobsB>.param",2),
-            ("#envKnobs>.param",2)
+            ("#filterKnobsA>.param",3),("#filterKnobsB>.param",3),
+            ("#envKnobs>.param",3)
         ]:
             shown=page.locator(selector).evaluate_all(
                 "a=>a.filter(x=>getComputedStyle(x).display!=='none').length")
@@ -86,8 +86,10 @@ with sync_playwright() as p:
         close_popup()
 
         open_popup("filter")
-        for key in ("filterAdrive","filterBdrive","envDecay","envSustain"):
+        for key in ("envDecay",):
             assert page.locator(f'#cp54Popover .dial[data-key="{key}"]').count()==1,key
+        assert page.locator("#page #filterKnobsA>.param:nth-child(3)").is_visible()
+        assert page.locator("#page #envKnobs>.param:nth-child(3)").is_visible()
         assert page.locator("#cp54Popover #pitchMode").count()==1
         assert page.locator('#cp54Popover [data-cp54-id="3120"]').count()==1
         close_popup()
