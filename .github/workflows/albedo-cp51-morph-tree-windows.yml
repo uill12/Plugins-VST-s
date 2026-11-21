@@ -1,4 +1,4 @@
-name: Albedo CP51 Morph Tree 192 Windows CLAP VST3
+name: Albedo CP52 Windows CLAP VST3 (verified CP51 sounds)
 on:
   push:
     branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser]
@@ -51,6 +51,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 jobs:
   windows-binaries:
     runs-on: windows-2022
@@ -744,15 +745,26 @@ jobs:
           $albedoSourceDir=("$PWD/Albedo-Quintessential-Synth").Replace([char]92, [char]47)
           cmake -S Albedo-JUCE-Native -B build-cp38-juce -G "Visual Studio 17 2022" -A x64 -DALBEDO_BUILD_CLAP=ON -DBUILD_TESTING=ON -DALBEDO_DSP_ROOT="$albedoSourceDir" -DJUCE_WEBVIEW2_PACKAGE_LOCATION="$PWD/cp33-webview2-sdk"
           if ($LASTEXITCODE -ne 0) { throw 'JUCE Windows CMake configuration failed' }
-      - name: CP51 render morph permutations, select distinct voices and calibrate oscillator/master levels
+      - name: Fetch previously verified CP51 192-program sound selection (do not regenerate sound)
+        uses: actions/download-artifact@v4
+        with:
+          name: Albedo_CP51_MorphTree_192_Generation_QA
+          repository: uill12/Plugins-VST-s
+          run-id: 44835756139
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: cp51-selected
+      - name: CP52 use sound-identical verified CP51 selection, regenerate only native headers and GUI
         shell: pwsh
         run: |
-          cmake --build build-cp38-juce --config Release --target AlbedoTargetRenderer --parallel 4
-          if ($LASTEXITCODE -ne 0) { throw 'CP51 calibration renderer build failed' }
-          $renderer=(Get-ChildItem build-cp38-juce -Recurse -Filter AlbedoTargetRenderer.exe | Select-Object -First 1).FullName
-          if (!$renderer) { throw 'No CP51 renderer' }
-          python patches/cp51/select_morph.py --candidates cp51-candidates --renderer "$renderer" --out cp51-selected
-          if ($LASTEXITCODE -ne 0) { throw 'CP51 render-based diversity/amp selection failed' }
+          $required=@('material_factory_bank.json','recursive_forms_bank.json','morph_expansion_bank.json','morph_selection_report.json','cp51_existing_preset_regeneration.json')
+          foreach ($name in $required) {
+            $found=Get-ChildItem cp51-selected -File -Recurse -Filter $name | Select-Object -First 1
+            if (!$found) { throw "CP51 verified source bank missing: $name" }
+            if ($found.DirectoryName -ne (Resolve-Path cp51-selected).Path) {
+              Copy-Item -LiteralPath $found.FullName -Destination "cp51-selected/$name" -Force
+            }
+          }
+          Write-Host 'Reusing exactly the verified 192 CP51 programs, without DSP re-selection'
           python Albedo-JUCE-Native/tests/check_cp51_morph.py --metadata cp51-selected --selected
           if ($LASTEXITCODE -ne 0) { throw 'CP51 selected 192-preset audit failed' }
           python Albedo-JUCE-Native/tests/check_cp51_regenerated_existing.py --original cp51-original-128 --updated cp51-selected --selected
@@ -801,10 +813,19 @@ jobs:
           python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB2'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in VST3'; print('VST3 PCM24 32-material bank present')" $vst.FullName
           if ($LASTEXITCODE -ne 0) { throw 'VST3 sound bank resource missing' }
           New-Item -ItemType Directory -Path 'dist-cp38' -Force | Out-Null
-          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP51_MorphTree_JUCE_WebView2.clap'
+          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP52_NereidaBrowser_JUCE_WebView2.clap'
           $bundle=Get-ChildItem -Path build-cp38-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
+          @(
+            'Checkpoint: Albedo CP52 responsive preset browser and window-size improvements',
+            'Sound bank: verified CP51 192 programs, no sound modifications',
+            "Git SHA: $env:GITHUB_SHA",
+            "GitHub Run: $env:GITHUB_RUN_ID",
+            'Host plugin identifier and internal product name retained for DAW session compatibility',
+            'Windows: CLAP + VST3, WebView2, JUCE native',
+            'CP51 remains intact as rollback'
+          ) | Set-Content -Path 'dist-cp38/CP52_BUILD_PROVENANCE.txt' -Encoding utf8
           Get-ChildItem 'dist-cp38' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
       - name: Compare all 18336 pairs of rendered preset outputs
         shell: pwsh
@@ -836,7 +857,7 @@ jobs:
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP51_MorphTree_192_Windows_x64_CLAP_VST3
+          name: Albedo_CP52_JUCE_NereidaBrowser_Windows_x64_CLAP_VST3
           path: dist-cp38/*
           if-no-files-found: error
       - name: Package and exercise Windows target reconstruction
