@@ -76,6 +76,27 @@ replace('case 3:v.env*=blockRates_.voiceRelease;if(v.env<.000035){',
 replace('blockRates_.voiceRelease=std::exp(-7./(std::max(.01,get(3103))*srInternal));',
         'blockRates_.voiceRelease=std::exp(-7./(std::max(.01,get(3103))*srInternal));\n   blockRates_.panicRelease=std::exp(-1./(.012*srInternal));',
         'precomputed panic release coefficient')
+# CP53: cache unison pitch ratios once per host audio chunk. The original
+# per-voice/per-sample pow(2,shift) could execute millions of times per second
+# in wide, twelve-note presets. This preserves the exact relative detune map.
+replace('  double detune=get(1000+e*32+12),spread=get(1000+e*32+13)*.01,side=0,sides=0;',
+        '  double spread=get(1000+e*32+13)*.01,side=0,sides=0;',
+        'cache unison detune')
+replace('    double shift=position*detune/1200.;\\n    double f=freq*std::pow(2.,shift);',
+        '    const double f=freq*unisonRatios_[e][u];',
+        'eliminate unison pow inside every sample')
+replace(' blockRates_.driveGain[0]=db(get(3002));blockRates_.driveGain[1]=db(get(3005));',
+ ''' blockRates_.driveGain[0]=db(get(3002));blockRates_.driveGain[1]=db(get(3005));
+ // One cache refresh per audio chunk, with the same per-unison spread map.
+ for(int e=0;e<4;++e){
+  const int uni=std::clamp(int(get(1000+32*e+11)),1,8);
+  const double detune=get(1000+32*e+12)/1200.;
+  unisonRatios_[e][0]=1.;
+  for(int u=1;u<uni;++u){
+   const double position=(u%2?1.:-1.)*double((u+1)/2)/double(uni/2);
+   unisonRatios_[e][u]=std::exp2(position*detune);
+  }
+ }''','once-per-block unison detune cache')
 h=args.root/'include/vitriol_dsp.hpp'
 header=h.read_text(encoding='utf-8')
 def replace_header(old,new):
@@ -87,6 +108,9 @@ replace_header('bool active=false,released=false,held=false,sustained=false;',
                'bool active=false,released=false,held=false,sustained=false,fastPanicRelease=false;')
 replace_header('double voiceDecay=0,voiceRelease=1,filterDecay=0',
                'double voiceDecay=0,voiceRelease=1,panicRelease=1,filterDecay=0')
+replace_header(' std::array<std::array<double,2>,2049> panLaw_{};',
+ ''' std::array<std::array<double,2>,2049> panLaw_{};
+ std::array<std::array<double,8>,4> unisonRatios_{};''')
 h.write_text(header,encoding='utf-8')
 cpp.write_text(s,encoding='utf-8')
 print('CP53: clean Corpus, mix, and master with transparent JUCE output headroom')
