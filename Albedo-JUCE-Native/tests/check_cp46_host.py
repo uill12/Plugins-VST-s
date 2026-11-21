@@ -65,6 +65,51 @@ def main():
                 assert page.locator('#presetBrowser').is_visible()
                 page.keyboard.press('Escape')
                 print('Compiled CLAP physical client and editor match',w,h)
+            # CP52: use the compiled WebView2 -> JUCE -> CLAP host path,
+            # rather than only checking mocked browser resize events.
+            page.wait_for_function('() => !!window.ALBEDO_CP52_BROWSER',timeout=15000)
+            page.locator('#presetBrowseOpen').click()
+            assert page.locator('#presetBrowser').is_visible()
+            def viewport_width():
+                return page.evaluate('document.documentElement.clientWidth')
+            before=viewport_width()
+            page.locator('.cp52-window-controls button[aria-label="Reduce plugin window"]').click()
+            page.wait_for_function(
+                'before => document.documentElement.clientWidth <= before-24',
+                arg=before,timeout=20000)
+            smaller=viewport_width()
+            page.locator('.cp52-window-controls button[aria-label="Enlarge plugin window"]').click()
+            page.wait_for_function(
+                'smaller => document.documentElement.clientWidth >= smaller+24',
+                arg=smaller,timeout=20000)
+            page.locator('.cp52-window-controls button[aria-label="Comfortable 1080 × 720 window"]').click()
+            page.wait_for_function("""() => {
+                const box=document.querySelector('#presetBrowser .preset-browser-panel').getBoundingClientRect();
+                return box.left >= -2 && box.top >= -2
+                    && box.right <= document.documentElement.clientWidth+2
+                    && box.bottom <= document.documentElement.clientHeight+2;
+            }""",timeout=10000)
+            # The three CP51 library boundaries must reach the compiled
+            # processor through the real indexed factory-program loader.
+            page.evaluate("""() => {
+                window.cp52ProgramEvents=[];
+                window.__JUCE__.backend.addEventListener('albedoProgram',p=>
+                    window.cp52ProgramEvents.push(Number(p)));
+            }""")
+            for library,selector,program in [
+                ('Factory','Factory:1',1),
+                ('Creative','Creative:127',127),
+                ('New','New:191',191)
+            ]:
+                page.locator('[data-collection="'+library+'"]').click()
+                page.locator('[data-pb-choose="'+selector+'"]').click()
+                page.wait_for_function('program => window.cp52ProgramEvents.includes(program)',
+                                       arg=program,timeout=10000)
+                assert page.locator('#presetBrowser').is_visible(), (
+                    'CP52 audition browser must remain open',library)
+            page.keyboard.press('Escape')
+            assert not page.locator('#presetBrowser').is_visible()
+            print('CP52 compiled CLAP resize buttons, modal clipping, 3 bank boundaries passed')
             page.evaluate("""() => {
                 window.cp47Echo = {};
                 window.__JUCE__.backend.addEventListener('albedoUpdate',csv=>{
