@@ -121,8 +121,12 @@ with sync_playwright() as p:
         # receives the event. Verify the real native bridge dispatches it.
         page.evaluate("""() => {
             window.cp54ArpDispatches=[];
-            const native=window.ALBEDO_NATIVE_CP27;
-            const original=native.onExtraParam;
+            // Standalone HTML QA has no JUCE backend. Install a recording
+            // substitute so we can verify that the DOM delegates ARP events
+            // toward the same native interface present in compiled WebView2.
+            const native=window.ALBEDO_NATIVE_CP27 ||= {};
+            const original=typeof native.onExtraParam==='function'
+                ? native.onExtraParam : () => {};
             native.onExtraParam=function(id,value){
                 window.cp54ArpDispatches.push([id,value]);
                 return original.call(native,id,value);
