@@ -71,6 +71,13 @@ with sync_playwright() as p:
         open_popup("source")
         assert page.locator('#cp54Popover .dial[data-key="engine:2"]').count()==1
         assert page.locator('#cp54Popover [data-cp54-id="1017"]').count()==1
+        keytrack=page.locator("#cp54Popover .cp54-keytrack")
+        assert keytrack.is_visible()
+        before_tracking=page.evaluate("window.ALBEDO_CP04.state.engines[0].keytrack")
+        keytrack.click()
+        assert page.evaluate("window.ALBEDO_CP04.state.engines[0].keytrack")!=before_tracking
+        keytrack.click()
+        assert page.evaluate("window.ALBEDO_CP04.state.engines[0].keytrack")==before_tracking
         native_before=page.evaluate("window.ALBEDO_CP04.state.cp04[1017]")
         dial=page.locator('#cp54Popover .cp54-rotary[data-cp54-id="1017"]')
         dial.scroll_into_view_if_needed()
