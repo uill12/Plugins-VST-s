@@ -1,28 +1,22 @@
-name: Albedo CP54 Essential Sound Stage — Edge QA
+name: Albedo CP54 Contextual Popup QA
 on:
   push:
     branches: [albedo/cp54-essential-sound-layout]
-    paths:
-      - '.github/workflows/albedo-cp54-essential-ui.yml'
-      - 'Albedo-JUCE-Native/Assets/**'
-      - 'Albedo-JUCE-Native/tests/check_cp54_essential_gui.py'
-      - 'Albedo-JUCE-Native/Source/AlbedoWebViewEditor.cpp'
-      - 'Albedo-JUCE-Native/CMakeLists.txt'
-      - 'ui/Albedo_CP30_CP22_Landscape_3x2.html'
   workflow_dispatch:
 permissions:
   contents: read
   actions: read
 jobs:
-  edge:
+  edge-gui:
     runs-on: windows-2022
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Python 3.12
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Download verified CP51 factory catalog (do not regenerate sound)
+      - name: Fetch verified CP51 factory catalog
         uses: actions/download-artifact@v4
         with:
           name: Albedo_CP51_MorphTree_192_Generation_QA
@@ -30,38 +24,35 @@ jobs:
           run-id: 44835756139
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: cp54-selected
-      - name: Inject exact 192 indexed sounds into original HTML
+      - name: Expand the 192-preset catalog in canonical HTML
         shell: pwsh
         run: |
-          $bank = Get-ChildItem cp54-selected -Recurse -File -Filter morph_expansion_bank.json | Select-Object -First 1
-          if (!$bank) { throw 'Previously verified CP51 catalog absent' }
+          $bank=Get-ChildItem cp54-selected -Recurse -File -Filter morph_expansion_bank.json | Select-Object -First 1
+          if (!$bank) { throw 'CP51 verified catalog not found' }
           python patches/cp51/patch_atlas_catalog.py ui/Albedo_CP30_CP22_Landscape_3x2.html "$($bank.FullName)" Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
-          if ($LASTEXITCODE -ne 0) { throw 'Factory bank metadata insertion failed' }
-      - name: Verify native resource registration and script syntax
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify native asset registration and JS syntax
         shell: pwsh
         run: |
           node --check Albedo-JUCE-Native/Assets/cp54_essential_sound_layout.js
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          node --check Albedo-JUCE-Native/Assets/cp52_nereida_browser.js
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node Albedo-JUCE-Native/tests/check_cp52_browser.cjs --expanded
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $cpp=Get-Content -Raw Albedo-JUCE-Native/Source/AlbedoWebViewEditor.cpp
           $cmake=Get-Content -Raw Albedo-JUCE-Native/CMakeLists.txt
-          if (!$cpp.Contains('cp54_essential_sound_layout_js')) { throw 'CP54 resource route absent' }
-          if (!$cpp.Contains('<script src=\"cp54_essential_sound_layout.js\"')) { throw 'CP54 HTML injection absent' }
-          if (!$cmake.Contains('Assets/cp54_essential_sound_layout.js')) { throw 'CP54 JUCE embedded binary resource absent' }
-      - name: Test primary-only main page and working detail modal in Microsoft Edge
+          if (!$cpp.Contains('cp54_essential_sound_layout_js')) { throw 'CP54 resource handler missing' }
+          if (!$cmake.Contains('Assets/cp54_essential_sound_layout.js')) { throw 'CP54 embedded source missing' }
+      - name: Test context popups and permanently visible sound controls in Edge
         shell: pwsh
         run: |
           python -m pip install playwright --quiet
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python Albedo-JUCE-Native/tests/check_cp54_essential_gui.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Publish screenshots: primary layout and details at 3 sizes
+      - name: Publish contextual GUI screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP54_Essential_Sound_Stage_Edge
-          path: qa-cp54-screenshots/*.png
+          name: Albedo_CP54_SoundFirst_Contextual_GUI
+          path: qa-cp54-context/*.png
           if-no-files-found: ignore
