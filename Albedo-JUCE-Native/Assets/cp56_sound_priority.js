@@ -30,6 +30,8 @@ const css=[
 'html.albedo-fit #page #macros .dial:after{height:11px!important;top:4px!important;transform-origin:50% 15px!important}',
 'html.albedo-fit #page #macros .param-label{font-size:9px!important;line-height:1.06!important;margin-top:2px!important}',
 'html.albedo-fit #page #macros .param-value{font-size:10px!important}',
+'html.albedo-fit #page #cp56Route{width:86px!important;max-width:86px!important;height:23px!important;min-height:23px!important;margin:0!important;padding:1px 3px!important;font:800 8.8px Arial,sans-serif;background:#e4ebdc;color:#3c654f;border:1px solid #9eb4a0;border-radius:4px}',
+'html.albedo-fit #page .shape-panel .shape-block:nth-child(3) .shape-head{grid-template-columns:minmax(0,1fr) 86px!important}',
 'html.albedo-fit #page #envKnobs{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:1px!important;height:64px!important;max-height:64px!important}',
 'html.albedo-fit #page #envKnobs>.param:nth-child(2){display:flex!important}',
 'html.albedo-fit #page #envKnobs>.param{min-height:62px!important;max-height:64px!important}',
@@ -128,6 +130,36 @@ function syncSource(){
 insert(env,[[3120,'A ENV ±'],[3121,'B ENV ±'],[3122,'ENV ATTACK'],[3123,'ENV DECAY']]);
 insert(arp,[[6023,'GATE'],[6022,'CA ACCENT'],[6026,'SWING'],[6025,'OCTAVES']]);
 syncSource();
+// Visual order is audible influence, not factory ID order. DOM nodes are reused:
+// the original dial listeners and JUCE automation remain fully intact.
+const macros=$('#macros');
+function orderMacros(){
+ if(!macros||macros.children.length!==7)return;
+ const order=['bright','contour','impact','exchange','width','growth','memory'];
+ const nodes=[...macros.children];
+ const byKey=new Map(nodes.map(el=>[el.querySelector('.dial[data-key]')?.dataset.key,el]));
+ const sorted=order.map(k=>byKey.get('macro:'+k));
+ if(sorted.some(x=>!x)||sorted.every((x,i)=>x===nodes[i]))return;
+ macros.append(...sorted);
+}
+orderMacros();
+if(macros)new MutationObserver(orderMacros).observe(macros,{childList:true});
+// Filter topology radically changes timbre: make this existing DSP selector primary.
+const route=$('#filterRoute'),bodyHead=$('.shape-panel .shape-block:nth-child(3) .shape-head');
+let routeView=null;
+if(route&&bodyHead){
+ routeView=document.createElement('select');routeView.id='cp56Route';
+ routeView.setAttribute('aria-label','Filter routing');
+ routeView.title='Filter routing · parallel / serial A→B / serial B→A';
+ for(const option of route.options)routeView.add(option.cloneNode(true));
+ routeView.value=route.value;
+ routeView.addEventListener('change',()=>{
+  route.value=routeView.value;
+  route.dispatchEvent(new Event('change',{bubbles:true}));
+ });
+ bodyHead.appendChild(routeView);
+ route.addEventListener('change',()=>{routeView.value=route.value});
+}
 const fx=$('#fx'),fxMap=[[5012,'BIAS'],[5008,'RATE'],[5011,'SIZE'],null];
 function syncFx(){
  const cards=fx?[...fx.querySelectorAll('.fx-card')]:[];
@@ -160,7 +192,7 @@ function refresh(){
 document.addEventListener('change',e=>{if(e.target.id==='method')queueMicrotask(syncSource)});
 document.addEventListener('click',e=>{if(e.target.closest?.('[data-select],.node,[data-pb-choose]'))queueMicrotask(syncSource)});
 window.__JUCE__?.backend?.addEventListener?.('albedoUpdate',refresh);
-window.__JUCE__?.backend?.addEventListener?.('albedoProgram',refresh);
+window.__JUCE__?.backend?.addEventListener?.('albedoProgram',()=>{refresh();if(routeView)routeView.value=route.value;});
 window.addEventListener('albedo:gui-patch-imported',refresh);
 let drag=null;
 page.addEventListener('pointerdown',e=>{
