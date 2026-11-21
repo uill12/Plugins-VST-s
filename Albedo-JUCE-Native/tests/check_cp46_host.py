@@ -82,7 +82,7 @@ def main():
             page.wait_for_function(
                 'smaller => document.documentElement.clientWidth >= smaller+24',
                 arg=smaller,timeout=20000)
-            page.locator('.cp52-window-controls button[aria-label="Comfortable 1080 × 720 window"]').click()
+            page.locator('.cp52-window-controls button[aria-label="Comfortable 1230 × 820 window"]').click()
             page.wait_for_function("""() => {
                 const box=document.querySelector('#presetBrowser .preset-browser-panel').getBoundingClientRect();
                 return box.left >= -2 && box.top >= -2
