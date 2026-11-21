@@ -46,6 +46,28 @@ with sync_playwright() as playwright:
             assert bounds["right"] <= width+2 and bounds["bottom"] <= height+2, (width,height,box,dimensions)
         assert dimensions["overflowX"] <= 3, (width,height,dimensions)
         assert dimensions["scrollable"], "Preset list must scroll vertically"
+        # CP52 compact modal: leave approximately 5% breathing room on every
+        # side. The synthesizer behind the browser must remain visually evident.
+        panel_width = dimensions["p"]["right"] - dimensions["p"]["left"]
+        panel_height = dimensions["p"]["bottom"] - dimensions["p"]["top"]
+        assert 0.85 <= panel_width/width <= 0.915, (width,height,dimensions)
+        assert 0.85 <= panel_height/height <= 0.915, (width,height,dimensions)
+        # The compact size must not hide the top-level controls.
+        control_bounds = page.evaluate("""() => {
+            const selectors=['#presetBrowserClose','#pbSearch',
+              '#presetBrowser [data-collection="New"]',
+              '.cp52-window-controls button[aria-label="Reduce plugin window"]',
+              '.cp52-window-controls button[aria-label="Keep preset browser open while auditioning"]'];
+            const panel=document.querySelector('#presetBrowser .preset-browser-panel').getBoundingClientRect();
+            return selectors.map(selector=>{
+                const element=document.querySelector(selector);
+                const r=element?.getBoundingClientRect();
+                return {selector,visible:!!r && r.width>0 && r.height>0,
+                  inside:!!r && r.left>=panel.left-2 && r.right<=panel.right+2 &&
+                    r.top>=panel.top-2 && r.bottom<=panel.bottom+2};
+            });
+        }""")
+        assert all(v["visible"] and v["inside"] for v in control_bounds), (width,height,control_bounds)
         shots = root / "qa-cp52-screenshots"
         shots.mkdir(exist_ok=True)
         page.screenshot(path=str(shots / f"Albedo_CP52_{width}x{height}_browser.png"))
