@@ -72,6 +72,27 @@ with sync_playwright() as playwright:
         shots.mkdir(exist_ok=True)
         page.screenshot(path=str(shots / f"Albedo_CP52_{width}x{height}_browser.png"))
 
+        # CP55 regression: Bitwig/WebView2 can report the 1500×1000
+        # content layout as the CSS root size even when its real HWND viewport
+        # is smaller. The JUCE albedoViewport measurement must prevent clipping
+        # instead of painting the entire 1500-px canvas outside the window.
+        dialog.locator('#presetBrowserClose').click()
+        overreported=page.evaluate("""({w,h}) => {
+            const root=document.documentElement;
+            Object.defineProperty(root,'clientWidth',{configurable:true,get:()=>Math.round(w*1.28)});
+            Object.defineProperty(root,'clientHeight',{configurable:true,get:()=>Math.round(h*1.28)});
+            window.ALBEDO_CP35_WINDOW.setHostGeometry(w,h);
+            const p=document.querySelector('#page').getBoundingClientRect();
+            const result={left:p.left,top:p.top,right:p.right,bottom:p.bottom};
+            delete root.clientWidth;delete root.clientHeight;
+            window.ALBEDO_CP35_WINDOW.setHostGeometry(0,0);
+            return result;
+        }""",{"w":width,"h":height})
+        assert overreported["left"]>=-2 and overreported["top"]>=-2,(width,height,overreported)
+        assert overreported["right"]<=width+2 and overreported["bottom"]<=height+2,(width,height,overreported)
+        open_button.click()
+        assert dialog.is_visible()
+
         # Window controls are available even while the preset browser is open.
         page.evaluate("""() => {
             window.cp52ResizeRequests=[];
