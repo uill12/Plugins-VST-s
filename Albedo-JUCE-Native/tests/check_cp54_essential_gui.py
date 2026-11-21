@@ -116,6 +116,24 @@ with sync_playwright() as p:
         assert page.locator("#cp54Popover .arp-options").count()==1
         page.locator("#cp54Popover #rule").select_option("90")
         assert page.evaluate("window.ALBEDO_CP04.state.motionRule")==90
+        # The original ARP change handler used to be scoped to #cellArp.
+        # When these original nodes move into the popup, that handler no longer
+        # receives the event. Verify the real native bridge dispatches it.
+        page.evaluate("""() => {
+            window.cp54ArpDispatches=[];
+            const native=window.ALBEDO_NATIVE_CP27;
+            const original=native.onExtraParam;
+            native.onExtraParam=function(id,value){
+                window.cp54ArpDispatches.push([id,value]);
+                return original.call(native,id,value);
+            };
+        }""")
+        page.locator('#cp54Popover [data-arp="6024"]').select_option("1")
+        assert [6024,1] in page.evaluate("window.cp54ArpDispatches"), (
+            width,height,"ARP character failed to reach JUCE bridge")
+        page.locator('#cp54Popover [data-arp="6025"]').select_option("3")
+        assert [6025,3] in page.evaluate("window.cp54ArpDispatches"), (
+            width,height,"ARP octave span failed to reach JUCE bridge")
         close_popup()
         assert page.locator("#page #rule").count()==1
 
