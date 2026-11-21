@@ -52,7 +52,9 @@ assert(!source.includes('Math.min(w,physicalWidth/dpr)'),
 rootNode.clientWidth=900;rootNode.clientHeight=600;
 window.ALBEDO_CP35_WINDOW.fit();check(900,600,900/1320);
 rootNode.clientWidth=1500;rootNode.clientHeight=1000;
-window.ALBEDO_CP35_WINDOW.fit();check(1500,1000,1500/1320);
+// CP55: a 1500×1000 layout reported inside a real 900×600 Bitwig
+// viewport must be scaled to the native host, not clipped offscreen.
+window.ALBEDO_CP35_WINDOW.fit();check(900,600,900/1320);
 // Slight host aspect mismatch is filled rather than bordered or cropped.
 rootNode.clientWidth=1000;rootNode.clientHeight=700;
 window.ALBEDO_CP35_WINDOW.fit();check(1000,700,Math.min(1000/1320,700/880));
@@ -64,4 +66,4 @@ window.ALBEDO_CP35_WINDOW.fit();
 assert.strictEqual(properties.get('--fit-scale-x'),properties.get('--fit-scale-y'));
 assert(!source.includes('window.setInterval'),'Avoid repeated rescale polling');
 assert(source.includes('right:8px;bottom:8px'),'Resize widget must anchor to actual viewport');
-console.log('CP40 PASS: no contextual overlays, ADSR retained, CSS viewport fills 1200x800, 900x600, 1500x1000');
+console.log('CP55 PASS: CP40 DPI tolerance retained; oversized 1500×1000 WebView CSS layout fits native 900×600 Bitwig viewport');
