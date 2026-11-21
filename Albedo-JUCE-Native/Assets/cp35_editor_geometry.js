@@ -201,8 +201,8 @@
  controls.id='albedo-cp35-controls';
  controls.setAttribute('aria-label','Resize the Albedo plugin window');
  controls.innerHTML='<button type="button" id="albedo-cp35-smaller" title="Smaller 3:2 window">−</button>'+
-   '<span id="albedo-cp35-size-value">1080×720</span>'+
-   '<button type="button" id="albedo-cp35-reset" title="Request comfortable 1080×720 (limited by available screen area)">↔</button>'+
+   '<span id="albedo-cp35-size-value">1230×820</span>'+
+   '<button type="button" id="albedo-cp35-reset" title="Request comfortable 1230×820 (limited by available screen area)">↔</button>'+
    '<button type="button" id="albedo-cp35-resize-grip" title="Drag to resize the 3:2 plugin window">◢</button>';
  document.body.appendChild(controls);
  function ask(width){
@@ -212,7 +212,7 @@
  controls.querySelector('#albedo-cp35-smaller').addEventListener('click',()=>{
    ask((nativeW||measured().w)-36);
  });
- controls.querySelector('#albedo-cp35-reset').addEventListener('click',()=>ask(1080));
+ controls.querySelector('#albedo-cp35-reset').addEventListener('click',()=>ask(1230));
  const grip=controls.querySelector('#albedo-cp35-resize-grip');
  let start=null;
  grip.addEventListener('pointerdown',event=>{
