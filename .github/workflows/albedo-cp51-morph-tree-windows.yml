@@ -1,7 +1,7 @@
-name: Albedo CP53 HiFi Safe Voices Windows CLAP VST3
+name: Albedo CP54 Sound First GUI Windows CLAP VST3
 on:
   push:
-    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety]
+    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout]
     paths:
       - '.github/workflows/albedo-cp51-morph-tree-windows.yml'
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
@@ -699,6 +699,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP36 quantitative HiFi and Preset Atlas quality regression' }
           python Albedo-JUCE-Native/tests/check_cp35_render_window.py
           if ($LASTEXITCODE -ne 0) { throw 'CP35 host editor/render geometry contract failed' }
+          node --check Albedo-JUCE-Native/Assets/cp54_essential_sound_layout.js
+          if ($LASTEXITCODE -ne 0) { throw 'CP54 contextual sound controls syntax failed' }
           python Albedo-JUCE-Native/tests/check_cp39_layout.py
           if ($LASTEXITCODE -ne 0) { throw 'CP39 gain/master, filter alignment and resize regression' }
           node Albedo-JUCE-Native/tests/check_cp40_viewport.cjs
@@ -827,18 +829,18 @@ jobs:
           python -c "from pathlib import Path; import sys; d=Path(sys.argv[1]).read_bytes(); assert b'VTRB2'+bytes(3) in d, 'Original 32-material PCM bank is not embedded in VST3'; print('VST3 PCM24 32-material bank present')" $vst.FullName
           if ($LASTEXITCODE -ne 0) { throw 'VST3 sound bank resource missing' }
           New-Item -ItemType Directory -Path 'dist-cp38' -Force | Out-Null
-          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP53_HiFi_SafeVoices_JUCE_WebView2.clap'
+          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP54_SoundFirst_HiFi_JUCE_WebView2.clap'
           $bundle=Get-ChildItem -Path build-cp38-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
           @(
-            'Checkpoint: Albedo CP53 HiFi sound clarity, true-peak guard and stuck-note safety',
+            'Checkpoint: Albedo CP54 permanent sound controls, local contextual overlays, HiFi DSP and MIDI safety',
             'Preset parameters: CP51 192 programs, retained; DSP tonal processing upgraded for clarity',
             "Git SHA: $env:GITHUB_SHA",
             "GitHub Run: $env:GITHUB_RUN_ID",
             'Host plugin identifier and internal product name retained for DAW session compatibility',
             'Windows: CLAP + VST3, WebView2, JUCE native; 63-sample latency; 12 voices AUTO',
-            'CP51 and CP52 remain intact as rollback'
+            'CP51, CP52 and CP53 remain intact as rollback'
           ) | Set-Content -Path 'dist-cp38/CP52_BUILD_PROVENANCE.txt' -Encoding utf8
           Get-ChildItem 'dist-cp38' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
       - name: CP53 emit 192-program HiFi and MIDI lifecycle QA report
@@ -850,7 +852,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP53 192-program clarity/sustain regression' }
       - uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP53_HiFi_DSP_192_Presets_QA
+          name: Albedo_CP54_HiFi_DSP_192_Presets_QA
           path: CP53_DSP_QA.txt
           if-no-files-found: error
       - name: Compare all 18336 pairs of rendered preset outputs
@@ -883,7 +885,7 @@ jobs:
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP53_HiFi_SafeVoices_Windows_x64_CLAP_VST3
+          name: Albedo_CP54_SoundFirst_HiFi_Windows_x64_CLAP_VST3
           path: dist-cp38/*
           if-no-files-found: error
       - name: Package and exercise Windows target reconstruction
