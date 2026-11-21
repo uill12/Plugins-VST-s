@@ -51,6 +51,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python Albedo-JUCE-Native/tests/check_cp52_browser_ui.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python Albedo-JUCE-Native/tests/check_cp55_stage_visibility.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP55 all-four-sources / Corpus / lower FX stage-fit regression' }
       - name: Test context popups and permanently visible sound controls in Edge
         shell: pwsh
         run: |
@@ -66,4 +68,5 @@ jobs:
           path: |
             qa-cp54-context/*.png
             qa-cp52-screenshots/*.png
+            qa-cp55-stage-fit/*.png
           if-no-files-found: ignore
