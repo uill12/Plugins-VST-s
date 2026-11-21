@@ -20,12 +20,23 @@
    // JUCE HWND logical dimensions and visualViewport can report different units
    // under Windows DPI scaling / host embedding. Never take their minimum:
    // it created a reduced canvas with empty borders in Bitwig.
-   const w=Math.max(1,Math.floor(root.clientWidth||window.innerWidth||1));
-   const h=Math.max(1,Math.floor(root.clientHeight||window.innerHeight||1));
-   // The WebView2 client viewport is authoritative for painted CSS geometry.
-   // Native physicalWidth / DPR may describe the HWND's previous size while
-   // Bitwig negotiates a resize. Capping here produced a 900x600 render inside
-   // a 942x628 CSS viewport (confirmed in Windows host QA).
+   let w=Math.max(1,Math.floor(root.clientWidth||window.innerWidth||1));
+   let h=Math.max(1,Math.floor(root.clientHeight||window.innerHeight||1));
+   // CP55: a real Bitwig screenshot showed the 1500x1000 design canvas clipped
+   // inside a significantly smaller granted host window. In unusual WebView2
+   // embed/DPI cases root.clientWidth can describe the content layout instead
+   // of the host client rectangle. Use the JUCE-reported host dimensions ONLY
+   // for large, unambiguous over-reporting (>16% on either axis).
+   // Small disagreements are deliberately left alone: CP40 established that
+   // always taking min(css, native) causes whitespace on normal Windows DPI.
+   const hostValid=nativeW>=480 && nativeH>=320;
+   const mismatch=hostValid&&(w>nativeW*1.16 || h>nativeH*1.16);
+   if(mismatch){
+     const hostRatio=nativeW/nativeH;
+     if(hostRatio>1.35 && hostRatio<1.65){
+       w=Math.min(w,nativeW);h=Math.min(h,nativeH);
+     }
+   }
    return {w,h};
  }
  function fit(){
