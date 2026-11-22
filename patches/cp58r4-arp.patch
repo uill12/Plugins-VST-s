@@ -1,0 +1,202 @@
+--- a/include/AlbedoCellArp.inc
++++ b/include/AlbedoCellArp.inc
+@@ -22,7 +22,7 @@
+  const double swing=clamp(get(6026)*.01,0.,.45);
+  double nextBeat=pairStart;
+  uint64_t index=uint64_t(pairStart);
+- if(phase>nextBeat+1.e-9){nextBeat=pairStart+1.+swing;++index;}
++ if(phase>nextBeat+1.e-9){nextBeat=pairStart+1.-swing;++index;}
+  if(phase>nextBeat+1.e-9){nextBeat=pairStart+2.;++index;}
+  const unsigned length=unsigned(std::clamp(int(get(6027)),4,16));
+  arpStep_=int(index%length);arpIndex_=unsigned(index);
+@@ -32,11 +32,11 @@
+ void Synth::arpRelease(){
+  if(arpSound_>=0){voiceOff(arpSound_,arpChannel_,-1);arpSound_=-1;}
+ }
+-void Synth::arpClear(){arpDisplay_.store(-1,std::memory_order_relaxed);arpCount_=0;arpSound_=-1;arpClock_=arpGate_=0;arpStep_=arpIndex_=0;arpBits_=0x8421;arpPedal_.fill(false);}
++void Synth::arpClear(){arpDisplay_.store(-1,std::memory_order_relaxed);arpCount_=0;arpSound_=-1;arpClock_=arpGate_=0;arpStep_=arpIndex_=0;arpNoteCell_=0x00010001u;arpBits_=0xA5C33C5Bu;arpPedal_.fill(false);}
+ void Synth::arpMode(){
+  const bool enabled=get(6020)>.5;
+  if(enabled==arpEnabled_)return;
+- arpDisplay_.store(-1,std::memory_order_relaxed);arpRelease();voicePanic();arpClock_=arpGate_=0;arpStep_=arpIndex_=0;arpBits_=0x8421;
++ arpDisplay_.store(-1,std::memory_order_relaxed);arpRelease();voicePanic();arpClock_=arpGate_=0;arpStep_=arpIndex_=0;arpNoteCell_=0x00010001u;arpBits_=0xA5C33C5Bu;
+  arpEnabled_=enabled;
+  if(enabled)arpSnap();
+  if(!enabled){
+@@ -48,7 +48,7 @@
+  if(n<0||n>127||ch<0||ch>15||!std::isfinite(vel))return;
+  if(vel<=0){noteOff(n,ch,id);return;}
+  arpMode();
+- if(!arpCount_){arpClock_=0;arpStep_=arpIndex_=0;arpBits_=0x8421;arpSnap();}
++ if(!arpCount_){arpClock_=0;arpStep_=arpIndex_=0;arpNoteCell_=0x00010001u;arpBits_=0xA5C33C5Bu;arpSnap();}
+  if(arpCount_==int(arpKeys_.size())){for(int i=1;i<arpCount_;++i)arpKeys_[i-1]=arpKeys_[i];--arpCount_;}
+  arpKeys_[arpCount_++]={n,ch,id,vel,true};
+  if(!arpEnabled_)voiceOn(n,vel,ch,id);
+@@ -66,6 +66,69 @@
+  arpCount_=write;if(!write){arpRelease();arpDisplay_.store(-1,std::memory_order_relaxed);}
+ }
+ void Synth::allNotesOff(){arpClear();voicePanic();}
++static int arpIndex(int character,uint32_t step,int n,int rotate){
++ if(n<2)return 0;int k=(int)(step%uint32_t(n));
++ if(character==0)k=(int)(((step*2u)+(step/2u))%uint32_t(n)); // oblique: crossing diagonals
++ else if(character==1){int span=n*2-2;int t=(int)(step%uint32_t(span));k=t<n?t:span-t;} // symmetry
++ else if(character==3)k=(int)(((step*5u)+(step/3u))%uint32_t(n)); // asymmetric offset
++ return (k+rotate)%n; // cyclical: regular rotation
++}
++// Eight additional note-event characters use the same genuine 32-cell radius-one
++// Wolfram rules as the timbral field. The CA state here is independent from the
++// per-voice CA and the pre-existing accent lattice. No MIDI pitch is synthesized:
++// only a held-note index, authorized octave, gate/rest and accent are selected.
++// 4/8 = Rule30 chaotic/sparse; 5/9 = Rule90 fractal/mirror;
++// 6/10 = Rule110 glider/domain; 7/11 = Rule150 weave/braid.
++static int arpCellularIndex(int mode,uint32_t cells,uint32_t step,int count,int rotate,bool* hit,bool* emphasis){
++ if(count<2){*hit=true;*emphasis=(cells&1u)!=0;return 0;}
++ const unsigned shift=(unsigned)((step*7u+uint32_t(rotate)*3u)&31u);
++ const uint32_t window=(cells>>shift)|(cells<<((32u-shift)&31u));
++ const int b0=(int)(window&1u),b1=(int)((window>>1)&1u),b2=(int)((window>>2)&1u);
++ const int walk=(int)((window>>3)&7u);
++ int k=(int)(step%uint32_t(count));
++ *hit=true;*emphasis=b0!=0;
++ switch(mode){
++  case 4: // Rule30 / CHAOS: irregular bounded chord traversal
++   k=(k+walk+b1*2)%count;*hit=(b0||b1||((step&3u)==0u));break;
++  case 5: { // Rule90 / FRACTAL: additive-rule mirrored rise/fall
++   int span=2*count-2,t=(int)((step+uint32_t(b0+b2))%uint32_t(span));
++   k=t<count?t:span-t;*hit=b0||((step&1u)==0u);break;
++  }
++  case 6: // Rule110 / GLIDER: paired steps interrupted by local domains
++   k=(int)(((step/2u)+uint32_t(walk%3))%uint32_t(count));*hit=(b0||b1||((step&3u)!=3u));break;
++  case 7: // Rule150 / WEAVE: alternating opposing voices through the held chord
++   k=(int)(((step/2u)+(b0?uint32_t(count)-1u:0u))%uint32_t(count));
++   if((step&1u)!=0u)k=count-1-k;break;
++  case 8: // Rule30 / SPARSE: gaps and irregular accents
++   k=(int)((step*3u+uint32_t(walk))%uint32_t(count));*hit=b0&&(b1||((step&3u)==0u));break;
++  case 9: { // Rule90 / MIRROR: fractal palindromic scan
++   int span=2*count-2,t=(int)((step+uint32_t(b0))%uint32_t(span));
++   k=count-1-(t<count?t:span-t);if(b2)k=(k+count-1)%count;
++   *hit=b0||b2||((step&3u)!=3u);break;
++  }
++  case 10: // Rule110 / DOMAIN: stable local clusters with occasional shifts
++   k=(int)(((step/3u)+uint32_t((window>>5)&3u))%uint32_t(count));
++   *hit=b0||b1||((step%3u)==0u);break;
++  case 11: // Rule150 / BRAID: alternate interleaved trajectories
++   k=(int)((((step/2u)*2u)+((step&1u)?uint32_t(count)-1u:0u)+uint32_t(b1))%uint32_t(count));
++   *hit=b0||((step&3u)!=3u);break;
++ }
++ return (k+rotate)%count;
++}
++static inline uint32_t nereidaCellularNext(uint32_t cells,int selected){
++ static const uint32_t rules[4]={30u,90u,110u,150u};
++ uint32_t rule=rules[selected<0?0:selected>3?3:selected];
++ uint32_t left=(cells<<1)|(cells>>31),right=(cells>>1)|(cells<<31);
++ uint32_t next=0;
++ for(int pattern=0;pattern<8;pattern++)if(rule&(1u<<pattern)){
++  uint32_t l=(pattern&4)?left:~left;
++  uint32_t c=(pattern&2)?cells:~cells;
++  uint32_t r=(pattern&1)?right:~right;
++  next|=l&c&r;
++ }
++ return next;
++}
++
+ void Synth::arpTick(){
+  // Nereida CP-03B characters: Oblique / Symmetrical / Cyclical / Asymmetrical.
+  // Only note-event selection and deliberate octave additions affect pitch.
+@@ -79,52 +142,45 @@
+  const double swing=clamp(get(6026)*.01,0.,.45);
+  const double tempo=(get(6030)>.5&&arpHostValid_)?arpHostTempo_:clamp(get(6029),40.,240.);
+  const double division=get(6021); // 1, 1/2, 1/4, 1/8 beats for quarter ... thirty-second
+- const double period=std::max(2.,fs_*60./tempo*division*((step&1)?1.-swing:1.+swing));
++ const double period=std::max(2.,fs_*60./tempo*division*((step&1)?1.+swing:1.-swing));
+  arpClock_+=period;
+  arpGate_=std::max(1.,period*clamp(get(6023)*.01,.10,.95));
+- const bool obliqueGap=character==0 && (step%8==7);
+- // Fixed Bjorklund-like 5-of-8 pulse mask, deterministic for any step count.
+- const bool asymmetricGap=character==3 && ((step*5)%8)>=5;
+- const bool active=get(6000+step)>.5&&!obliqueGap&&!asymmetricGap;
+- if(arpCount_>0 && active){
++ const int ext=int(get(6031));
++ const int mode=ext?3+ext:character;
++ bool hit=true,emphasis=false;
++ const unsigned fallback=1u<<((step*7u+11u)&31u);
++ arpBits_=nereidaCellularNext(arpBits_,int(get(4003)));
++ if(!arpBits_)arpBits_=fallback;
++ if(arpCount_){
+   std::array<int,128> sorted{};for(int i=0;i<arpCount_;++i)sorted[i]=i;
+   std::sort(sorted.begin(),sorted.begin()+arpCount_,[&](int a,int b){
+    return std::make_pair(arpKeys_[a].note,a)<std::make_pair(arpKeys_[b].note,b);
+   });
+   const int span=arpCount_*octaves;
+-  const unsigned cursor=arpIndex_;
+-  int pos=0;
+-  if(character==0)pos=int((2ull*cursor+cursor/2+unsigned(rotate))%unsigned(span));
+-  else if(character==1){
+-   const int cycle=std::max(1,2*span-2);
+-   const int t=int((cursor+unsigned(rotate))%unsigned(cycle));
+-   pos=t<span?t:cycle-t;
+-  }else if(character==2)pos=int((cursor+unsigned(rotate))%unsigned(span));
+-  else pos=int((5ull*cursor+cursor/3+unsigned(rotate))%unsigned(span));
++  int pos;
++  if(ext){
++   arpNoteCell_=nereidaCellularNext(arpNoteCell_,(mode-4)&3);
++   if(!arpNoteCell_)arpNoteCell_=fallback;
++   pos=arpCellularIndex(mode,arpNoteCell_,step,span,rotate,&hit,&emphasis);
++  }else{
++   pos=arpIndex(mode,step,span,rotate);
++   emphasis=((arpBits_>>step)&1u)!=0;
++   if(mode==0)hit=step%8!=7;
++   if(mode==3)hit=((step*5)%8)<5;
++  }
+   const auto& key=arpKeys_[sorted[pos%arpCount_]];
+-  const int note=key.note+12*(pos/arpCount_);
+-  if(note<=127){
++  const int note=std::min(127,key.note+12*(pos/arpCount_));
++  if(hit && get(6000+step)>.5){
+    // Separate CA lattice shapes accents only; no pitch drift or random transpose.
+-   const bool energetic=((arpBits_>>step)&1)!=0;
++   
+    const double accent=clamp(get(6022)*.01,0.,1.);
+-   const double velocityScale=energetic?1.:(1.-.70*accent);
++   const double velocityScale=1.-accent*.25+(emphasis?accent*.25:0.);
+    voiceOn(note,clamp(key.vel*velocityScale,.001,1.),key.ch,-1);
+    arpSound_=note;arpChannel_=key.ch;
+   }
+  }
+  ++arpIndex_; // Advance through rests as Nereida's note-event clock does.
+- if(++arpStep_>=length){
+-  arpStep_=0;const int rules[]={30,90,110,150};
+-  const int rule=rules[std::clamp(int(get(4003)),0,3)];
+-  unsigned next=0;
+-  for(int i=0;i<16;++i){
+-   const int pattern=(((arpBits_>>((i+15)%16))&1)<<2)
+-                    |(((arpBits_>>i)&1)<<1)
+-                    |((arpBits_>>((i+1)%16))&1);
+-   next|=unsigned((rule>>pattern)&1)<<i;
+-  }
+-  arpBits_=next?next:1u;
+- }
++ arpStep_=(arpStep_+1)%length;
+ }
+ template<typename Sample>void Synth::processArp(Sample* l,Sample* r,uint32_t n){
+  arpMode();if(!arpEnabled_||!arpCount_){processTyped(l,r,n);if(arpTransportValid_)arpTransportBeat_+=double(n)*arpHostTempo_/(60.*fs_);return;}
+--- a/include/vitriol_params.hpp
++++ b/include/vitriol_params.hpp
+@@ -70,6 +70,7 @@
+  add(6027,"Arp Steps","Cellular Arpeggiator",4,16,8,"",true);
+  add(6028,"Arp Rotate","Cellular Arpeggiator",0,7,0,"",true);
+  add(6029,"Arp Tempo","Cellular Arpeggiator",40,240,120,"BPM");
++ add(6031,"Arp Wolfram Character","Cellular Arpeggiator",0,8,0,"",true);
+  add(6030,"Arp DAW Sync","Cellular Arpeggiator",0,1,1,"",true);
+  add(6020,"Arpeggiator Enabled","Cellular Arpeggiator",0,1,0,"",true);add(6021,"Arp Division","Cellular Arpeggiator",.05,1,.25,"beats");add(6022,"Arp Cellular Accent","Cellular Arpeggiator",0,100,30,"%");add(6023,"Arp Gate","Cellular Arpeggiator",10,95,68,"%");
+  const char* src[]={"LFO 1","LFO 2","ENV / A","ENV / B","CELLULAR","VELOCITY","MOD WHEEL","AFTERTOUCH","XY / X","XY / Y","KEY TRACK","FOLLOWER"};
+--- a/include/vitriol_dsp.hpp
++++ b/include/vitriol_dsp.hpp
+@@ -40,7 +40,7 @@
+  std::atomic<int> arpDisplay_{-1};
+  struct ArpKey {int note,ch,id;double vel;bool down;};
+  std::array<ArpKey,128> arpKeys_{};std::array<bool,16> arpPedal_{};
+- int arpCount_=0,arpSound_=-1,arpChannel_=0,arpStep_=0;unsigned arpIndex_=0,arpBits_=0x8421;
++ int arpCount_=0,arpSound_=-1,arpChannel_=0,arpStep_=0;unsigned arpIndex_=0,arpBits_=0xA5C33C5Bu,arpNoteCell_=0x00010001u;
+  bool arpEnabled_=false,arpHostValid_=false,arpTransportValid_=false;double arpHostTempo_=120,arpClock_=0,arpGate_=0,arpTransportBeat_=0;
+  void arpMode();void arpTick();void arpClear();void arpPrune();void arpRelease();void arpSnap();
+  void voiceOn(int,double,int,int);void voiceOff(int,int,int);void voicePanic();

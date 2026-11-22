@@ -33,7 +33,7 @@ for f in binary:
     sums.append(f"{hashlib.sha256(payload).hexdigest()}  {f.relative_to(root).as_posix()}")
 (root/"SHA256SUMS.txt").write_text("\n".join(sums)+"\n",encoding="utf-8")
 (root/"CP58_PACKAGE_QA.json").write_text(json.dumps({
-    "checkpoint":"Albedo CP58R3 — spectral CPU optimization",
+    "checkpoint":"Albedo CP58R4 — Nereida arp characters",
     "version":args.version,
     "sources":"192 existing program IDs; 64 selected Morphogenic Fields programs retain parameters",
     "new_bank_display_label":"Morphogenic Fields",

@@ -37,10 +37,16 @@ with sync_playwright() as p:
         }""")
         assert rect['ok'],(width,height,'caption overrun',rect)
         assert not errors,(width,height,errors)
-        page.locator('#cpArpRule').select_option('3')
-        assert page.locator('#rule').input_value()=='150'
-        page.locator('#cpArpPattern').select_option('2')
-        assert page.evaluate('window.ALBEDO_CP04.state.cp04[6024]')==2
+        panel=page.locator('#nereidaArp')
+        panel.get_by_role('button',name='ARP DETAIL  >').click()
+        assert page.locator('dialog.arpZoom').is_visible()
+        for i,name in enumerate(['OBLIQUE','SYMMETRY','CYCLIC','ASYMMETRY','30 CHAOS','90 FRACTAL','110 GLIDER','150 WEAVE','30 SPARSE','90 MIRROR','110 DOMAIN','150 BRAID']):
+            control=panel.get_by_role('button',name=name,exact=True)
+            control.click()
+            assert control.get_attribute('aria-pressed')=='true'
+            assert page.evaluate('window.ALBEDO_CP04.state.cp04[6031]')==max(0,i-3)
+        assert panel.get_by_role('slider').count()==7
+        page.keyboard.press('Escape')
         page.evaluate("document.querySelector('#presetBrowser').hidden=false")
         page.wait_for_selector('#presetBrowser:popover-open')
         box=page.locator('#presetBrowser .preset-browser-panel').bounding_box()
