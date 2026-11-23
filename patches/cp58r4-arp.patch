@@ -50,7 +50,7 @@
 +// 4/8 = Rule30 chaotic/sparse; 5/9 = Rule90 fractal/mirror;
 +// 6/10 = Rule110 glider/domain; 7/11 = Rule150 weave/braid.
 +static int arpCellularIndex(int mode,uint32_t cells,uint32_t step,int count,int rotate,bool* hit,bool* emphasis){
-+ if(count<2){*hit=true;*emphasis=(cells&1u)!=0;return 0;}
++ // A single held note still follows the selected rhythm.
 + const unsigned shift=(unsigned)((step*7u+uint32_t(rotate)*3u)&31u);
 + const uint32_t window=(cells>>shift)|(cells<<((32u-shift)&31u));
 + const int b0=(int)(window&1u),b1=(int)((window>>1)&1u),b2=(int)((window>>2)&1u);
@@ -61,7 +61,7 @@
 +  case 4: // Rule30 / CHAOS: irregular bounded chord traversal
 +   k=(k+walk+b1*2)%count;*hit=(b0||b1||((step&3u)==0u));break;
 +  case 5: { // Rule90 / FRACTAL: additive-rule mirrored rise/fall
-+   int span=2*count-2,t=(int)((step+uint32_t(b0+b2))%uint32_t(span));
++   int span=std::max(1,2*count-2),t=(int)((step+uint32_t(b0+b2))%uint32_t(span));
 +   k=t<count?t:span-t;*hit=b0||((step&1u)==0u);break;
 +  }
 +  case 6: // Rule110 / GLIDER: paired steps interrupted by local domains
@@ -72,7 +72,7 @@
 +  case 8: // Rule30 / SPARSE: gaps and irregular accents
 +   k=(int)((step*3u+uint32_t(walk))%uint32_t(count));*hit=b0&&(b1||((step&3u)==0u));break;
 +  case 9: { // Rule90 / MIRROR: fractal palindromic scan
-+   int span=2*count-2,t=(int)((step+uint32_t(b0))%uint32_t(span));
++   int span=std::max(1,2*count-2),t=(int)((step+uint32_t(b0))%uint32_t(span));
 +   k=count-1-(t<count?t:span-t);if(b2)k=(k+count-1)%count;
 +   *hit=b0||b2||((step&3u)!=3u);break;
 +  }
@@ -107,7 +107,7 @@
   const double tempo=(get(6030)>.5&&arpHostValid_)?arpHostTempo_:clamp(get(6029),40.,240.);
   const double division=get(6021); // 1, 1/2, 1/4, 1/8 beats for quarter ... thirty-second
 - const double period=std::max(2.,fs_*60./tempo*division*((step&1)?1.-swing:1.+swing));
-+ const double period=std::max(2.,fs_*60./tempo*division*((step&1)?1.+swing:1.-swing));
++ const double period=std::max(2.,fs_*60./tempo*division*((arpIndex_&1)?1.+swing:1.-swing));
   arpClock_+=period;
   arpGate_=std::max(1.,period*clamp(get(6023)*.01,.10,.95));
 - const bool obliqueGap=character==0 && (step%8==7);
@@ -150,7 +150,7 @@
    const auto& key=arpKeys_[sorted[pos%arpCount_]];
 -  const int note=key.note+12*(pos/arpCount_);
 -  if(note<=127){
-+  const int note=std::min(127,key.note+12*(pos/arpCount_));
++  int note=key.note+12*(pos/arpCount_);while(note>127)note-=12;
 +  if(hit && get(6000+step)>.5){
     // Separate CA lattice shapes accents only; no pitch drift or random transpose.
 -   const bool energetic=((arpBits_>>step)&1)!=0;

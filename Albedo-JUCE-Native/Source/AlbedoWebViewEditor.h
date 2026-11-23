@@ -43,6 +43,7 @@ private:
     std::unique_ptr<AlbedoEditor> nativeFallback;
     std::unique_ptr<juce::FileChooser> patchChooser;
     bool patchDialogOpen=false;
+    float lastHostTempo=-1.f;
     std::vector<float> lastValues;
     bool pageReady=false, browserHasLoaded=false, fullSyncPending=true;
     int pendingTicks=0;

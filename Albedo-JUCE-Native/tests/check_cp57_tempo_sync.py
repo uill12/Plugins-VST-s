@@ -19,7 +19,7 @@ for token in ('void Synth::setArpTransport','void Synth::arpSnap','arpTransportB
 assert 'if(hasArp&&!hasExplicitClock)set(6030,1.0f)' in programs
 for token in ('cp57_tempo_controls.js','cp57_tempo_controls_js'):
  assert token in editor or token in cmake,token
-for token in ('DAW SYNC','FREE','1/4','1/8','1/16','1/32','setExtraParam?.(id,v)'):
+for token in ('AUTO','FREE','1/4','1/8','1/16','1/32','setExtraParam?.(id,v)'):
  assert token in ui,token
 assert re.search(r'VERSION 1\.0\.(?:57|58)',cmake), 'CP57 tempo sync remains compatible with CP58 metadata'
 for rate in (44100,48000,88200,96000):

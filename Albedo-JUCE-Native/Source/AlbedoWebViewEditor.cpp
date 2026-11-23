@@ -380,6 +380,11 @@ void AlbedoWebViewEditor::activateFallback(const juce::String& reason)
 }
 void AlbedoWebViewEditor::sendDelta(bool full)
 {
+    const auto tempo=processor.currentHostTempo();
+    if(full || tempo!=lastHostTempo){
+        lastHostTempo=tempo;
+        browser.emitEventIfBrowserIsVisible("albedoHostTempo",juce::var(static_cast<double>(tempo)));
+    }
     juce::String csv;
     const auto& defs=processor.definitions();
     for(size_t i=0;i<defs.size();++i)

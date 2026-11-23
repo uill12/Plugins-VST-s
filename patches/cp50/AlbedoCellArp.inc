@@ -1,7 +1,7 @@
 // A single clock owns note selection, step rests and gate releases.
 // Keep host tempo separate from the free-running BPM parameter. No transport
 // callbacks, allocations, or UI calls are made in the scheduler.
-void Synth::setArpTempo(double bpm){if(std::isfinite(bpm)&&bpm>0){arpHostTempo_=clamp(bpm,20.,400.);arpHostValid_=true;}}
+void Synth::setArpTempo(double bpm){arpHostValid_=std::isfinite(bpm)&&bpm>0;if(arpHostValid_)arpHostTempo_=clamp(bpm,20.,400.);}
 // Host PPQ time is sample-advanced between MIDI events and never driven by UI.
 void Synth::setArpTransport(double ppq,bool playing){
  const bool valid=playing&&std::isfinite(ppq)&&ppq>=0.&&arpHostValid_;

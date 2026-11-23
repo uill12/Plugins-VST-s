@@ -48,7 +48,9 @@ public:
     int arpStep() const noexcept {return synth->arpStep();}
     int activeVoices() const noexcept { return activeVoiceCount.load(); }
 
+    float currentHostTempo() const noexcept { return hostTempo.load(std::memory_order_relaxed); }
 private:
+    std::atomic<float> hostTempo{0.f};
     std::unique_ptr<vitriol::Synth> synth;
     std::vector<vitriol::ParamDef> definitions_;
     std::unordered_map<uint32_t,juce::AudioParameterFloat*> idParameters;

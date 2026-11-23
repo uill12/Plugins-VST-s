@@ -93,15 +93,19 @@ void AlbedoProcessor::syncArpClock()
     // Position belongs to the host. MIDI subregions are sample-accurate in DSP.
     double ppq=std::numeric_limits<double>::quiet_NaN();
     bool playing=false;
+    float tempo=0.f;
     if(auto* transport=getPlayHead()){
         if(auto position=transport->getPosition()){
-            if(auto bpm=position->getBpm())synth->setArpTempo(*bpm);
+            if(auto bpm=position->getBpm(); bpm && std::isfinite(*bpm) && *bpm>0)
+                tempo=static_cast<float>(juce::jlimit(20.0,400.0,*bpm));
             playing=position->getIsPlaying();
             if(auto beat=position->getPpqPosition())ppq=*beat;
             if(transportPlaying&&!playing)panicVoices();
             transportPlaying=playing;
         }
     }
+    hostTempo.store(tempo,std::memory_order_relaxed);
+    synth->setArpTempo(tempo);
     synth->setArpTransport(ppq,playing);
 }
 void AlbedoProcessor::handleMidi (const juce::MidiMessage& m)
