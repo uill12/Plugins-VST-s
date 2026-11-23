@@ -11,7 +11,7 @@ assert(!rotary.includes('pop.hidden')&&!rotary.includes('drawSoon('),'Dangling o
 assert(!rotary.includes('document.addEventListener(\'pointerdown\''),'Unexpected contextual trigger');
 assert(html.includes("id='cp37AdsrPopup'"),'ADSR must remain');
 const properties=new Map(),listeners={};
-const rootNode={clientWidth:1200,clientHeight:800,style:{setProperty:(k,v)=>properties.set(k,v)}};
+const rootNode={clientWidth:1200,clientHeight:800,style:{getPropertyValue:k=>properties.get(k)||"",setProperty:(k,v)=>properties.set(k,v)}};
 const grip={addEventListener(){},setPointerCapture(){},hasPointerCapture(){return false}};
 const controls={id:'',style:{},setAttribute(){},querySelector(s){
   return s==='#albedo-cp35-resize-grip'?grip:{addEventListener(){}};
