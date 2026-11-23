@@ -31,6 +31,7 @@ AlbedoProcessor::~AlbedoProcessor()
 }
 void AlbedoProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    nextCallback={};
     synth->prepare (sampleRate);
     juce::ignoreUnused(samplesPerBlock);
     rearField.prepare(sampleRate);
@@ -40,7 +41,27 @@ void AlbedoProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     parametersChanged.store(true, std::memory_order_release);
     updateSynthParameters();
 }
-void AlbedoProcessor::releaseResources() { panicVoices(); outputGuard.reset(); }
+void AlbedoProcessor::releaseResources() { reset(); }
+void AlbedoProcessor::reset() { resumeReset.store(true,std::memory_order_release); }
+
+void AlbedoProcessor::recoverInterruptedAudio(int frames)
+{
+    using Clock=std::chrono::steady_clock;
+    bool interrupted=resumeReset.exchange(false,std::memory_order_acq_rel);
+    if(isNonRealtime()) nextCallback={};
+    else {
+        const auto now=Clock::now();
+        interrupted |= nextCallback!=Clock::time_point{} && now-nextCallback>std::chrono::seconds(2);
+        const std::chrono::duration<double> duration(frames/std::max(1.0,getSampleRate()));
+        nextCallback=now+std::chrono::duration_cast<Clock::duration>(duration);
+    }
+    if(interrupted){
+        synth->allSoundOff();
+        for(auto& channel:midiHeld) channel.fill(false);
+        transportPlaying=false;
+        outputGuard.reset();
+    }
+}
 bool AlbedoProcessor::isBusesLayoutSupported (const BusesLayout& l) const
 { return l.getMainOutputChannelSet() == juce::AudioChannelSet::stereo() || l.getMainOutputChannelSet() == juce::AudioChannelSet::quadraphonic(); }
 void AlbedoProcessor::updateSynthParameters()
@@ -114,6 +135,7 @@ void AlbedoProcessor::processRegion (juce::AudioBuffer<float>& b, int start, int
 void AlbedoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
+    recoverInterruptedAudio(buffer.getNumSamples());
     if(pendingPanic.exchange(false,std::memory_order_acq_rel)) panicVoices();
     syncArpClock();
     updateSynthParameters();
@@ -133,6 +155,7 @@ void AlbedoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
 void AlbedoProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
+    recoverInterruptedAudio(buffer.getNumSamples());
     if(pendingPanic.exchange(false,std::memory_order_acq_rel)) panicVoices();
     syncArpClock();
     updateSynthParameters();

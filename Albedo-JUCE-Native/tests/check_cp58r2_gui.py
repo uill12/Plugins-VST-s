@@ -51,6 +51,14 @@ with sync_playwright() as p:
         page.wait_for_selector('#presetBrowser:popover-open')
         box=page.locator('#presetBrowser .preset-browser-panel').bounding_box()
         assert box['x']>=-1 and box['y']>=-1 and box['x']+box['width']<=width+1 and box['y']+box['height']<=height+1,box
+        for query in ('silk','zz-no-results',''):
+            page.locator('#pbSearch').fill(query)
+            page.wait_for_timeout(60)
+            assert page.locator('#presetBrowser .preset-browser-panel').bounding_box()==box
+        for tab in ('New','Creative','Factory'):
+            item=page.locator('[data-collection="'+tab+'"]')
+            if item.count():item.click()
+            assert page.locator('#presetBrowser .preset-browser-panel').bounding_box()==box
         page.close()
     browser.close()
 print('CP57 Edge PASS: BPM source, musical divisions, true DSP parameter IDs, 3 viewport sizes')

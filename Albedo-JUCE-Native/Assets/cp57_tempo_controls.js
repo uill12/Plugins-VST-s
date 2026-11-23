@@ -30,8 +30,9 @@ html.albedo-fit #page #cp57TempoControls select{font-size:8.5px;font-weight:700;
 #page .cp-arp-modes{display:flex;justify-content:center;align-items:center;gap:4px;grid-column:1/-1}
 #page .cp-arp-modes select{min-width:0;font:700 10px Arial;color:inherit}
 #page .cp56-param:not(.cp56-fx-param)>.cp56-label{align-self:stretch;text-align:center}
-html.albedo-fit #presetBrowser.preset-browser-backdrop:popover-open{inset:0!important;margin:0!important;width:auto!important;height:auto!important;transform:none!important;border:0;display:grid!important;place-items:center}
-html.albedo-fit #presetBrowser:popover-open .preset-browser-panel{position:relative!important;inset:auto!important;transform:none!important;margin:0!important;max-width:100%!important;max-height:100%!important}
+html.albedo-fit #presetBrowser.preset-browser-backdrop:popover-open{position:fixed!important;inset:0 auto auto 0!important;margin:0!important;width:var(--albedo-browser-w,100vw)!important;height:var(--albedo-browser-h,100dvh)!important;transform:none!important;border:0;display:grid!important;grid-template: minmax(0,1fr) / minmax(0,1fr);place-items:center;padding:7px!important;contain:strict}
+html.albedo-fit #presetBrowser:popover-open .preset-browser-panel{position:relative!important;inset:auto!important;transform:none!important;margin:0!important;width:min(1040px,96%)!important;height:min(730px,96%)!important;max-width:100%!important;max-height:100%!important;contain:size layout}
+#presetBrowser #pbResultContainer{scrollbar-gutter:stable;overflow-anchor:none}
 `;document.head.appendChild(style);
 const browser=document.querySelector('#presetBrowser');
 if(browser && typeof browser.showPopover==='function'){

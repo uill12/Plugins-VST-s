@@ -58,6 +58,14 @@
  }
  function fit(){
    const {w,h}=measured();
+   // The browser belongs to the visible host client, independently of the scaled synth canvas.
+   const dpi=window.devicePixelRatio||1;
+   const browserW=Math.min(w,physicalWidth>0?Math.round(physicalWidth/dpi):(nativeW||w));
+   const browserH=Math.min(h,physicalHeight>0?Math.round(physicalHeight/dpi):(nativeH||h));
+   for(const [axis,value] of [['w',browserW],['h',browserH]]){
+     const key='--albedo-browser-'+axis,px=value+'px';
+     if(root.style.getPropertyValue(key)!==px)root.style.setProperty(key,px);
+   }
    const pw=Math.max(1,page.offsetWidth),ph=Math.max(1,page.offsetHeight);
    const sx=Math.max(.1,w/pw),sy=Math.max(.1,h/ph);
    const scale=Math.min(sx,sy);

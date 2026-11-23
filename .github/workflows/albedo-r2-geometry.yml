@@ -2,7 +2,7 @@ name: Browser and arp geometry
 on: [push]
 jobs:
   viewport:
-    if: github.ref == 'refs/heads/albedo/cp58r4-nereida-arp'
+    if: github.ref == 'refs/heads/albedo/cp58r5-resume'
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4

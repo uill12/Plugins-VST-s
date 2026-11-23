@@ -7,6 +7,7 @@
 #include "AlbedoRearField.hpp"
 #include "AlbedoOutputGuard.hpp"
 #include <array>
+#include <chrono>
 #include <atomic>
 #include <memory>
 #include <unordered_map>
@@ -21,6 +22,7 @@ public:
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
+    void reset() override;
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
     void processBlock (juce::AudioBuffer<double>&, juce::MidiBuffer&) override;
     bool isBusesLayoutSupported (const BusesLayout&) const override;
@@ -56,6 +58,9 @@ private:
     std::atomic<int> currentProgram { 0 };
     std::atomic<int> activeVoiceCount { 0 };
     bool transportPlaying=false;
+    std::atomic<bool> resumeReset{false};
+    std::chrono::steady_clock::time_point nextCallback{};
+    void recoverInterruptedAudio(int frames);
     AlbedoRearField rearField;
     AlbedoOutputGuard outputGuard;
     std::array<std::array<bool,128>,16> midiHeld{};
