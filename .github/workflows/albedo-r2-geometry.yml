@@ -8,3 +8,8 @@ jobs:
       - uses: actions/checkout@v4
       - run: python -m pip install playwright
       - run: python Albedo-JUCE-Native/tests/check_cp58r2_gui.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP58R9_Editor
+          path: Albedo_CP58R9_Editor.png
+          if-no-files-found: error

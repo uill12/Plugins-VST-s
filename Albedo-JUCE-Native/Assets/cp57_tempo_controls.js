@@ -49,6 +49,14 @@ html.albedo-fit #page #cp57TempoControls select{font-size:8.5px;font-weight:700;
 html.albedo-fit #page #cp56Arp:not(.internal) [data-cp56-id="6029"]{display:none!important}
 html.albedo-fit #page #cp56Arp.internal .cp56-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
 #page .surface-title .eyebrow,#page .footer,#page .pattern-note{display:none!important}
+#page #networkPaths .conduit{stroke-linecap:round;stroke-linejoin:round}
+#page #networkPaths .conduit.active:not(.off){stroke-width:3.2;opacity:1}
+#page #networkPaths .conduit.off{stroke-dasharray:2 7;opacity:.26}
+#page #steps .step.current{box-shadow:inset 0 -3px #c09850}
+#page #steps .step.on{font-weight:800}
+#page.nigredo :is(#spectral,#envGraph,.filter-vis,.wave){background-color:#233930}
+#page.nigredo #envGraph path[stroke-width]{stroke:#efb797}
+#page.nigredo #spectral path[stroke-width]{stroke:#a1d5c2}
 #page .surface-title{align-items:center}
 #page :is(#spectral,#envGraph,.filter-vis,.wave){border-radius:4px;background-color:rgba(117,142,118,.07);background-image:linear-gradient(to right,rgba(118,137,112,.16) 1px,transparent 1px),linear-gradient(to top,rgba(118,137,112,.14) 1px,transparent 1px);background-size:25% 100%,100% 50%}
 #page :is(#spectral,#envGraph,.filter-vis,.wave) path[fill="none"]{stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}

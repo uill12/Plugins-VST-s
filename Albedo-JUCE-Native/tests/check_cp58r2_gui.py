@@ -51,6 +51,8 @@ with sync_playwright() as p:
             assert page.evaluate('window.ALBEDO_CP04.state.cp04[6031]')==max(0,choice-3)
             if choice<4:
                 assert page.evaluate('window.ALBEDO_CP04.state.cp04[6024]')==choice
+        if width==1230:
+            page.screenshot(path='Albedo_CP58R9_Editor.png')
         page.evaluate("document.querySelector('#presetBrowser').hidden=false")
         page.wait_for_selector('#presetBrowser:popover-open')
         box=page.locator('#presetBrowser .preset-browser-panel').bounding_box()
