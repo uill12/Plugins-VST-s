@@ -9,6 +9,7 @@ void apply(int index, Set&& set)
 {
     auto load = [&](const auto& p) {
         set(6031,0.f);
+        set(6032,0.f);
         bool hasArp=false,hasExplicitClock=false;
         for (std::size_t i=0; i<p.changeCount; ++i) {
             const auto& c=p.changes[i];

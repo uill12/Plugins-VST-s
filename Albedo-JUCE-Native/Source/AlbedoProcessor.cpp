@@ -141,8 +141,8 @@ void AlbedoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
     juce::ScopedNoDenormals noDenormals;
     recoverInterruptedAudio(buffer.getNumSamples());
     if(pendingPanic.exchange(false,std::memory_order_acq_rel)) panicVoices();
-    syncArpClock();
     updateSynthParameters();
+    syncArpClock();
     int pos = 0;
     for (const auto metadata : midi)
     {
@@ -161,8 +161,8 @@ void AlbedoProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::Mid
     juce::ScopedNoDenormals noDenormals;
     recoverInterruptedAudio(buffer.getNumSamples());
     if(pendingPanic.exchange(false,std::memory_order_acq_rel)) panicVoices();
-    syncArpClock();
     updateSynthParameters();
+    syncArpClock();
     int pos=0;
     for (const auto metadata : midi)
     {
@@ -221,6 +221,7 @@ void AlbedoProcessor::setStateInformation (const void* data, int size)
     juce::MemoryInputStream in (data, (size_t) juce::jmax (0, size), false);
     if (in.readInt() != 0x414C4232) return;
     presetGeneration.fetch_add(1u,std::memory_order_acq_rel);
+    if(auto* meter=parameter(6032)) meter->setValueNotifyingHost(0.f);
     if(auto* wolfram=parameter(6031)) wolfram->setValueNotifyingHost(0.0f);
     currentProgram.store (juce::jlimit (0, getNumPrograms()-1, in.readInt()));
     const int count = juce::jlimit (0, 500, in.readInt());

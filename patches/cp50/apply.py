@@ -49,6 +49,7 @@ for ident,old_name,new_name,default in (
         if ident==6023:fields[3],fields[4]='10','95'
         modified=','.join(fields)
     p=p.replace(item,modified)
+p=change(p,' return p;', ' add(6032,"Arp Time Signature","Cellular Arpeggiator",0,7,0,"",true);\n return p;')
 params.write_text(p)
 s=src.read_text()
 s=s.replace('void Synth::noteOn(','void Synth::voiceOn(').replace('void Synth::noteOff(','void Synth::voiceOff(').replace('void Synth::allNotesOff(){','void Synth::voicePanic(){')

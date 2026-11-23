@@ -1,6 +1,13 @@
 // A single clock owns note selection, step rests and gate releases.
 // Keep host tempo separate from the free-running BPM parameter. No transport
 // callbacks, allocations, or UI calls are made in the scheduler.
+// Identify the first grid event in each bar, including dotted and triplet divisions.
+static bool arpBarAccent(unsigned index,double division,int meter){
+ constexpr double barBeats[]={4.,2.,3.,5.,3.5,3.,4.5,6.};
+ const double bar=barBeats[std::clamp(meter,0,7)];
+ const double phase=double(index)*division/bar;
+ return index==0 || std::floor(phase+1.e-6)>std::floor(phase-division/bar+1.e-6);
+}
 void Synth::setArpTempo(double bpm){arpHostValid_=std::isfinite(bpm)&&bpm>0;if(arpHostValid_)arpHostTempo_=clamp(bpm,20.,400.);}
 // Host PPQ time is sample-advanced between MIDI events and never driven by UI.
 void Synth::setArpTransport(double ppq,bool playing){
@@ -8,14 +15,14 @@ void Synth::setArpTransport(double ppq,bool playing){
  if(!valid){arpTransportValid_=false;return;}
  const bool jumped=arpTransportValid_&&std::abs(ppq-arpTransportBeat_)>0.02;
  arpTransportBeat_=ppq;arpTransportValid_=true;
- if(arpEnabled_&&arpCount_){
+ if(get(6030)>.5&&arpEnabled_&&arpCount_){
   if(jumped){arpRelease();arpGate_=0.;}
   arpSnap();
  }
 }
 // Lock step phase to paired swung musical divisions, without changing pitch.
 void Synth::arpSnap(){
- if(!arpTransportValid_||!arpHostValid_)return;
+ if(get(6030)<.5||!arpTransportValid_||!arpHostValid_)return;
  const double division=clamp(get(6021),.05,1.);
  const double phase=arpTransportBeat_/division;
  const double pair=std::floor(phase*.5),pairStart=2.*pair;
@@ -77,7 +84,7 @@ void Synth::arpTick(){
  const int octaves=std::clamp(int(get(6025)),1,3);
  const int rotate=std::clamp(int(get(6028)),0,7);
  const double swing=clamp(get(6026)*.01,0.,.45);
- const double tempo=arpHostValid_?arpHostTempo_:120.;
+ const double tempo=get(6030)>.5?(arpHostValid_?arpHostTempo_:120.):clamp(get(6029),40.,240.);
  const double division=get(6021); // 1, 1/2, 1/4, 1/8 beats for quarter ... thirty-second
  const double period=std::max(2.,fs_*60./tempo*division*((step&1)?1.-swing:1.+swing));
  arpClock_+=period;

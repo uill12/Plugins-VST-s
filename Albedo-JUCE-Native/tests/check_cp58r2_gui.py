@@ -19,18 +19,22 @@ with sync_playwright() as p:
                      'cp57_tempo_controls.js'):
             page.add_script_tag(path=str(assets/name))
         page.wait_for_function('()=>!!window.ALBEDO_CP57_TEMPO')
-        assert page.locator('#cp57Clock,[data-arp="6029"],[data-arp="6030"]').count()==0
-        tiles=page.locator('#cp56Arp .cp56-param')
-        assert tiles.count()==6
-        previous=None
-        for tile in tiles.all():
-            dial,label,value=[tile.locator(sel).bounding_box() for sel in ('.cp56-rotary','.cp56-label','output')]
-            center=dial['x']+dial['width']/2
-            for box in (label,value):
-                assert abs(box['x']+box['width']/2-center)<2
-            if previous:
-                assert dial['x']>previous['x']+previous['width'] and abs(dial['y']-previous['y'])<1
-            previous=dial
+        for mode,count in [('1',6),('0',7),('1',6)]:
+            page.locator('#cp57Clock').select_option(mode)
+            assert page.locator('#cp56Arp [data-cp56-id="6029"]').is_visible()==(mode=='0')
+            tiles=page.locator('#cp56Arp .cp56-param:visible')
+            assert tiles.count()==count
+            previous=None
+            for tile in tiles.all():
+                dial,label,value=[tile.locator(sel).bounding_box() for sel in ('.cp56-rotary','.cp56-label','output')]
+                center=dial['x']+dial['width']/2
+                for box in (label,value):
+                    assert abs(box['x']+box['width']/2-center)<2
+                if previous:
+                    assert dial['x']>previous['x']+previous['width'] and abs(dial['y']-previous['y'])<1
+                previous=dial
+        page.locator('#pulsusMeter').select_option('4')
+        assert page.evaluate('window.ALBEDO_CP04.state.cp04[6032]')==4
         page.locator('#cp57Rate').select_option('0.5')
         assert abs(page.evaluate('window.ALBEDO_CP04.state.cp04[6021]')-0.5)<1e-6,(width,height,'1/8')
         page.locator('#cp57Rate').select_option('0.25')
