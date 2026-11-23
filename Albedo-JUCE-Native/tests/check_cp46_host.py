@@ -135,7 +135,7 @@ def main():
             for control,pid,options,context in [
                     ('oversample',9002,[('2×',2),('4×',3)],'settings'),
                     ('filterRoute',3012,[('SERIAL A-B',1),('SERIAL B-A',2)],'filter'),
-                    ('division',6021,[('125',.125),('500',.5)],None),
+                    ('cp57Rate',6021,[('0.125',.125),('0.5',.5)],None),
                     ('tuning',3112,[('19-TET',3),('24-TET',4)],'settings')]:
                 if context:open_context(context)
                 # Filter routing uses a visible proxy that dispatches change
