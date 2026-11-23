@@ -15,12 +15,12 @@ assert ("VERSION 1.0.51" in cmake or "VERSION 1.0.53" in cmake or "VERSION 1.0.5
 assert "BUNDLE_ID \"org.vitriol.albedo.juce32\"" in cmake
 for i,character in enumerate(("Oblique","Symmetrical","Cyclical","Asymmetrical")):
     assert f'<option value="{i}"' in html and character in html
-for pid in (6022,6023,6024,6025,6026,6027,6028,6029,6030):
+for pid in (6022,6023,6024,6025,6026,6027,6028):
     assert f'data-arp="{pid}"' in html, pid
     assert f'add({pid},' in apply or pid in (6022,6023), pid
 for token in ("const bool obliqueGap","const bool asymmetricGap","2ull*cursor+cursor/2",
-              "5ull*cursor+cursor/3","2*span-2","get(6028)","get(6029)",
-              "get(6030)","arpHostValid_","++arpIndex_",
+              "5ull*cursor+cursor/3","2*span-2","get(6028)",
+              "arpHostValid_","++arpIndex_",
               "arpBits_","std::sort","arpPrune()","voicePanic()"):
     assert token in src or token in apply, token
 assert "std::stable_sort" not in src

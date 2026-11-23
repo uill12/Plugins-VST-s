@@ -52,6 +52,8 @@ const css=[
 'html.albedo-fit #page #cp56Envelope .cp56-param,html.albedo-fit #page #cp56Arp .cp56-param{min-height:54px}',
 'html.albedo-fit #page #cp56Envelope .cp56-rotary,html.albedo-fit #page #cp56Arp .cp56-rotary{width:28px;height:28px;flex-basis:28px}',
 'html.albedo-fit #page #cp56Envelope .cp56-label,html.albedo-fit #page #cp56Arp .cp56-label{font-size:8.5px}',
+'html.albedo-fit #page #cp56Arp .cp56-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;padding:0 4px}',
+'html.albedo-fit #page #cp56Arp .cp56-param{display:grid;grid-template-rows:28px 12px 13px;justify-items:center;align-items:center;align-content:start;justify-content:stretch;gap:2px}',
 'html.albedo-fit #page #cp56Arp{margin-top:2px;min-height:59px}',
 'html.albedo-fit #page #fx .fx-knob-area{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-around!important;gap:2px!important;overflow:hidden!important}',
 'html.albedo-fit #page #fx .fx-knob-area>.param{min-width:0!important;flex:1 1 54%!important;max-width:56%!important}',
@@ -128,7 +130,7 @@ function syncSource(){
  else items.forEach(([off,label],i)=>bind(grid.children[i],base+off,label));
 }
 insert(env,[[3120,'A ENV ±'],[3121,'B ENV ±'],[3122,'ENV ATTACK'],[3123,'ENV DECAY']]);
-insert(arp,[[6023,'GATE'],[6022,'CA ACCENT'],[6026,'SWING'],[6025,'OCTAVES']]);
+insert(arp,[[6023,'GATE'],[6022,'CA ACCENT'],[6026,'SWING'],[6025,'OCTAVES'],[6027,'STEPS'],[6028,'ROTATE']]);
 syncSource();
 // Visual order is audible influence, not factory ID order. DOM nodes are reused:
 // the original dial listeners and JUCE automation remain fully intact.

@@ -19,14 +19,18 @@ with sync_playwright() as p:
                      'cp57_tempo_controls.js'):
             page.add_script_tag(path=str(assets/name))
         page.wait_for_function('()=>!!window.ALBEDO_CP57_TEMPO')
-        assert page.locator('#cp57Clock').is_visible(),(width,height,'clock')
-        assert page.locator('#cp57Rate').is_visible(),(width,height,'rate')
-        assert page.locator('#cp57Clock').input_value()=='1',(width,height,'initial DAW')
-        assert page.locator('#cp57Rate').input_value()=='0.25',(width,height,'initial 1/16')
-        page.locator('#cp57Clock').select_option('0')
-        assert page.evaluate('window.ALBEDO_CP04.state.cp04[6030]')==0,(width,height,'FREE')
-        page.locator('#cp57Clock').select_option('1')
-        assert page.evaluate('window.ALBEDO_CP04.state.cp04[6030]')==1,(width,height,'DAW')
+        assert page.locator('#cp57Clock,[data-arp="6029"],[data-arp="6030"]').count()==0
+        tiles=page.locator('#cp56Arp .cp56-param')
+        assert tiles.count()==6
+        previous=None
+        for tile in tiles.all():
+            dial,label,value=[tile.locator(sel).bounding_box() for sel in ('.cp56-rotary','.cp56-label','output')]
+            center=dial['x']+dial['width']/2
+            for box in (label,value):
+                assert abs(box['x']+box['width']/2-center)<2
+            if previous:
+                assert dial['x']>previous['x']+previous['width'] and abs(dial['y']-previous['y'])<1
+            previous=dial
         page.locator('#cp57Rate').select_option('0.5')
         assert abs(page.evaluate('window.ALBEDO_CP04.state.cp04[6021]')-0.5)<1e-6,(width,height,'1/8')
         page.locator('#cp57Rate').select_option('0.25')

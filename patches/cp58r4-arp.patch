@@ -104,7 +104,7 @@
   // Only note-event selection and deliberate octave additions affect pitch.
 @@ -79,52 +142,45 @@
   const double swing=clamp(get(6026)*.01,0.,.45);
-  const double tempo=(get(6030)>.5&&arpHostValid_)?arpHostTempo_:clamp(get(6029),40.,240.);
+  const double tempo=arpHostValid_?arpHostTempo_:120.;
   const double division=get(6021); // 1, 1/2, 1/4, 1/8 beats for quarter ... thirty-second
 - const double period=std::max(2.,fs_*60./tempo*division*((step&1)?1.-swing:1.+swing));
 + const double period=std::max(2.,fs_*60./tempo*division*((arpIndex_&1)?1.+swing:1.-swing));

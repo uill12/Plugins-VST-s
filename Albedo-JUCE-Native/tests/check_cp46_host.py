@@ -185,15 +185,13 @@ def main():
             # articulation is intentionally moved to the RHYTHM popup.
             open_context('arp')
             for pid,valid in ((6024,['0','1','2','3']),(6025,['1','2','3']),
-                              (6028,[str(n) for n in range(8)]),(6030,['0','1'])):
+                              (6028,[str(n) for n in range(8)])):
                 control=page.locator('#cp54Popover [data-arp="'+str(pid)+'"]')
                 current=control.input_value()
                 option=next(v for v in valid if v!=current)
                 control.select_option(option)
                 check_value(pid,int(option))
-            page.locator('#cp54Popover [data-arp="6029"]').fill('134')
-            page.locator('#cp54Popover [data-arp="6029"]').press('Tab')
-            check_value(6029,134)
+            assert page.locator('#cp54Popover [data-arp="6029"]').count()==0
             close_context()
             xy=page.locator('#xy')
             rect=xy.bounding_box()
