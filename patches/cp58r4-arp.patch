@@ -154,10 +154,10 @@
 +  if(hit && get(6000+step)>.5){
     // Separate CA lattice shapes accents only; no pitch drift or random transpose.
 -   const bool energetic=((arpBits_>>step)&1)!=0;
-+   const bool downbeat=arpBarAccent(arpIndex_,division,int(get(6032)));
++   const double meterWeight=arpMeterWeight(arpIndex_,division,int(get(6032)));
     const double accent=clamp(get(6022)*.01,0.,1.);
 -   const double velocityScale=energetic?1.:(1.-.70*accent);
-+   const double velocityScale=1.-accent*((emphasis?0.:.25)+(downbeat?0.:.15));
++   const double velocityScale=1.-accent*((emphasis?0.:.25)+(.15*(1.-meterWeight)));
     voiceOn(note,clamp(key.vel*velocityScale,.001,1.),key.ch,-1);
     arpSound_=note;arpChannel_=key.ch;
    }

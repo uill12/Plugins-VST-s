@@ -1,12 +1,21 @@
 // A single clock owns note selection, step rests and gate releases.
 // Keep host tempo separate from the free-running BPM parameter. No transport
 // callbacks, allocations, or UI calls are made in the scheduler.
-// Identify the first grid event in each bar, including dotted and triplet divisions.
-static bool arpBarAccent(unsigned index,double division,int meter){
- constexpr double barBeats[]={4.,2.,3.,5.,3.5,3.,4.5,6.};
- const double bar=barBeats[std::clamp(meter,0,7)];
- const double phase=double(index)*division/bar;
- return index==0 || std::floor(phase+1.e-6)>std::floor(phase-division/bar+1.e-6);
+// Weight each bar opening and its beats. Compound eighth meters group by three.
+static double arpMeterWeight(unsigned index,double division,int meter){
+ constexpr double bars[]={4.,2.,3.,5.,3.5,3.,4.5,6.};
+ const double bar=bars[std::clamp(meter,0,7)];
+ const double now=index*division;
+ const double before=now-division;
+ auto crossed=[&](double period){
+  return std::floor(now/period+1.e-6)>std::floor(before/period+1.e-6);
+ };
+ if(index==0 || crossed(bar))return 1.;
+ if(meter==4){ // 7/8 grouped 2+2+3
+  const double local=std::fmod(now+1.e-6,bar);
+  return ((local>=1. && local-division<1.) || (local>=2. && local-division<2.)) ? .5 : 0.;
+ }
+ return crossed(meter>=5?1.5:1.) ? .5 : 0.;
 }
 void Synth::setArpTempo(double bpm){arpHostValid_=std::isfinite(bpm)&&bpm>0;if(arpHostValid_)arpHostTempo_=clamp(bpm,20.,400.);}
 // Host PPQ time is sample-advanced between MIDI events and never driven by UI.
