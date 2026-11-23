@@ -2,7 +2,7 @@ name: Browser and arp geometry
 on: [push]
 jobs:
   viewport:
-    if: github.ref == 'refs/heads/albedo/cp58r8-clock-meter'
+    if: github.ref == 'refs/heads/albedo/cp58r9-voicing'
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4

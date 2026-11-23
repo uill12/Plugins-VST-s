@@ -48,6 +48,11 @@ html.albedo-fit #page #cp57TempoControls select{font-size:8.5px;font-weight:700;
 `;style.textContent+=`
 html.albedo-fit #page #cp56Arp:not(.internal) [data-cp56-id="6029"]{display:none!important}
 html.albedo-fit #page #cp56Arp.internal .cp56-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
+#page .surface-title .eyebrow,#page .footer,#page .pattern-note{display:none!important}
+#page .surface-title{align-items:center}
+#page :is(#spectral,#envGraph,.filter-vis,.wave){border-radius:4px;background-color:rgba(117,142,118,.07);background-image:linear-gradient(to right,rgba(118,137,112,.16) 1px,transparent 1px),linear-gradient(to top,rgba(118,137,112,.14) 1px,transparent 1px);background-size:25% 100%,100% 50%}
+#page :is(#spectral,#envGraph,.filter-vis,.wave) path[fill="none"]{stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+#page :is(.dial,.cp56-rotary,button,select):focus-visible{outline:2px solid #ab803e;outline-offset:2px}
 #cellArp #division{display:none!important}
 #cellArp .pattern-controls output{font:inherit;font-variant-numeric:tabular-nums;white-space:nowrap}
 #page .cp-arp-modes{display:flex;justify-content:center;align-items:center;gap:4px;grid-column:1/-1}
