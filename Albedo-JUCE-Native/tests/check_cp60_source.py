@@ -14,7 +14,7 @@ assert 'clearRemaining=rev_.mask+1' in s
 assert 'for(auto& ll:rev_.line)std::fill(ll.begin(),ll.end(),0.0)' not in s
 assert 'waveEditTables_' in h and 'struct Reverb' in h and 'clearRemaining' in h
 assert 'add(b+10,"Material",g,0,55' in params
-assert 'VERSION 1.0.60' in cmake
+assert ('VERSION 1.0.60' in cmake or 'VERSION 1.0.61' in cmake)
 assert 'AlbedoCP60DspQuality' in cmake and 'AlbedoCP60FxRealtimeTest' in cmake
 assert 'cp60-polish' in ui and 'CRUCIBLE II' in ui
 report=Path('CP60_FX_Preset_Balance_QA.json')

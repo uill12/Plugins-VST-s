@@ -119,14 +119,30 @@ void AlbedoProcessor::handleMidi (const juce::MidiMessage& m)
     const int ch=juce::jlimit(0,15,m.getChannel()-1);
     if(m.isNoteOn()) {
         const int note=m.getNoteNumber();
-        if(midiHeld[(size_t)ch][(size_t)note]) synth->noteOff(note,ch); // Retrigger: never accumulate lost same-key voices.
+        if(midiHeld[(size_t)ch][(size_t)note])
+            synth->noteOff(note,ch); // A retrigger replaces one held key.
         midiHeld[(size_t)ch][(size_t)note]=true;
+        midiPressStamp[(size_t)ch][(size_t)note]=++nextMidiPressStamp;
         synth->noteOn(note,m.getFloatVelocity(),ch);
     }
     else if(m.isNoteOff()) {
         const int note=m.getNoteNumber();
-        midiHeld[(size_t)ch][(size_t)note]=false;
-        synth->noteOff(note,ch);
+        int owner=ch;
+        if(!midiHeld[(size_t)ch][(size_t)note]) {
+            // A reconnecting MIDI bridge may send the release on a different
+            // channel from the press. Select the oldest outstanding press of
+            // this exact pitch; never release a different pitch or whole chord.
+            uint64_t oldest=std::numeric_limits<uint64_t>::max();
+            for(int candidate=0;candidate<16;++candidate)
+                if(midiHeld[(size_t)candidate][(size_t)note] &&
+                   midiPressStamp[(size_t)candidate][(size_t)note]<oldest){
+                    oldest=midiPressStamp[(size_t)candidate][(size_t)note];
+                    owner=candidate;
+                }
+        }
+        midiHeld[(size_t)owner][(size_t)note]=false;
+        midiPressStamp[(size_t)owner][(size_t)note]=0;
+        synth->noteOff(note,owner);
     }
     else if(m.isAllSoundOff() || m.isMidiStop()){
         synth->reset();for(auto& held:midiHeld)held.fill(false);

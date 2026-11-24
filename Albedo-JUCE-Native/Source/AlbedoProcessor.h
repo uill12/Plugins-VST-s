@@ -66,6 +66,10 @@ private:
     AlbedoRearField rearField;
     AlbedoOutputGuard outputGuard;
     std::array<std::array<bool,128>,16> midiHeld{};
+    // CP61: preserve press order across MIDI bridges that remap note-off channels.
+    // Audio-thread-only, fixed storage: no callback allocations or locks.
+    std::array<std::array<uint64_t,128>,16> midiPressStamp{};
+    uint64_t nextMidiPressStamp=0;
     std::atomic<unsigned> presetGeneration{0}; // odd=GUI editing, even=stable coherent preset
     std::atomic<bool> pendingPanic{false};
     std::atomic<bool> parametersChanged { true };

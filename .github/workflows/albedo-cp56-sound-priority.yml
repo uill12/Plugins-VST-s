@@ -1,7 +1,7 @@
-name: Albedo CP60 FDN Polish + CP59 WaveEdit GUI Regression
+name: Albedo CP61 Note Safety and CP60 GUI Regression
 on:
   push:
-    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection]
+    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership]
   workflow_dispatch:
 permissions:
   contents: read

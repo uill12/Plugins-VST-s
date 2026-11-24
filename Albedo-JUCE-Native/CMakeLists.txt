@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(AlbedoJUCE VERSION 1.0.60 LANGUAGES C CXX RC)
+project(AlbedoJUCE VERSION 1.0.61 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -258,4 +258,18 @@ if(BUILD_TESTING AND WIN32)
   endforeach()
   add_test(NAME cp60_fdn_stereo_physical_voice_quality COMMAND AlbedoCP60DspQuality)
   add_test(NAME cp60_fx_realtime_restart_and_modulation COMMAND AlbedoCP60FxRealtimeTest)
+endif()
+
+# CP61: sample-accurate arp-OFF onset and MIDI note ownership safety.
+# Must run against the exact reconstructed CP61 DSP and original resource IDs.
+if(BUILD_TESTING AND WIN32)
+  add_executable(AlbedoCP61OnsetMidiTest
+    tests/cp61_onset_midi_test.cpp
+    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc"
+    "${CMAKE_CURRENT_BINARY_DIR}/albedo_waveedit_bank.rc")
+  target_compile_features(AlbedoCP61OnsetMidiTest PRIVATE cxx_std_20)
+  target_compile_definitions(AlbedoCP61OnsetMidiTest PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
+  target_include_directories(AlbedoCP61OnsetMidiTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
+  add_test(NAME cp61_note_onset_ownership_200_cases COMMAND AlbedoCP61OnsetMidiTest)
 endif()

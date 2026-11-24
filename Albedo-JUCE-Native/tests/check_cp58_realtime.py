@@ -6,7 +6,7 @@ patch=(root/'patches/cp58_realtime_cache.py').read_text(encoding='utf-8')
 cmake=(root/'Albedo-JUCE-Native/CMakeLists.txt').read_text(encoding='utf-8')
 workflow=(root/'.github/workflows/albedo-cp51-morph-tree-windows.yml').read_text(encoding='utf-8')
 native=(root/'Albedo-JUCE-Native/tests/cp58_asio_blocks.cpp').read_text(encoding='utf-8')
-assert ('VERSION 1.0.58' in cmake or 'VERSION 1.0.59' in cmake or 'VERSION 1.0.60' in cmake)
+assert ('VERSION 1.0.58' in cmake or 'VERSION 1.0.59' in cmake or 'VERSION 1.0.60' in cmake or 'VERSION 1.0.61' in cmake)
 for needle in ('sourceDriveGain_','sourceFilterMixRate_','sourceSqrtUnison_',
                'sourceResonanceK_','sourceFilterCutoffRate_','voiceAttackDelta_',
                'sourceDriveNormalize_','std::fmod(x,size)'):
