@@ -53,6 +53,35 @@ namespace vitriol { struct CP60TestProbe { static int run(){
   }
   ++cases;
  }
+ // The offline target matcher reuses a Synth across 192 candidate renders.
+ // After prepare(), its reverb must match the same preset from a fresh process.
+ // Regression for missed FDN modulation phase reset after long wet tails.
+ for(int sr:{48000,96000}){
+  auto renderer=std::make_unique<Synth>();
+  renderer->setParam(1000,1);renderer->setParam(1001,1);renderer->setParam(1002,65);
+  renderer->setParam(5005,1);renderer->setParam(5004,60);renderer->setParam(5011,125);
+  renderer->setParam(5003,1);renderer->setParam(5002,15);renderer->setParam(3103,1.0);
+  auto render=[&](){
+   renderer->prepare(sr);renderer->noteOn(57,.8,0);
+   const int count=sr/2,off=count/2;
+   std::vector<float> output(count*2);
+   for(int p=0;p<count;){
+    if(p==off)renderer->noteOff(57,0);
+    int n=std::min(128,count-p);if(p<off)n=std::min(n,off-p);
+    float l[128]{},r[128]{};renderer->process(l,r,n);
+    for(int k=0;k<n;k++){output[2*(p+k)]=l[k];output[2*(p+k)+1]=r[k];}
+    p+=n;
+   }
+   return output;
+  };
+  const auto first=render(),second=render();
+  double delta=0.,peak=0.;for(size_t i=0;i<first.size();i++){
+   delta=std::max(delta,std::abs(double(first[i])-second[i]));
+   peak=std::max(peak,std::abs(double(first[i])));
+  }
+  if(peak<1.e-5||delta>1.e-7){std::fprintf(stderr,"non-deterministic FDN reset rate=%d delta=%.9g\n",sr,delta);return 9;}
+  ++cases;
+ }
  std::printf("CP60 FX QA PASS: %d cases across 44.1/48/88.2/96/192 kHz\n",cases);
 return 0;
 }}; }

@@ -17,13 +17,13 @@ h=swap(h,'double dampA=0,modDepth=0,outScale=1,inScale=1,lenSlew=1;bool lenValid
    'double dampA=0,modDepth=0,outScale=1,inScale=1,lenSlew=1;bool lenValid=false;\n  size_t clearCursor=0,clearRemaining=0; // bounded real-time reactivation',
    'reverb clear cursor')
 s=swap(s,'rev_.pos.fill(0);rev_.lp.fill(0.);rev_.lenValid=false;',
-       'rev_.pos.fill(0);rev_.lp.fill(0.);rev_.lenValid=false;rev_.clearCursor=rev_.clearRemaining=0;',
+       'rev_.pos.fill(0);rev_.lp.fill(0.);rev_.phase.fill(0.);rev_.lenValid=false;rev_.clearCursor=rev_.clearRemaining=0;',
        'reset cursor')
 s=swap(s,'if(k==2){for(auto& ll:rev_.line)std::fill(ll.begin(),ll.end(),0.0);rev_.lp.fill(0.);rev_.pos.fill(0);for(auto& f:fx_)for(auto& ap:f.inputDiffuse)ap.clear();}',
        '''if(k==2){
      // Do not memset the entire 8-line FDN in a 64-sample ASIO block.
      // Delay memory is cleared in small deterministic slices before audible wet output.
-     rev_.lp.fill(0.);rev_.pos.fill(0);
+     rev_.lp.fill(0.);rev_.pos.fill(0);rev_.phase.fill(0.);
      rev_.clearCursor=0;rev_.clearRemaining=rev_.mask+1;
      for(auto& f:fx_)for(auto& ap:f.inputDiffuse)ap.clear();
     }''','avoid FDN RT memset')
