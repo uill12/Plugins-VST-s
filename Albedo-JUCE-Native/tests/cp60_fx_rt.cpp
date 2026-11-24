@@ -5,10 +5,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <cmath>
-#define private public
 #include "vitriol_dsp.hpp"
-#undef private
-int main(){
+namespace vitriol { struct CP60TestProbe { static int run(){
  using vitriol::Synth;
  auto synth=std::make_unique<Synth>();
  int cases=0;
@@ -56,4 +54,6 @@ int main(){
   ++cases;
  }
  std::printf("CP60 FX QA PASS: %d cases across 44.1/48/88.2/96/192 kHz\n",cases);
-}
+return 0;
+}}; }
+int main(){return vitriol::CP60TestProbe::run();}

@@ -12,6 +12,7 @@ def swap(src,old,new,lab):
  n=src.count(old)
  if n!=1:raise RuntimeError(f'CP60 missing/unexpected {lab}: {n} matches')
  return src.replace(old,new)
+h=swap(h,' Reverb rev_;',' friend struct CP60TestProbe; // test-only internal access, unchanged MSVC ABI\n Reverb rev_;','MSVC friend test access')
 h=swap(h,'double dampA=0,modDepth=0,outScale=1,inScale=1,lenSlew=1;bool lenValid=false;',
    'double dampA=0,modDepth=0,outScale=1,inScale=1,lenSlew=1;bool lenValid=false;\n  size_t clearCursor=0,clearRemaining=0; // bounded real-time reactivation',
    'reverb clear cursor')
