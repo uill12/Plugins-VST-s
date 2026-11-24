@@ -24,6 +24,7 @@ assert 'waveEditTables_' in head and 'add(b+10,"Material",g,0,55' in params
 assert 'VERSION 1.0.59' in cmake
 assert 'albedo_waveedit_bank.rc' in cmake and 'AlbedoCP59WaveEditTest' in cmake
 assert 'cp59_waveedit_materials_js' in web
+assert "materials.extend" in Path('patches/cp50/export_recipes.py').read_text(encoding='utf-8'), 'Target matcher must recognize all 56 material IDs'
 assert 'synth->reset(); // Stop stale arpeggiator/sustain/FX state together.' in processor
 assert 'if(cc==123){synth->midiCC(123,0,ch);' in processor
 if a.report.exists():
