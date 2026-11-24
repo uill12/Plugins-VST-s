@@ -15,7 +15,7 @@ assert ("VERSION 1.0.51" in cmake or "VERSION 1.0.53" in cmake or "VERSION 1.0.5
 assert "BUNDLE_ID \"org.vitriol.albedo.juce32\"" in cmake
 for i,character in enumerate(("Oblique","Symmetrical","Cyclical","Asymmetrical")):
     assert f'<option value="{i}"' in html and character in html
-for pid in (6022,6023,6024,6025,6026,6027,6028):
+for pid in (6023,6024,6025,6026,6027,6028):
     assert f'data-arp="{pid}"' in html, pid
     assert f'add({pid},' in apply or pid in (6022,6023), pid
 for token in ("const bool obliqueGap","const bool asymmetricGap","2ull*cursor+cursor/2",
@@ -30,8 +30,9 @@ assert "get(4003)" in src, "CA rule selection must remain"
 assert "s->setParam(6025,1)" in test and "s->midiCC(64,127)" in test
 for rate in (44100,48000,88200,96000):
     assert str(rate) in test
+assert 'data-arp="6022"' not in html, "CP62 deprecates visible accent control"
 assert "syncArpClock()" in processor and "synth->setArpTempo(tempo)" in processor
 assert "albedoArpStep" in html, "GUI must follow the actual synth step"
 assert html.count('id="cellArp"')==1
 assert "Pulse Depth" not in apply.split("p=params.read_text()")[1].split("params.write_text(p)")[1]
-print("CP50 Nereida-style arp source contract PASS: four character modes, host/free BPM, CA accent, MIDI ownership, all step gates")
+print("CP50 Nereida-style arp source contract PASS: four character modes, host/free BPM, accent-free CP62 GUI, MIDI ownership, all step gates")
