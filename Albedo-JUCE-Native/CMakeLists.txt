@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(AlbedoJUCE VERSION 1.0.58 LANGUAGES C CXX RC)
+project(AlbedoJUCE VERSION 1.0.59 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -49,6 +49,7 @@ juce_add_binary_data(AlbedoArtwork SOURCES
   Assets/cp54_essential_sound_layout.js
   Assets/cp56_sound_priority.js
   Assets/cp57_tempo_controls.js
+  Assets/cp59_waveedit_materials.js
   Metadata/factory_preset_taxonomy.json
   "${CMAKE_CURRENT_SOURCE_DIR}/../ui/Albedo_CP30_CP22_Landscape_3x2.html"
 )
@@ -92,6 +93,15 @@ if(WIN32)
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Assets/albedo_bank.rc.in"
                  "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc" @ONLY)
   target_sources(AlbedoNative_VST3 PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
+  # CP59: CC0 WaveEdit bank with mipmapped single cycles and morph grains.
+  set(ALBEDO_WAVEEDIT_BANK "${ALBEDO_DSP_ROOT}/resources/Albedo_CP59_WaveEdit_MorphGrain.albw")
+  if(NOT EXISTS "${ALBEDO_WAVEEDIT_BANK}")
+    message(FATAL_ERROR "Selected WaveEdit resource missing: ${ALBEDO_WAVEEDIT_BANK}")
+  endif()
+  file(TO_CMAKE_PATH "${ALBEDO_WAVEEDIT_BANK}" ALBEDO_WAVEEDIT_RESOURCE_PATH)
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Assets/albedo_waveedit_bank.rc.in"
+                 "${CMAKE_CURRENT_BINARY_DIR}/albedo_waveedit_bank.rc" @ONLY)
+  target_sources(AlbedoNative_VST3 PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/albedo_waveedit_bank.rc")
 endif()
 
 option(ALBEDO_BUILD_CLAP "Build CLAP using unofficial clap-juce-extensions" ON)
@@ -102,7 +112,7 @@ if(ALBEDO_BUILD_CLAP)
       CLAP_ID "org.vitriol.opussonorum.juce32"
       CLAP_FEATURES instrument synthesizer stereo)
     if(WIN32)
-      target_sources(AlbedoNative_CLAP PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
+      target_sources(AlbedoNative_CLAP PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc" "${CMAKE_CURRENT_BINARY_DIR}/albedo_waveedit_bank.rc")
     endif()
   else()
     message(WARNING "CLAP extension checkout missing; build only VST3 until it is present")
@@ -174,7 +184,7 @@ endif()
 
 if(BUILD_TESTING AND WIN32)
   add_executable(AlbedoShapeAudition tests/cp49_shape_audition.cpp
-    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp" "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
+    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp" "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc" "${CMAKE_CURRENT_BINARY_DIR}/albedo_waveedit_bank.rc")
   target_compile_features(AlbedoShapeAudition PRIVATE cxx_std_20)
   target_include_directories(AlbedoShapeAudition PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Source" "${ALBEDO_DSP_ROOT}/include")
 endif()
@@ -190,7 +200,8 @@ if(BUILD_TESTING AND WIN32)
   add_executable(AlbedoCP53VoiceHifiTest
     tests/cp53_voice_hifi_qa.cpp
     "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp"
-    "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
+    "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc"
+    "${CMAKE_CURRENT_BINARY_DIR}/albedo_waveedit_bank.rc")
   target_compile_features(AlbedoCP53VoiceHifiTest PRIVATE cxx_std_20)
   target_compile_definitions(AlbedoCP53VoiceHifiTest PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
   target_include_directories(AlbedoCP53VoiceHifiTest PRIVATE
@@ -210,7 +221,20 @@ endif()
 
 if(BUILD_TESTING AND WIN32)
   add_executable(AlbedoTargetRenderer tools/target/render_target.cpp
-    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp" "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc")
+    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp" "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc" "${CMAKE_CURRENT_BINARY_DIR}/albedo_waveedit_bank.rc")
   target_compile_features(AlbedoTargetRenderer PRIVATE cxx_std_20)
   target_include_directories(AlbedoTargetRenderer PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Source" "${ALBEDO_DSP_ROOT}/include")
+endif()
+
+# CP59: real embedded CC0 wavetable/granular source with MIDI lifecycle.
+if(BUILD_TESTING AND WIN32)
+  add_executable(AlbedoCP59WaveEditTest
+    tests/cp59_waveedit_midi.cpp
+    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc"
+    "${CMAKE_CURRENT_BINARY_DIR}/albedo_waveedit_bank.rc")
+  target_compile_features(AlbedoCP59WaveEditTest PRIVATE cxx_std_20)
+  target_compile_definitions(AlbedoCP59WaveEditTest PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
+  target_include_directories(AlbedoCP59WaveEditTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
+  add_test(NAME cp59_waveedit_granular_midi_asio_buffers COMMAND AlbedoCP59WaveEditTest)
 endif()

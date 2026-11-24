@@ -56,7 +56,9 @@ void AlbedoProcessor::recoverInterruptedAudio(int frames)
         nextCallback=now+std::chrono::duration_cast<Clock::duration>(duration);
     }
     if(interrupted){
-        synth->allSoundOff();
+        // CP59: a suspended ASIO callback must not resurrect an orphaned held
+        // voice or 18-second wet tail when the host resumes.
+        synth->reset();
         for(auto& channel:midiHeld) channel.fill(false);
         transportPlaying=false;
         outputGuard.reset();
@@ -100,7 +102,11 @@ void AlbedoProcessor::syncArpClock()
                 tempo=static_cast<float>(juce::jlimit(20.0,400.0,*bpm));
             playing=position->getIsPlaying();
             if(auto beat=position->getPpqPosition())ppq=*beat;
-            if(transportPlaying&&!playing)panicVoices();
+            if(transportPlaying&&!playing){
+                synth->reset(); // Stop stale arpeggiator/sustain/FX state together.
+                for(auto& channel:midiHeld)channel.fill(false);
+                outputGuard.reset();
+            }
             transportPlaying=playing;
         }
     }
@@ -122,10 +128,18 @@ void AlbedoProcessor::handleMidi (const juce::MidiMessage& m)
         midiHeld[(size_t)ch][(size_t)note]=false;
         synth->noteOff(note,ch);
     }
-    else if(m.isAllNotesOff() || m.isAllSoundOff() || m.isMidiStop()) panicVoices();
+    else if(m.isAllSoundOff() || m.isMidiStop()){
+        synth->reset();for(auto& held:midiHeld)held.fill(false);
+        outputGuard.reset();
+    }
+    else if(m.isAllNotesOff()){
+        synth->midiCC(123,0,ch);midiHeld[(size_t)ch].fill(false);
+    }
     else if(m.isController()) {
         const int cc=m.getControllerNumber();
-        if(cc==120||cc==123){panicVoices();return;}
+        if(cc==120){synth->reset();for(auto& held:midiHeld)held.fill(false);outputGuard.reset();return;}
+        if(cc==123){synth->midiCC(123,0,ch);midiHeld[(size_t)ch].fill(false);return;}
+        // CC121 resets controller state, including an orphaned sustain pedal.
         synth->midiCC(cc,m.getControllerValue(),ch); // Sustain and release belong to the event's MIDI channel.
     }
     else if(m.isPitchWheel()) synth->bend(m.getPitchWheelValue());

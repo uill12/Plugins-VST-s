@@ -1,13 +1,14 @@
-name: Albedo CP58 ASIO Realtime Windows CLAP VST3
+name: Albedo CP59 WaveEdit ConceptTree MIDI Safety Windows CLAP VST3
 on:
   push:
-    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp58r1-bounce-audio, albedo/cp58r2-browser-arp, albedo/cp58r3-spectral-cpu, albedo/cp58r4-nereida-arp, albedo/cp58r9-voicing]
+    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp58r1-bounce-audio, albedo/cp58r2-browser-arp, albedo/cp58r3-spectral-cpu, albedo/cp58r4-nereida-arp, albedo/cp58r9-voicing, albedo/cp59-waveedit-concepttree-note-safety]
     paths:
       - '.github/workflows/albedo-cp51-morph-tree-windows.yml'
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
       - 'Albedo-JUCE-Native/**'
       - 'patches/cp50/**'
       - 'patches/cp51/**'
+      - 'patches/cp59/**'
       - 'patches/cp53_*.py'
       - 'patches/cp58_*.py'
       - 'patches/cp15_apply_part*.txt'
@@ -654,6 +655,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           git apply --ignore-space-change --directory=Albedo-Quintessential-Synth patches/cp58r4-arp.patch
           if ($LASTEXITCODE -ne 0) { throw 'CP58 realtime source cache patch failed' }
+          python patches/cp59/apply_dsp.py --root Albedo-Quintessential-Synth
+          if ($LASTEXITCODE -ne 0) { throw 'CP59 CC0 wavetable and MIDI note-off DSP patch failed' }
+          git clone --depth 1 https://github.com/smpldsnds/wavedit-online.git cp59-waveedit
+          if ($LASTEXITCODE -ne 0) { throw 'CP59 public-domain WaveEdit source acquisition failed' }
+          git -C cp59-waveedit checkout 1a8d80f7a062f36eca212f92f24f2ca6329b88ff
+          if ($LASTEXITCODE -ne 0) { throw 'CP59 WaveEdit source must use verified original revision' }
+          python patches/cp59/build_waveedit.py --samples cp59-waveedit/samples --selection patches/cp59/concept_tree_selection.json --output Albedo-Quintessential-Synth/resources/Albedo_CP59_WaveEdit_MorphGrain.albw --report CP59_WaveEdit_Source_QA.json
+          if ($LASTEXITCODE -ne 0) { throw 'CP59 original WAV SHA256, morphology, or anti-alias generation failed' }
           python patches/cp50/bank.py Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb
           if ($LASTEXITCODE -ne 0) { throw 'CP49 DSP integration failed' }
           python patches/cp51/material_qa.py Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb CP51_Material_Spectral_QA.json
@@ -722,6 +731,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP57 DAW PPQ tempo sync contract failed' }
           python Albedo-JUCE-Native/tests/check_cp58_realtime.py
           if ($LASTEXITCODE -ne 0) { throw 'CP58 realtime source contract failed' }
+          python Albedo-JUCE-Native/tests/check_cp59_waveedit.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP59 WaveEdit source/license/MIDI integration contract failed' }
+          node --check Albedo-JUCE-Native/Assets/cp59_waveedit_materials.js
+          if ($LASTEXITCODE -ne 0) { throw 'CP59 material browser JS syntax failed' }
           python -m py_compile patches/cp50/apply.py
           if ($LASTEXITCODE -ne 0) { throw 'CP50 arpeggiator patcher Python syntax failed' }
           node --check Albedo-JUCE-Native/Assets/cp35_editor_geometry.js
@@ -792,6 +805,10 @@ jobs:
           }
           python Albedo-JUCE-Native/tools/refine_registers.py Albedo-JUCE-Native/Metadata
           if ($LASTEXITCODE -ne 0) { throw 'Preset register refinement failed' }
+          python patches/cp59/augment_presets.py --metadata Albedo-JUCE-Native/Metadata --selection patches/cp59/concept_tree_selection.json --report CP59_ConceptTree_Preset_QA.json
+          if ($LASTEXITCODE -ne 0) { throw 'CP59 63-preset Concept Tree generation failed' }
+          python Albedo-JUCE-Native/tests/check_cp59_waveedit.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP59 selected preset integrity failed' }
           python Albedo-JUCE-Native/tools/generate_recursive_forms.py --bank material --metadata Albedo-JUCE-Native/Metadata/material_factory_bank.json --output Albedo-JUCE-Native/Source/AlbedoMaterialBank.hpp
           if ($LASTEXITCODE -ne 0) { throw 'CP51 material header failed' }
           python Albedo-JUCE-Native/tools/generate_recursive_forms.py --bank creative --metadata Albedo-JUCE-Native/Metadata/recursive_forms_bank.json --output Albedo-JUCE-Native/Source/AlbedoCreativeBank.hpp
@@ -811,7 +828,7 @@ jobs:
       - name: Preserve reconstructed CP53 DSP source for voice/audio audit
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP58_Reconstructed_DSP_Audit
+          name: Albedo_CP59_Reconstructed_DSP_Source
           path: |
             Albedo-Quintessential-Synth/src/vitriol_dsp.cpp
             Albedo-Quintessential-Synth/include/vitriol_dsp.hpp
@@ -822,7 +839,7 @@ jobs:
       - name: Build JUCE VST3 and CLAP plugins
         shell: pwsh
         run: |
-          cmake --build build-cp38-juce --config Release --target AlbedoNative_VST3 AlbedoNative_CLAP AlbedoPresetTaxonomyTest AlbedoCP36HifiDspTest AlbedoCP38CreativeAudioTest AlbedoRearFieldTest AlbedoTargetRenderer AlbedoArpTest AlbedoControlResponseTest AlbedoShapeAudition AlbedoViewportHost AlbedoCP53OutputGuardTest AlbedoCP53VoiceHifiTest AlbedoCP58AsioBlocks --parallel 4
+          cmake --build build-cp38-juce --config Release --target AlbedoNative_VST3 AlbedoNative_CLAP AlbedoPresetTaxonomyTest AlbedoCP36HifiDspTest AlbedoCP38CreativeAudioTest AlbedoRearFieldTest AlbedoTargetRenderer AlbedoArpTest AlbedoControlResponseTest AlbedoShapeAudition AlbedoViewportHost AlbedoCP53OutputGuardTest AlbedoCP53VoiceHifiTest AlbedoCP58AsioBlocks AlbedoCP59WaveEditTest --parallel 4
           if ($LASTEXITCODE -ne 0) { throw 'Native VST3/CLAP compile failed' }
       - name: Test native plugin and verify binary exports
         shell: pwsh
@@ -844,21 +861,21 @@ jobs:
           python Albedo-JUCE-Native/tests/cp58r1_bank_check.py Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb $clap.FullName $vst.FullName
           if ($LASTEXITCODE -ne 0) { throw 'Final plugin PCM resource 102 mismatch' }
           New-Item -ItemType Directory -Path 'dist-cp38' -Force | Out-Null
-          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP58R9_Voicing.clap'
+          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP59_WaveEdit_ConceptTree.clap'
           $bundle=Get-ChildItem -Path build-cp38-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
           @(
-            'Checkpoint: Albedo CP58R3 spectral CPU optimization; CP57 DAW sync and CP56 GUI preserved',
+            'Checkpoint: Albedo CP59 24 selected CC0 WaveEdit banks + 24 pitch-safe granular morphs + 63 Concept Tree preset branches + MIDI note safety; CP58R9 GUI retained',
             'Preset parameters: CP51 192 programs, retained; DSP tonal processing upgraded for clarity',
             "Git SHA: $env:GITHUB_SHA",
             "GitHub Run: $env:GITHUB_RUN_ID",
             'Host plugin identifier and internal product name retained for DAW session compatibility',
             'Windows: CLAP + VST3, WebView2, JUCE native; 63-sample latency; 12 voices AUTO',
             'CP51, CP52, CP53 and CP54 remain intact as rollback'
-          ) | Set-Content -Path 'dist-cp38/CP58_BUILD_PROVENANCE.txt' -Encoding utf8
-          python Albedo-JUCE-Native/tools/cp58_package_metadata.py dist-cp38 --source $env:GITHUB_SHA
-          if ($LASTEXITCODE -ne 0) { throw 'CP58 VST3 strict JSON and binary package verification failed' }
+          ) | Set-Content -Path 'dist-cp38/CP59_BUILD_PROVENANCE.txt' -Encoding utf8
+          python Albedo-JUCE-Native/tools/cp59_package_metadata.py dist-cp38 --source $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'CP59 VST3 strict JSON and binary package verification failed' }
           Get-ChildItem 'dist-cp38' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
       - name: CP53 emit 192-program HiFi and MIDI lifecycle QA report
         shell: pwsh
@@ -869,7 +886,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP53 192-program clarity/sustain regression' }
       - uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP58_HiFi_DSP_192_Presets_QA
+          name: Albedo_CP59_HiFi_192_Programs_QA
           path: CP53_DSP_QA.txt
           if-no-files-found: error
       - name: CP58 exercise 12 voices at 64 through 1024 buffer frames
@@ -911,10 +928,19 @@ jobs:
             cp51-selected/morph_expansion_bank.json
             cp51-selected/cp51_existing_preset_regeneration.json
           if-no-files-found: error
+      - name: Publish CP59 Concept Tree and selected source QA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP59_CC0_ConceptTree_Resource_Preset_QA
+          path: |
+            CP59_WaveEdit_Source_QA.json
+            CP59_ConceptTree_Preset_QA.json
+            patches/cp59/concept_tree_selection.json
+          if-no-files-found: error
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP58R9_Voicing_Windows_x64_CLAP_VST3
+          name: Albedo_CP59_WaveEdit_ConceptTree_Windows_x64_CLAP_VST3
           path: dist-cp38/*
           if-no-files-found: error
       - name: Package and exercise Windows target reconstruction

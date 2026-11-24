@@ -1,0 +1,369 @@
+{
+  "title": "Albedo CP59 WaveEdit Tonal Concept Tree",
+  "license": "CC0-1.0 as stated by wavedit-online README",
+  "source_repo": "https://github.com/smpldsnds/wavedit-online",
+  "total_inspected": 705,
+  "tree": "reference-source \u2192 harmonic band \u2192 instrument role \u2192 character \u2192 near-sibling morph \u2192 final sound diversity",
+  "selected": [
+    {
+      "id": 0,
+      "file": "TIDAL.WAV",
+      "sha256": "17ea7348f63f00f4ffc8f068c60a89e26bb344726762e967ce71b76438d04706",
+      "role": "Bass",
+      "family": "Tidal",
+      "morph_with": 1,
+      "feature": {
+        "low_harmonics": 0.9495,
+        "high_harmonics": 0.0034,
+        "frame_diversity": 0.4877,
+        "seam_75p": 0.0007,
+        "rms": 0.5931
+      }
+    },
+    {
+      "id": 1,
+      "file": "SOHLER01.WAV",
+      "sha256": "5a2f49a03dd6e57d37724825995b7636457d2393af7c920f787fe073326c8f24",
+      "role": "Bass",
+      "family": "Tidal",
+      "morph_with": 0,
+      "feature": {
+        "low_harmonics": 0.9601,
+        "high_harmonics": 0.0,
+        "frame_diversity": 0.4772,
+        "seam_75p": 0.0008,
+        "rms": 0.5148
+      }
+    },
+    {
+      "id": 2,
+      "file": "MICROW02.WAV",
+      "sha256": "711c7e2ab24fbbb3f72894d806091dd4cd9d5355d996ec7d4e05a33c55e10180",
+      "role": "Pad",
+      "family": "Organic",
+      "morph_with": 8,
+      "feature": {
+        "low_harmonics": 0.8947,
+        "high_harmonics": 0.0039,
+        "frame_diversity": 0.4413,
+        "seam_75p": 0.0002,
+        "rms": 0.5151
+      }
+    },
+    {
+      "id": 3,
+      "file": "SAW_BEND.WAV",
+      "sha256": "d0ba0884f641071920ac25211a8b148c8be609bd241a7660e24f7d1d7ca6c843",
+      "role": "Bass",
+      "family": "Analog",
+      "morph_with": 20,
+      "feature": {
+        "low_harmonics": 0.995,
+        "high_harmonics": 0.0001,
+        "frame_diversity": 0.1978,
+        "seam_75p": 0.0421,
+        "rms": 0.5076
+      }
+    },
+    {
+      "id": 4,
+      "file": "VOCAL_FO.WAV",
+      "sha256": "72e259f4670c721eb30c439b3b10a35438479c2f2e2b4531d19db2582b9ec519",
+      "role": "Pad",
+      "family": "Vocal",
+      "morph_with": 5,
+      "feature": {
+        "low_harmonics": 0.515,
+        "high_harmonics": 0.0358,
+        "frame_diversity": 0.2512,
+        "seam_75p": 0.0,
+        "rms": 0.3803
+      }
+    },
+    {
+      "id": 5,
+      "file": "VOCAL_00.WAV",
+      "sha256": "caa01eca5226c7adae1d6f3d44fa6977a7969030fe30c7412a61007d6208ae1f",
+      "role": "Lead",
+      "family": "Vocal",
+      "morph_with": 4,
+      "feature": {
+        "low_harmonics": 0.537,
+        "high_harmonics": 0.1828,
+        "frame_diversity": 0.3859,
+        "seam_75p": 0.0,
+        "rms": 0.4857
+      }
+    },
+    {
+      "id": 6,
+      "file": "TALKING.WAV",
+      "sha256": "1b8bf98a63ca7a18023a223256ee6e367c3dd0e04d8a48d3afa7a001e47c7bd0",
+      "role": "Lead",
+      "family": "Vocal",
+      "morph_with": 7,
+      "feature": {
+        "low_harmonics": 0.5492,
+        "high_harmonics": 0.2264,
+        "frame_diversity": 0.3608,
+        "seam_75p": 0.0015,
+        "rms": 0.3615
+      }
+    },
+    {
+      "id": 7,
+      "file": "KAWAI_K1.WAV",
+      "sha256": "dbafbf6796e74011ca26eadd1c7229c9405bad48699188457305fad9ddba2710",
+      "role": "Keys",
+      "family": "Digital",
+      "morph_with": 6,
+      "feature": {
+        "low_harmonics": 0.5066,
+        "high_harmonics": 0.0982,
+        "frame_diversity": 0.1875,
+        "seam_75p": 0.0,
+        "rms": 0.272
+      }
+    },
+    {
+      "id": 8,
+      "file": "SOFT_MAN.WAV",
+      "sha256": "e1c8ce7fb7d45255420981cb68c6c89192a24bdd34558d9ef598bc08ef5cf0a6",
+      "role": "Pad",
+      "family": "Organic",
+      "morph_with": 9,
+      "feature": {
+        "low_harmonics": 0.9383,
+        "high_harmonics": 0.006,
+        "frame_diversity": 0.4022,
+        "seam_75p": 0.0009,
+        "rms": 0.4212
+      }
+    },
+    {
+      "id": 9,
+      "file": "BOWING.WAV",
+      "sha256": "d32a7fb643224779d0700a3d0a1c157a71f02901bd2a9fec7caa9d6e1bd34690",
+      "role": "Pad",
+      "family": "Acoustic",
+      "morph_with": 8,
+      "feature": {
+        "low_harmonics": 0.8397,
+        "high_harmonics": 0.0171,
+        "frame_diversity": 0.3576,
+        "seam_75p": 0.0341,
+        "rms": 0.3443
+      }
+    },
+    {
+      "id": 10,
+      "file": "ORGAN_DI.WAV",
+      "sha256": "379bd5f043e4027c0a169e498ef9295235659ce14dd871a7b5e0fe4ad44d2faf",
+      "role": "Keys",
+      "family": "Acoustic",
+      "morph_with": 11,
+      "feature": {
+        "low_harmonics": 0.86,
+        "high_harmonics": 0.0251,
+        "frame_diversity": 0.1369,
+        "seam_75p": 0.0589,
+        "rms": 0.5358
+      }
+    },
+    {
+      "id": 11,
+      "file": "HARMONIX.WAV",
+      "sha256": "343b6e339978f175aa3017fb1b02eac1ccd07052d3c24182d23ecc48644f69cb",
+      "role": "Keys",
+      "family": "Harmonic",
+      "morph_with": 10,
+      "feature": {
+        "low_harmonics": 0.7574,
+        "high_harmonics": 0.0165,
+        "frame_diversity": 0.244,
+        "seam_75p": 0.0039,
+        "rms": 0.4162
+      }
+    },
+    {
+      "id": 12,
+      "file": "HIENHARM.WAV",
+      "sha256": "4b754d1dd5e541702386176a87afbfd284a192a8858252f1da03c532e80b797b",
+      "role": "Texture",
+      "family": "Spectral",
+      "morph_with": 13,
+      "feature": {
+        "low_harmonics": 0.3351,
+        "high_harmonics": 0.4427,
+        "frame_diversity": 0.5441,
+        "seam_75p": 0.0,
+        "rms": 0.557
+      }
+    },
+    {
+      "id": 13,
+      "file": "HARMONIC.WAV",
+      "sha256": "5d03f6f7905e636164b0f1689fc9d6b103381f0789d5b4d6ce36fa7d246b9747",
+      "role": "Lead",
+      "family": "Spectral",
+      "morph_with": 12,
+      "feature": {
+        "low_harmonics": 0.1746,
+        "high_harmonics": 0.3916,
+        "frame_diversity": 0.1599,
+        "seam_75p": 0.0073,
+        "rms": 0.1933
+      }
+    },
+    {
+      "id": 14,
+      "file": "ENSHTURZ.WAV",
+      "sha256": "59878c4223c30bc142aa1ab6746113a31b79cf563bc1a303a73d5ad0b14ab002",
+      "role": "Texture",
+      "family": "Spectral",
+      "morph_with": 15,
+      "feature": {
+        "low_harmonics": 0.3984,
+        "high_harmonics": 0.3738,
+        "frame_diversity": 0.4217,
+        "seam_75p": 0.0007,
+        "rms": 0.3201
+      }
+    },
+    {
+      "id": 15,
+      "file": "CHEBYSHE.WAV",
+      "sha256": "257996277f890444cb77d2bbec92f57195bc306404754a2736275df06dd79130",
+      "role": "Texture",
+      "family": "Spectral",
+      "morph_with": 14,
+      "feature": {
+        "low_harmonics": 0.3594,
+        "high_harmonics": 0.3249,
+        "frame_diversity": 0.5696,
+        "seam_75p": 0.1551,
+        "rms": 0.6456
+      }
+    },
+    {
+      "id": 16,
+      "file": "WAVETABL.WAV",
+      "sha256": "d6cd6ffa8be30b64fd3322a35e653da3cae99ec6171833ef2f0a0a8c7816de1c",
+      "role": "Lead",
+      "family": "Digital",
+      "morph_with": 17,
+      "feature": {
+        "low_harmonics": 0.4656,
+        "high_harmonics": 0.1815,
+        "frame_diversity": 0.1795,
+        "seam_75p": 0.028,
+        "rms": 0.178
+      }
+    },
+    {
+      "id": 17,
+      "file": "FOURIER.WAV",
+      "sha256": "6e4a9a5b840ab5739d50bf516c73ae4e7721d6c67fe1f0e3e83425fbbd520fc8",
+      "role": "Keys",
+      "family": "Digital",
+      "morph_with": 16,
+      "feature": {
+        "low_harmonics": 0.4242,
+        "high_harmonics": 0.1371,
+        "frame_diversity": 0.3423,
+        "seam_75p": 0.1875,
+        "rms": 0.4285
+      }
+    },
+    {
+      "id": 18,
+      "file": "SPECTR04.WAV",
+      "sha256": "f1a07cc8f535c2cf06ac9ba62fcb5f2d292820636366093d208166c89d8e0a34",
+      "role": "Texture",
+      "family": "Spectral",
+      "morph_with": 12,
+      "feature": {
+        "low_harmonics": 0.4482,
+        "high_harmonics": 0.2185,
+        "frame_diversity": 0.2859,
+        "seam_75p": 0.1983,
+        "rms": 0.2145
+      }
+    },
+    {
+      "id": 19,
+      "file": "BRAIDS01.WAV",
+      "sha256": "eb5866e5e7fda7bfa7da5413446318d1e8317371bd6a208c2fceb4bfb1527544",
+      "role": "Pluck",
+      "family": "Acoustic",
+      "morph_with": 23,
+      "feature": {
+        "low_harmonics": 0.8294,
+        "high_harmonics": 0.01,
+        "frame_diversity": 0.3842,
+        "seam_75p": 0.2208,
+        "rms": 0.4129
+      }
+    },
+    {
+      "id": 20,
+      "file": "AM_SINE.WAV",
+      "sha256": "e1e2a0ca9caa44827d27d6fadf2157b52d7b6fa512a5db10890ed54459f974a7",
+      "role": "Bass",
+      "family": "Analog",
+      "morph_with": 3,
+      "feature": {
+        "low_harmonics": 0.8448,
+        "high_harmonics": 0.0208,
+        "frame_diversity": 0.276,
+        "seam_75p": 0.0013,
+        "rms": 0.3323
+      }
+    },
+    {
+      "id": 21,
+      "file": "ALTO_SAX.WAV",
+      "sha256": "57fad6b39be80c6e85cb48c46eea04579205d56ba4eff4afbc73bdce80454fb7",
+      "role": "Lead",
+      "family": "Vocal",
+      "morph_with": 22,
+      "feature": {
+        "low_harmonics": 0.001,
+        "high_harmonics": 0.88,
+        "frame_diversity": 0.2139,
+        "seam_75p": 0.0162,
+        "rms": 0.2313
+      }
+    },
+    {
+      "id": 22,
+      "file": "G2_ASTRA.WAV",
+      "sha256": "b5c4c729e184a8f443d0b154e847395689c7dea192718079b85610705d536905",
+      "role": "Texture",
+      "family": "Digital",
+      "morph_with": 21,
+      "feature": {
+        "low_harmonics": 0.087,
+        "high_harmonics": 0.5871,
+        "frame_diversity": 0.3271,
+        "seam_75p": 0.081,
+        "rms": 0.326
+      }
+    },
+    {
+      "id": 23,
+      "file": "TIDYB067.WAV",
+      "sha256": "3e17b837961d1297c67b6bc968b70eca19c68d0531af6d8b6fbe5fb96ecd1f9d",
+      "role": "Pluck",
+      "family": "Organic",
+      "morph_with": 19,
+      "feature": {
+        "low_harmonics": 0.6791,
+        "high_harmonics": 0.077,
+        "frame_diversity": 0.7418,
+        "seam_75p": 0.0002,
+        "rms": 0.7323
+      }
+    }
+  ]
+}
