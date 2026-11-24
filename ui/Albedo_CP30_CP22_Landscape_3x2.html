@@ -1904,7 +1904,7 @@ html #page :focus-visible{outline:2px solid #c07a45!important;outline-offset:2px
 <section class="lower" aria-label="Modulation motion processing and rhythm">
  <div class="surface"><div class="surface-title"><div><div class="eyebrow">04 / ASSIGNMENT WITHOUT CABLES</div><h2>Correspondentiae</h2></div><span class="seal">◇</span></div><div class="bodypad"><div class="subrow"><span class="section-caption">SOURCE → TARGET · DEPTH</span><span class="micro" id="routeCount">4 ROUTES</span></div><div id="routes"></div><button id="addRoute" class="add-route">+ ADD SYMBOLIC ASSIGNMENT</button></div></div>
  <div class="surface" id="cellArp"><div class="surface-title"><div><div class="eyebrow">05 / DETERMINISTIC NOTE EVENTS</div><h2>Cellular Arpeggiator</h2></div></div><div class="arp-body">
- <div class="arp-lattice"><div class="motion-head"><span class="section-caption">4 CHARACTERS · NOTE-LOCKED</span><select id="rule" aria-label="Cellular accent rule"><option value="30">RULE 30</option><option value="90">RULE 90</option><option value="110" selected>RULE 110</option><option value="150">RULE 150</option></select></div><div class="automata" id="cells" aria-label="Cellular automaton accent pattern"></div><div class="motion-controls" id="motionKnobs"></div><svg class="lfo-small" id="lfoGraphic" viewBox="0 0 270 55" preserveAspectRatio="none"></svg></div>
+ <div class="arp-lattice"><div class="motion-head"><span class="section-caption">4 CHARACTERS · NOTE-LOCKED</span><select id="rule" aria-label="Cellular pattern rule"><option value="30">RULE 30</option><option value="90">RULE 90</option><option value="110" selected>RULE 110</option><option value="150">RULE 150</option></select></div><div class="automata" id="cells" aria-label="Cellular automaton pattern"></div><div class="motion-controls" id="motionKnobs"></div><svg class="lfo-small" id="lfoGraphic" viewBox="0 0 270 55" preserveAspectRatio="none"></svg></div>
  <div class="arp-performance"><div class="steps" id="steps" aria-label="Sixteen editable note-event gates"></div>
  <div class="pattern-controls"><button class="tiny-button" id="play" aria-label="Enable or disable arpeggiator">▶ ARP</button><button class="tiny-button" id="regen">✧ NEW</button><select id="division" aria-label="Arpeggiator beat division"><option value="1000">1/4</option><option value="500">1/8</option><option value="250" selected>1/16</option><option value="125">1/32</option></select></div>
  <div class="arp-options">
@@ -1915,9 +1915,10 @@ html #page :focus-visible{outline:2px solid #c07a45!important;outline-offset:2px
  <label>ROTATE<select data-arp="6028" aria-label="Character rotation"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label>
  <label>GATE %<input type="number" aria-label="Gate percent" data-arp="6023" min="10" max="95" step="1" value="68"></label>
  <label>SWING %<input type="number" aria-label="Swing percent" data-arp="6026" min="0" max="45" step="1" value="0"></label>
- <label>CA ACCENT %<input type="number" aria-label="Cellular velocity accent percent" data-arp="6022" min="0" max="100" step="1" value="30"></label>
- <label>BPM<input type="number" aria-label="Internal arpeggiator tempo" data-arp="6029" min="40" max="240" step="1" value="120"></label>
- <label>CLOCK<select data-arp="6030" aria-label="Arpeggiator clock source"><option value="1" selected>DAW</option><option value="0">FREE</option></select></label>
+ 
+ <label class="arp-internal-tempo">TEMPO · BPM<input type="number" aria-label="Internal arpeggiator tempo" data-arp="6029" min="40" max="240" step="1" value="120"></label>
+ <label>CLOCK<select data-arp="6030" aria-label="Arpeggiator clock source"><option value="1" selected>DAW SYNC</option><option value="0">INTERNAL</option></select></label>
+ <label>TIME SIGNATURE<select data-arp="6032" aria-label="Arpeggiator time signature"><option value="0">4/4</option><option value="1">3/4</option><option value="2">5/4</option><option value="3">7/8</option><option value="4">6/8</option><option value="5">9/8</option><option value="6">12/8</option><option value="7">2/4</option></select></label>
  </div></div></div></div>
  <div class="surface"><div class="surface-title"><div><div class="eyebrow">06 / POST-SYNTHESIS PROCESSING</div><h2>Spatium & Transform</h2></div><span class="seal">☽</span></div><div class="bodypad"><div id="fx"></div><div class="pattern-note">Insert processes / dry-wet mix / bypass. Processing algorithms are proposed.</div></div></div>
 </section>
@@ -2373,7 +2374,7 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
   else if(id===4003){s.motionRule=RULES[Math.max(0,Math.min(3,Math.round(value)))];document.getElementById('rule').value=String(s.motionRule);needsRefresh=!batch;}
   else if(id>=5000&&id<=5007){const i=Math.floor((id-5000)/2);if(id%2===0){s.effects[i].mix=value;const slider=document.querySelector(`[data-fxmix="${i}"]`);if(slider)slider.value=value;if(!batch)setDial('fx:'+i,value);}else{s.effects[i].on=value>=.5;needsRefresh=true;}}
   else if(id>=6000&&id<=6015){const i=id-6000;s.steps[i]=value>=.5;const button=document.querySelector(`[data-step="${i}"]`);if(button)button.classList.toggle('on',s.steps[i]);}
-  else if(id>=6022&&id<=6031){const el=document.querySelector('[data-arp="'+id+'"]');if(el)el.value=String(Math.round(value));}
+  else if((id>=6022&&id<=6032)&&id!==6020&&id!==6021){const el=document.querySelector('[data-arp="'+id+'"]');if(el)el.value=String(Math.round(value));if(id===6030)window.ALBEDO_CP62_ARP?.syncClock();}
   else if(id===6020){const b=document.getElementById('play');if(b)b.dataset.nativePulse=String(value>=.5);api.setPulse(value>=.5);}
   else if(id===6021){s.division=value*1000;const c=document.getElementById('division');if(c)c.value=String(Math.round(s.division));}
   else if(id>=8000&&id<=8023){let i=Math.floor((id-8000)/3),j=(id-8000)%3;while(s.routes.length<=i)s.routes.push({src:SOURCE[0],dst:TARGET[0],depth:0});const item=s.routes[i];if(j===0)item.src=SOURCE[Math.round(value)]||SOURCE[0];else if(j===1)item.dst=TARGET[Math.round(value)]||TARGET[0];else item.depth=value;}
@@ -2731,5 +2732,33 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
  // Delegate from document so controls send native parameter events in either parent. 
  document.addEventListener('change',e=>{if(e.target.matches?.('[data-arp]')&&e.target.value!==''){const id=Number(e.target.dataset.arp);window.ALBEDO_NATIVE_CP27?.onExtraParam(id,Number(e.target.value));}});
 window.__JUCE__?.backend?.addEventListener('albedoArpStep',step=>window.ALBEDO_CP04?.setArpStep(step));
-</script></body>
+</script>
+<style id="cp62-arp-layout">
+/* CP62: Nereida-like precise timing controls, Albedo visual language. */
+#cellArp .arp-options{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px 6px!important;align-content:start}
+#cellArp .arp-options label{min-width:0;overflow:visible;white-space:nowrap;letter-spacing:.02em}
+#cellArp .arp-options :is(input,select){min-width:0;width:100%;box-sizing:border-box;font-variant-numeric:tabular-nums}
+#cellArp .arp-internal-tempo[hidden]{display:none!important}
+#cellArp .arp-body{min-width:0}
+#cellArp .arp-performance{overflow:visible;min-width:0}
+#cellArp .pattern-controls{flex-wrap:wrap;align-content:center}
+#cellArp .steps{grid-template-columns:repeat(16,minmax(0,1fr));min-width:0}
+#cellArp .step{min-width:0}
+#cellArp .arp-options :is(select,input):focus-visible,#cellArp .pattern-controls :is(select,button):focus-visible{outline:2px solid #b79456;outline-offset:1px}
+</style>
+<script id="cp62-arp-stability">
+(()=>{'use strict';
+ const root=document.getElementById('cellArp');if(!root)return;
+ const clock=root.querySelector('[data-arp="6030"]');
+ const tempo=root.querySelector('.arp-internal-tempo');
+ const controls=root.querySelector('.arp-options');
+ function syncClock(){if(!clock||!tempo)return;const internal=clock.value==='0';tempo.hidden=!internal;tempo.setAttribute('aria-hidden',String(!internal));}
+ clock?.addEventListener('change',syncClock);
+ // No accent control or velocity accents in the HTML preview.
+ // Retained host parameter 6022 must be neutralized by native DSP for restored sessions.
+ window.ALBEDO_CP62_ARP={syncClock,get controls(){return controls?.querySelectorAll('[data-arp]').length||0}};
+ syncClock();
+})();
+</script>
+</body>
 </html>
