@@ -19,7 +19,7 @@ with sync_playwright() as p:
                      'cp57_tempo_controls.js'):
             page.add_script_tag(path=str(assets/name))
         page.wait_for_function('()=>!!window.ALBEDO_CP57_TEMPO')
-        for mode,count in [('1',6),('0',7),('1',6)]:
+        for mode,count in [('1',5),('0',6),('1',5)]:
             page.locator('#cp57Clock').select_option(mode)
             assert page.locator('#cp56Arp [data-cp56-id="6029"]').is_visible()==(mode=='0')
             tiles=page.locator('#cp56Arp .cp56-param:visible')
