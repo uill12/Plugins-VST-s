@@ -36,7 +36,7 @@ for f in binary:
 (root/"CP59_PACKAGE_QA.json").write_text(json.dumps({
     "checkpoint":"Albedo CP59 — WaveEdit Concept Tree and MIDI safety",
     "version":args.version,
-    "sources":"192 existing program IDs; 64 selected Morphogenic Fields programs retain parameters",
+    "sources":"192 program IDs preserved; 63 Concept Tree patches revoiced with selected CC0 WaveEdit tables",
     "new_bank_display_label":"Morphogenic Fields",
     "new_bank_internal_key":"New",
     "window_start":"1230x820 when screen permits; 3:2 fallback",
@@ -47,7 +47,8 @@ for f in binary:
     "presets_and_ui_unchanged":False,
     "rhythmic_preset_clock_defaults":True,
     "vst3_moduleinfo_strict_json":True,
-    "embedded_pcm24_material_bank":True,\n    "embedded_waveedit_cc0_wavetables":True,
+    "embedded_pcm24_material_bank":True,
+    "embedded_waveedit_cc0_wavetables":True,
     "git_source":args.source,
     "bitwig_manual_validation":"pending"
 },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
