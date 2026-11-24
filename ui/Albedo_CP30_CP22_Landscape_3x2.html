@@ -1918,7 +1918,7 @@ html #page :focus-visible{outline:2px solid #c07a45!important;outline-offset:2px
  
  <label class="arp-internal-tempo">TEMPO · BPM<input type="number" aria-label="Internal arpeggiator tempo" data-arp="6029" min="40" max="240" step="1" value="120"></label>
  <label>CLOCK<select data-arp="6030" aria-label="Arpeggiator clock source"><option value="1" selected>DAW SYNC</option><option value="0">INTERNAL</option></select></label>
- <label>TIME SIGNATURE<select data-arp="6032" aria-label="Arpeggiator time signature"><option value="0">4/4</option><option value="1">3/4</option><option value="2">5/4</option><option value="3">7/8</option><option value="4">6/8</option><option value="5">9/8</option><option value="6">12/8</option><option value="7">2/4</option></select></label>
+ <label>TIME SIGNATURE<select data-arp="6032" aria-label="Arpeggiator time signature"><option value="0">4/4</option><option value="1">2/4</option><option value="2">3/4</option><option value="3">5/4</option><option value="4">7/8</option><option value="5">6/8</option><option value="6">9/8</option><option value="7">12/8</option></select></label>
  </div></div></div></div>
  <div class="surface"><div class="surface-title"><div><div class="eyebrow">06 / POST-SYNTHESIS PROCESSING</div><h2>Spatium & Transform</h2></div><span class="seal">☽</span></div><div class="bodypad"><div id="fx"></div><div class="pattern-note">Insert processes / dry-wet mix / bypass. Processing algorithms are proposed.</div></div></div>
 </section>
@@ -2740,7 +2740,7 @@ window.__JUCE__?.backend?.addEventListener('albedoArpStep',step=>window.ALBEDO_C
 #cellArp .arp-options :is(input,select){min-width:0;width:100%;box-sizing:border-box;font-variant-numeric:tabular-nums}
 #cellArp .arp-internal-tempo[hidden]{display:none!important}
 #cellArp .arp-body{min-width:0}
-#cellArp .arp-performance{overflow:visible;min-width:0}
+#cellArp .arp-performance{overflow:hidden;min-width:0}
 #cellArp .pattern-controls{flex-wrap:wrap;align-content:center}
 #cellArp .steps{grid-template-columns:repeat(16,minmax(0,1fr));min-width:0}
 #cellArp .step{min-width:0}
