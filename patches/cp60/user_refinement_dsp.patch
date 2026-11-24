@@ -1,0 +1,274 @@
+--- a/Albedo-Quintessential-Synth/src/vitriol_dsp.cpp
++++ b/Albedo-Quintessential-Synth/src/vitriol_dsp.cpp
+@@ -167,7 +167,17 @@
+   panLaw_[k]={std::cos(angle),std::sin(angle)};}
+  for(int k=1;k<=20;k++){spectralSinK_[k-1]=std::sin(k*.6);spectralCosK_[k-1]=std::cos(k*.6);}
+  proceduralSample_.assign(32768,0);for(int i=0;i<int(proceduralSample_.size());i++){double t=i/double(proceduralSample_.size()),fade=std::exp(-t*7); proceduralSample_[i]=(std::sin(TAU*(62*t+17*t*t))*.62+std::sin(TAU*(181*t+3*t*t))*.2+std::sin(TAU*49*t)*.08)*fade;}
+- for(int c=0;c<2;c++){auto& f=fx_[c];f.chorus.sizeTo(size_t(fs_*.075)+8);for(int j=0;j<4;j++)f.reverb[j].sizeTo(size_t(fs_*.115)+8);for(int j=0;j<2;j++)f.ap[j].sizeTo(size_t(fs_*.018)+8);f.diffuse.sizeTo(size_t(fs_*.11)+8);}
++ {
++  static constexpr double diffMs[2][4]={{4.1,6.9,10.7,16.9},{4.7,7.7,11.9,18.7}};
++  static constexpr double diffG[4]={.62,.58,.52,.48};
++  static constexpr int inAp[2][2]={{142,107},{149,113}};
++  for(int ch=0;ch<2;ch++){auto& f=fx_[ch];f.chorus.sizeTo(size_t(fs_*.075)+8);
++   for(int j=0;j<4;j++)f.diffuse[j].sizeTo(size_t(std::lround(diffMs[ch][j]*.001*fs_)),diffG[j]);
++   for(int j=0;j<2;j++)f.inputDiffuse[j].sizeTo(size_t(std::lround(inAp[ch][j]*fs_/48000.)),j?.6:.65);}
++  size_t cap=64;while(cap<size_t(3833.*(fs_/48000.)*1.4+64.))cap<<=1;
++  for(auto& l:rev_.line)l.assign(cap,0.0);
++  rev_.mask=cap-1;
++ }
+  prevOS_=0;setupDecimator(oversamplingFactor());reset();}
+ void Synth::setupDecimator(int os){if(prevOS_==os)return;prevOS_=os;cutoffSmoothAlpha_=1.-std::exp(-1./(.003*fs_*os));decimLen_=64;const double fc=.44/os;double sum=0;for(int i=0;i<decimLen_;i++){double m=i-(decimLen_-1)/2.;double v=2*fc*(std::abs(m)<1e-12?1:std::sin(TAU*fc*m)/(TAU*fc*m));double window=.42-.5*std::cos(TAU*i/(decimLen_-1))+.08*std::cos(2*TAU*i/(decimLen_-1));v*=window;decimCoeffs_[i]=v;sum+=v;}for(int i=0;i<decimLen_;i++)decimCoeffs_[i]/=sum;for(auto& h:decimHist_)h.fill(0);decimPos_=0;}
+ void Synth::reset(){arpClear();arpEnabled_=false;
+@@ -178,7 +188,7 @@
+   v.cellValue=0;v.caBits=1u<<16;v.age=0;v.random=0x18953u;}
+  sustain_.fill(false);noteGroupCounter_=0;completedHead_=completedTail_=0;
+  for(auto& f:filters_)for(auto& channel:f)channel.clear();
+- for(auto& c:fx_){c.chorus.clear();for(auto& x:c.reverb)x.clear();for(auto& x:c.ap)x.clear();c.diffuse.clear();std::fill(std::begin(c.reverbLP),std::end(c.reverbLP),0);c.diffLP=0;}
++ clearFxState();fxSatMix_=fxChorusMix_=fxRevMix_=fxDiffMix_=0;chorusPhase_=0;for(bool& idle:fxIdle_)idle=true;
+  clock_=0;ageCounter_=0;lfoPhase_=lfo2Phase_=lfoSlew_=motion_=0;meterL_=meterR_=0;modwheel_=aftertouch_=bend_=0;
+  cutoffLogSmooth_[0]=std::log2(std::max(20.0,get(3000)));
+  cutoffLogSmooth_[1]=std::log2(std::max(20.0,get(3003)));
+@@ -254,18 +264,22 @@
+   if(!voice){voice=&*std::min_element(voices_.begin(),voices_.begin()+budget,[](const Voice&a,const Voice&b){
+     // Prefer stealing released tails before sustained/held voices.
+     if(a.released!=b.released)return a.released;
++    if(a.released)return a.env<b.env; // steal the quietest tail: smallest possible discontinuity
+     return a.age<b.age;});}
+   if(voice->active){
+    bool otherGroupVoice=false;
+    for(const auto& other:voices_)if(&other!=voice&&other.active&&other.group==voice->group){otherGroupVoice=true;break;}
+    if(!otherGroupVoice)emitEnd(voice->note,voice->ch,voice->noteId);
+   }
++  // A reclaimed voice keeps its envelope, phases and filter memory: the new note
++  // starts from the current waveform instead of a hard cut to silence.
++  const bool reuse=voice->active;
+   voice->active=true;voice->released=false;voice->held=true;voice->sustained=false;voice->fastPanicRelease=false;
+   voice->noteId=noteId;voice->group=group;
+-  voice->envStage=0;voice->env=0;voice->filterStage=0;voice->filterEnv=0;
++  voice->envStage=0;if(!reuse)voice->env=0;voice->filterStage=0;if(!reuse)voice->filterEnv=0;
+   voice->cellClock=0;voice->caBits=1u<<16;voice->cellValue=0.;
+-  std::fill(std::begin(voice->phase),std::end(voice->phase),0);
+-  for(int e=0;e<4;e++){
++  if(!reuse)std::fill(std::begin(voice->phase),std::end(voice->phase),0);
++  if(!reuse)for(int e=0;e<4;e++){
+    const double amount=get(1000+e*32+20)*.01;
+    voice->sourceFilterIC1[e]=voice->sourceFilterIC2[e]=voice->sourceFilterMix[e]=0;
+    voice->sourceFilterA1[e]=1;voice->sourceFilterA2[e]=voice->sourceFilterA3[e]=0;
+@@ -274,18 +288,25 @@
+    voice->phase[e]=amount*(double(noise(*voice))/4294967295.0);
+    for(int u=0;u<8;u++)voice->unisonPhase[e][u]=fract(.17*u+e*.11+amount*.29*double(noise(*voice))/4294967295.0);
+   }
+-  std::fill(std::begin(voice->subphase),std::end(voice->subphase),0);
+-  std::fill(std::begin(voice->colorLP),std::end(voice->colorLP),0);
+-  std::fill(std::begin(voice->grainPhase),std::end(voice->grainPhase),0);
+-  std::fill(std::begin(voice->samplePos),std::end(voice->samplePos),0);
+-  std::fill(std::begin(voice->stringPos),std::end(voice->stringPos),0);
++  if(!reuse){
++   std::fill(std::begin(voice->subphase),std::end(voice->subphase),0);
++   std::fill(std::begin(voice->colorLP),std::end(voice->colorLP),0);
++   std::fill(std::begin(voice->grainPhase),std::end(voice->grainPhase),0);
++   std::fill(std::begin(voice->samplePos),std::end(voice->samplePos),0);
++   std::fill(std::begin(voice->stringPos),std::end(voice->stringPos),0);
++  }
+   voice->note=n;voice->ch=channel;voice->velocity=vel;voice->age=++ageCounter_;
+   voice->detuneCents=0.;voice->panOffset=0.;
+   voice->freq=noteHz(n)*std::pow(2.,bend_*2/12);
+   voice->random=0x19827361u+uint32_t(n*768457+ageCounter_*193);
+   for(int e=0;e<4;e++)if(int(get(1000+32*e))==5){
+-   int period=int(clamp(fs_*oversamplingFactor()*(fs_>=176400.&&int(get(9002))==0?.5:1.)/std::max(10.,voice->freq),4,8190));
+-   for(int j=0;j<period;j++){double z=(double(noise(*voice))/4294967295.0)*2.0-1.0;voice->strings[e][j]=z*.40;}
++   const double fsInt=fs_*oversamplingFactor()*(fs_>=176400.&&int(get(9002))==0?.5:1.);
++   const double pf=std::exp2((get(1000+32*e+3)+get(1000+32*e+21)*.01)/12.);
++   const double fStr=(get(1000+32*e+5)>=.5?voice->freq:noteHz(60))*pf;
++   const int n=int(clamp(std::floor(fsInt/std::max(10.,fStr)+.5),4,8000));
++   auto& sb=voice->strings[e];const size_t sm=8191;
++   if(!reuse){std::fill(sb.begin(),sb.end(),0.0);for(int j=0;j<n;j++)sb[size_t(j)]=((double(noise(*voice))/4294967295.0)*2.0-1.0)*.40;voice->stringPos[e]=n;}
++   else{size_t w=size_t(voice->stringPos[e])&sm;for(int j=1;j<=n;j++)sb[(w+8192-size_t(j))&sm]+=((double(noise(*voice))/4294967295.0)*2.0-1.0)*.40;}
+   }
+  }
+ }
+@@ -490,13 +511,17 @@
+    sum+=amp*fastSin(phase*k*shift+(d*k*.32)/TAU);
+   }
+   y=sum/std::max(norm,.01)*1.55;break;}
+- case 5:{ // Karplus-Strong physical/modal resonator with envelope excitation
+-  int period=int(clamp(fsInt/freq,4,8190));int pos=v.stringPos[e];double prev=v.strings[e][(pos+1)%period];double now=v.strings[e][pos];
+-  double damping=.981+.0186*(1.-b);double next=(prev+now)*.5*damping;
+-  v.strings[e][pos]=next;
+-  v.stringPos[e]=(pos+1)%period;
+-  const double bodyTap=v.strings[e][(pos+period/3)%period];
+-  y=lerp(lerp(next,now,c*.7),bodyTap,d*.8)*(0.8+a*.8);break;}
++ case 5:{ // CP59 physical string: fractional-delay Karplus-Strong, exact pitch at any register
++  auto& buf=v.strings[e];const size_t smask=8191;size_t w=size_t(v.stringPos[e])&smask;
++  const double Tl=clamp(fsInt/freq,3.,8000.); // loop length in samples (two-point average adds the 0.5 handled below)
++  auto rd=[&](double D){const double p=double(w)-D;const double q=p<0.?p+8192.:p;const size_t i=size_t(q);const double t=q-double(i);
++   return catmullRom(buf[(i+smask)&smask],buf[i&smask],buf[(i+1)&smask],buf[(i+2)&smask],t);};
++  const double x0=rd(Tl+.5),x1=rd(Tl-.5);
++  const double damping=.981+.0186*(1.-b);
++  const double next=(x0+x1)*.5*damping;
++  buf[w]=next;w=(w+1)&smask;v.stringPos[e]=int(w);
++  const double bodyTap=rd(Tl*(2./3.));
++  y=lerp(lerp(next,x0,c*.7),bodyTap,d*.8)*(0.8+a*.8);break;}
+  case 6:{ // white / brown / highpass stochastic color
+   double n=(double(noise(v))/4294967295.0)*2.-1.;double alpha=.003+.28*clamp(.5*b+.5*get(1000+e*32+18)*.01,0,1);v.colorLP[e]+=alpha*(n-v.colorLP[e]);y=lerp(v.colorLP[e]*4.,n-v.colorLP[e],a);y+=(c*.45)*fastSinCycles(phase*2);y*=.45+.7*d;break;}
+  case 7:{ // timewarp / procedural one-shot sample; editable start and time-stretch surrogate
+@@ -671,17 +696,110 @@
+  lfoPhase_=fract(lfoPhase_+lf1/(srInternal));lfo2Phase_=fract(lfo2Phase_+lf2/(srInternal));
+  double slew=get(4002)*.01;lfoSlew_+= (1.-slew*.9995)*(fastSinCycles(lfoPhase_)-lfoSlew_);
+ }
++// ---- CP59 effects ---------------------------------------------------------
++// log(cosh(s)) in an overflow-safe form: first antiderivative of tanh.
++static inline double lnCosh(double s){const double a=std::abs(s);return a+std::log1p(std::exp(-2.*a))-0.69314718055994531;}
++double Synth::ringRead(const std::vector<double>& b,size_t mask,size_t w,double lag){
++ double p=double(w)-lag;if(p<0.)p+=double(mask+1);
++ const size_t i=size_t(p);const double t=p-double(i);
++ return catmullRom(b[(i+mask)&mask],b[i&mask],b[(i+1)&mask],b[(i+2)&mask],t);
++}
++void Synth::clearFxState(){
++ for(auto& f:fx_){f.chorus.clear();for(auto& a:f.diffuse)a.clear();for(auto& a:f.inputDiffuse)a.clear();f.satPrevS=0;f.satPrevF=0;}
++ for(auto& l:rev_.line)std::fill(l.begin(),l.end(),0.0);
++rev_.pos.fill(0);rev_.lp.fill(0.);rev_.lenValid=false;
++}
++void Synth::refreshFxCoefficients(){
++ // Once per processing chunk: no pow/exp work inside the per-sample loop.
++ fxSmoothAlpha_=1.-std::exp(-1./(fs_*.010));
++ chorusInc_=get(5008)/fs_;
++ static constexpr double base[kRevLines]={1429,1783,1973,2099,2593,2971,3457,3833};
++ static constexpr double rate[kRevLines]={.13,.17,.21,.27,.31,.37,.43,.51};
++ const double size=clamp(get(5011),40.,140.)*.01,duration=clamp(get(2006),0.,100.)*.01;
++ // Size scales the space; the Memory macro (duration domain) scales the tail.
++ const double rt60=std::min(3.5,.87*std::pow(size,1.25)*(.6+1.2*duration));
++ const double fc=std::min(14000.*std::exp2(-clamp(get(5010),0.,100.)*.01*4.2),fs_*.45);
++ rev_.dampA=std::exp(-TAU*fc/fs_);
++ for(int i=0;i<kRevLines;i++){
++  const double len=base[i]*(fs_/48000.)*size;
++  rev_.lenTarget[i]=len;if(!rev_.lenValid)rev_.len[i]=len;rev_.gain[i]=std::pow(10.,-3.*len/(fs_*rt60));rev_.modInc[i]=rate[i]/fs_;
++ }
++ rev_.modDepth=.0003*fs_;rev_.lenValid=true;rev_.lenSlew=1.-std::exp(-1./(fs_*.08)); // Size automation glides instead of jumping
++ rev_.inScale=.35;rev_.outScale=1.0/std::sqrt(double(kRevLines));
++}
++void Synth::reverbTick(double inL,double inR,double& outL,double& outR){
++ double dl=fx_[0].inputDiffuse[1].tick(fx_[0].inputDiffuse[0].tick(inL));
++ double dr=fx_[1].inputDiffuse[1].tick(fx_[1].inputDiffuse[0].tick(inR));
++ double v[kRevLines],sum=0,oL=0,oR=0;
++ static constexpr double sL[kRevLines]={1,-1,1,-1,1,-1,1,-1},sR[kRevLines]={1,1,-1,-1,1,1,-1,-1};
++ for(int i=0;i<kRevLines;i++){
++  rev_.len[i]+=(rev_.lenTarget[i]-rev_.len[i])*rev_.lenSlew;
++  const double lag=rev_.len[i]+rev_.modDepth*fastSinCycles(rev_.phase[i]);
++  rev_.phase[i]=fract(rev_.phase[i]+rev_.modInc[i]);
++  const double y=ringRead(rev_.line[i],rev_.mask,rev_.pos[i],lag);
++  rev_.lp[i]=y+rev_.dampA*(rev_.lp[i]-y); // unity DC gain, high-frequency absorption
++  if(std::abs(rev_.lp[i])<1e-24)rev_.lp[i]=0.;
++  v[i]=rev_.lp[i]*rev_.gain[i];sum+=v[i];
++  oL+=sL[i]*v[i];oR+=sR[i]*v[i];
++ }
++ const double mix=sum*(2./double(kRevLines)); // Householder reflection: lossless, fully mixing feedback
++ for(int i=0;i<kRevLines;i++){
++  const double in=rev_.inScale*((i&1)?(.2*dl+.8*dr):(.8*dl+.2*dr));
++  rev_.line[i][rev_.pos[i]]=clamp(in+v[i]-mix,-16.,16.);
++  rev_.pos[i]=(rev_.pos[i]+1)&rev_.mask;
++ }
++ outL=oL*rev_.outScale;outR=oR*rev_.outScale;
++}
+ void Synth::processEffects(double& l,double& r){
+- for(int c=0;c<2;c++){
+-  double x=c? r:l;auto& fx=fx_[c];
+-  if(get(5001)>.5){double wet=get(5000)*.01;double bias=get(5012)*.003;double y=(std::tanh((x+bias)*2.)-std::tanh(bias*2.))*.58;x=lerp(x,y,wet);}
+-  if(get(5003)>.5){double wet=get(5002)*.01;double t=double(clock_)/fs_;double lag=fs_*(.014+.008*fastSinCycles(get(5008)*t+c*(.05+get(5009)*.002)));
+-    double y=fx.chorus.read(lag);fx.chorus.tick(x);x=lerp(x,(x+y*.7)*.84,wet);}
+-  if(get(5005)>.5){double wet=clamp((get(5004)+modFrame_[8]*20)*.01,0,1);const double lengths[]={.0297,.0371,.0411,.0437};double reverb=0;
+-   for(int i=0;i<4;i++){double delayed=fx.reverb[i].read(fs_*lengths[i]*(c?1.035:1)*get(5011)*.01);fx.reverbLP[i]+=(.06+.54*(1.-get(5010)*.01))*(delayed-fx.reverbLP[i]);fx.reverb[i].tick(x*.16+std::tanh(fx.reverbLP[i]*(.58+get(2006)*.003)));reverb+=delayed;}
+-   reverb=std::tanh(reverb*.45);x=lerp(x,reverb,wet*.62);}
+-  if(get(5007)>.5){double wet=get(5006)*.01;double delay=fx.diffuse.read(fs_*(c?.037:.051));fx.diffuse.tick(x*.35+delay*.42);fx.diffLP+=.06*(delay-fx.diffLP);x=lerp(x,fx.diffLP,wet*.55);}
+-  if(c)r=x;else l=x;
++ const double tSat=get(5001)>.5?get(5000)*.01:0.;
++ const double tCh=get(5003)>.5?get(5002)*.01:0.;
++ const double tRev=get(5005)>.5?clamp((get(5004)+modFrame_[8]*20)*.01,0,1):0.;
++ const double tDif=get(5007)>.5?get(5006)*.01:0.;
++ const double a=fxSmoothAlpha_;
++ fxSatMix_+=(tSat-fxSatMix_)*a;fxChorusMix_+=(tCh-fxChorusMix_)*a;fxRevMix_+=(tRev-fxRevMix_)*a;fxDiffMix_+=(tDif-fxDiffMix_)*a;
++ auto settle=[&](int k,double& mix,double target){
++  if(target==0.&&mix<1e-5){mix=0.;fxIdle_[k]=true;return false;}
++  if(fxIdle_[k]){ // coming back from a bypassed state: never replay stale buffers
++   fxIdle_[k]=false;
++   if(k==1)for(auto& f:fx_)f.chorus.clear();
++   if(k==2){for(auto& ll:rev_.line)std::fill(ll.begin(),ll.end(),0.0);rev_.lp.fill(0.);rev_.pos.fill(0);for(auto& f:fx_)for(auto& ap:f.inputDiffuse)ap.clear();}
++   if(k==3)for(auto& f:fx_)for(auto& ap:f.diffuse)ap.clear();
++   if(k==0)for(auto& f:fx_){f.satPrevS=0;f.satPrevF=0;}
++  }
++  return true;};
++ double* io[2]={&l,&r};
++ // 1. Saturation (first-order antiderivative anti-aliasing: removes the digital fizz of a bare tanh at host rate)
++ if(settle(0,fxSatMix_,tSat)){
++  const double bias=get(5012)*.003,dc=std::tanh(bias*2.);
++  for(int c=0;c<2;c++){
++   auto& f=fx_[c];const double s=(*io[c]+bias)*2.,F=lnCosh(s),ds=s-f.satPrevS;
++   const double shaped=std::abs(ds)>1e-6?(F-f.satPrevF)/ds:std::tanh(.5*(s+f.satPrevS));
++   f.satPrevS=s;f.satPrevF=F;
++   *io[c]=lerp(*io[c],(shaped-dc)*.58,fxSatMix_);
++  }
++ }
++ // 2. Chorus: two quadrature-offset voices per channel, phase-continuous rate changes
++ if(settle(1,fxChorusMix_,tCh)){
++  const double spread=.05+get(5009)*.002;
++  for(int c=0;c<2;c++){
++   auto& f=fx_[c];const double x=*io[c],ph=chorusPhase_+c*spread;
++   const double lag1=fs_*(.014+.008*fastSinCycles(ph)),lag2=fs_*(.0185+.005*fastSinCycles(ph+.63));
++   const double y=.5*(f.chorus.read(lag1)+f.chorus.read(lag2));f.chorus.tick(x);
++   *io[c]=lerp(x,(x+y*.7)*.84,fxChorusMix_);
++  }
++  chorusPhase_=fract(chorusPhase_+chorusInc_);
++ }
++ // 3. Reverb: 8-line stereo feedback delay network
++ if(settle(2,fxRevMix_,tRev)){
++  double wl=0,wr=0;reverbTick(l,r,wl,wr);
++  const double w=fxRevMix_*.62;l=lerp(l,wl,w);r=lerp(r,wr,w);
++ }
++ // 4. Diffusion: four-stage allpass smear (flat magnitude response, no level change)
++ if(settle(3,fxDiffMix_,tDif)){
++  for(int c=0;c<2;c++){
++   auto& f=fx_[c];double y=*io[c];for(auto& ap:f.diffuse)y=ap.tick(y);
++   *io[c]=lerp(*io[c],y,fxDiffMix_);
++  }
+  }
+ }
+ template<typename Sample>
+@@ -741,6 +859,7 @@
+   refreshPitchFactors(voice);
+  }
+ 
++ refreshFxCoefficients();
+  const double pulseAttack=1.-std::exp(-1./(fs_*.003));
+  const double pulseRelease=1.-std::exp(-1./(fs_*.006));
+  const double gainAlpha=1.-std::exp(-1./(fs_*.008));
+--- a/Albedo-Quintessential-Synth/include/vitriol_dsp.hpp
++++ b/Albedo-Quintessential-Synth/include/vitriol_dsp.hpp
+@@ -74,7 +74,27 @@
+  };
+  static FilterParams makeFilterParams(double cutoff,double resonance,double drive,int type,double fs);
+  struct Delay {std::vector<double> buf;size_t pos=0;void sizeTo(size_t n);double read(double lag)const;double tick(double input);void clear();};
+- struct ChannelFX { Delay chorus,reverb[4],ap[2],diffuse;double reverbLP[4]{},diffLP=0;};
++ // CP59 effects. All buffers are allocated in prepare(); nothing allocates in process().
++ struct Allpass {
++  std::vector<double> buf;size_t pos=0;double g=.5;
++  void sizeTo(size_t n,double gain){buf.assign(std::max<size_t>(2,n),0.0);pos=0;g=gain;}
++  void clear(){std::fill(buf.begin(),buf.end(),0.0);pos=0;}
++  double tick(double x){const double d=buf[pos];const double w=x-g*d;buf[pos]=w;pos=(pos+1==buf.size())?0:pos+1;return d+g*w;}
++ };
++ struct ChannelFX { Delay chorus;Allpass diffuse[4],inputDiffuse[2];double satPrevS=0,satPrevF=0; };
++ static constexpr int kRevLines=8;
++ struct Reverb {
++  std::array<std::vector<double>,kRevLines> line;size_t mask=0;
++  std::array<size_t,kRevLines> pos{};
++  std::array<double,kRevLines> lp{},phase{},len{},lenTarget{},gain{},modInc{};
++  double dampA=0,modDepth=0,outScale=1,inScale=1,lenSlew=1;bool lenValid=false;
++ };
++ Reverb rev_;
++ double fxSatMix_=0,fxChorusMix_=0,fxRevMix_=0,fxDiffMix_=0,fxSmoothAlpha_=1,chorusPhase_=0,chorusInc_=0;
++ bool fxIdle_[4]{true,true,true,true};
++ void refreshFxCoefficients();void clearFxState();
++ void reverbTick(double inL,double inR,double& outL,double& outR);
++ static double ringRead(const std::vector<double>& b,size_t mask,size_t w,double lag);
+  std::array<Voice,kVoices> voices_{};
+  std::array<bool,16> sustain_{};
+  std::array<NoteEnd,64> completedNoteEnds_{};

@@ -34,7 +34,7 @@ assert "dialog.addEventListener('click',requestApply)" not in bridge
 assert "addEventListener('change',requestApply)" in bridge
 assert "cp38-visual" not in rotary
 assert "cp37AdsrPopup" in html
-assert ("VERSION 1.0.51" in cmake or "VERSION 1.0.53" in cmake or "VERSION 1.0.54" in cmake or "VERSION 1.0.55" in cmake or "VERSION 1.0.56" in cmake or "VERSION 1.0.57" in cmake or "VERSION 1.0.58" in cmake or "VERSION 1.0.59" in cmake), "Retain plugin family and compatible CP53 version"
+assert ("VERSION 1.0.51" in cmake or "VERSION 1.0.53" in cmake or "VERSION 1.0.54" in cmake or "VERSION 1.0.55" in cmake or "VERSION 1.0.56" in cmake or "VERSION 1.0.57" in cmake or "VERSION 1.0.58" in cmake or "VERSION 1.0.59" in cmake or "VERSION 1.0.60" in cmake), "Retain plugin family and compatible CP53 version"
 assert "juce32" in cmake and "CLAP_ID" in cmake
 factory=re.search(r'<script type="application/json" id="albedoFactoryCatalog">([^<]+)</script>',html)
 creative=re.search(r'<script type="application/json" id="albedoCreativeCatalog">([^<]+)</script>',html)

@@ -1835,6 +1835,25 @@ html.albedo-fit #page #cellArp .arp-body,
 #cellArp .step{height:25px;min-height:0;max-height:25px;font-size:9px}
 #cellArp .motion-controls{margin:2px 0}
 #cellArp .section-caption{font-size:8px!important}
+</style><style id="cp60-polish">
+/* Integrated user CP59 polish: legibility/hit-target changes, without DOM or ID changes. */
+html #page .inspector-head{align-items:center!important;gap:8px!important}
+html #page .inspector-head>div{display:flex!important;flex-direction:column!important;gap:1px!important;min-width:0!important}
+html #page .inspector-head #editorTitle{display:block!important;white-space:nowrap!important;line-height:1.15!important}
+html #page .inspector-head #editorStatus{white-space:nowrap!important;text-align:right!important;letter-spacing:.03em!important}
+html #page .morph-panel .coords{background:rgba(10,24,24,.58)!important;padding:1px 9px!important;border-radius:10px!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+html #page .network svg text:nth-last-of-type(1){display:none!important}
+html #page .signal-label{display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;column-gap:10px!important;align-items:center!important;line-height:1.2!important}
+html #page .signal-label>span{letter-spacing:.005em!important;font-size:9px!important}
+html #page .signal-label>span:first-child{text-align:left!important}
+html #page .signal-label>span:last-child{text-align:right!important}
+html #page .field-notes .visual-card .micro,html.albedo-fit #page .field-notes .micro{font-size:7.8px!important;white-space:nowrap!important;letter-spacing:0!important}
+html #page .shape-panel .shape-head,html.albedo-fit #page .shape-panel .shape-head{gap:4px!important;grid-template-columns:minmax(0,1fr) 84px!important}
+html #page .shape-panel .shape-head select,html.albedo-fit #page .shape-panel .shape-head select{width:84px!important;max-width:84px!important;min-width:0!important;padding:2px 0 2px 3px!important;font-size:8.4px!important;text-overflow:clip!important}
+html #page #theme,html #page #help{min-width:26px!important}
+html #page .coupling-grid input[type=range]{height:16px!important;cursor:ew-resize}
+html #page .cp54-trigger{min-height:22px!important}
+html #page :focus-visible{outline:2px solid #c07a45!important;outline-offset:2px!important;border-radius:4px}
 </style></head>
 <body>
 <div class="page" id="page">
@@ -1873,12 +1892,12 @@ html.albedo-fit #page #cellArp .arp-body,
  </svg><div class="morph-panel"><div class="caption">QUINTESSENTIA</div><div id="xy" class="morph-pad" tabindex="0" role="slider" aria-label="XY morph control, horizontal form and vertical material" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span id="aim" class="aim"></span></div><div class="coords" id="coords">FORM 50 · MATTER 50</div></div></div>
  <div class="signal-label"><span>SYMBOLIC EXCHANGE · NON-DESTRUCTIVE MIXING</span><strong id="activeLabel">A / Wavetable</strong><span>THE DIAGRAM RESPONDS TO ENGINE STATES</span></div>
  <div class="macro-deck"><div class="macro-caption"><span class="section-caption">MACRO / SEVEN ALCHEMICAL DOMAINS</span><span class="micro">☉ brilliance · ☿ exchange · ♄ duration</span></div><div class="knob-grid" id="macros"></div></div>
- <div class="analysis-strip" aria-label="Material curves and inter-engine coupling"><div class="field-notes"><div class="visual-card"><div class="subrow"><h3>Harmonic Material</h3><span class="micro">SPECTRAL PROFILE / GRAPHIC</span></div><p>Brightness, texture and resonant weight</p><svg id="spectral" viewBox="0 0 310 73" preserveAspectRatio="none" aria-label="Graphical spectral profile"></svg></div><div class="visual-card"><div class="subrow"><h3>Articulation & Form</h3><span class="micro">ENVELOPE / GRAPHIC</span></div><p>Playable attack, body and release</p><svg id="envGraph" viewBox="0 0 310 73" preserveAspectRatio="none"></svg></div></div>
+ <div class="analysis-strip" aria-label="Material curves and inter-engine coupling"><div class="field-notes"><div class="visual-card"><div class="subrow"><h3>Harmonic Material</h3><span class="micro">SPECTRAL PROFILE / GRAPHIC</span></div><p title="Brightness, texture and resonant weight">Brightness, texture, weight</p><svg id="spectral" viewBox="0 0 310 73" preserveAspectRatio="none" aria-label="Graphical spectral profile"></svg></div><div class="visual-card"><div class="subrow"><h3>Articulation & Form</h3><span class="micro">ENVELOPE / GRAPHIC</span></div><p title="Playable attack, body and release">Attack, body, release</p><svg id="envGraph" viewBox="0 0 310 73" preserveAspectRatio="none"></svg></div></div>
  <div class="coupling-deck"><div class="coupling-head"><h3>Syzygia · Reciprocal Coupling</h3><small>BOUNDED INTER-ENGINE INFLUENCE</small></div><div id="couplings" class="coupling-grid"></div></div></div>
  </section>
  <section class="surface shape-panel" aria-label="Filters envelopes and pitch"><div class="surface-title"><div><div class="eyebrow">04 / RESONANT BODY · SPECTRAL SHAPING</div><h2>Corpus & Character</h2></div><span class="seal">♄</span></div><div class="bodypad shapers">
- <div class="shape-block"><div class="shape-head"><div><div class="section-caption">FIRST CRUCIBLE</div><strong>Filter / A</strong></div><select id="filterTypeA" aria-label="Filter A type"><option>SVF Morph</option><option>Ladder LP</option><option>Formant Bank</option><option>Comb</option><option>Notch</option></select></div><svg class="filter-vis" id="filterA" viewBox="0 0 260 58" preserveAspectRatio="none"></svg><div class="knob-grid three" id="filterKnobsA"></div></div>
- <div class="shape-block"><div class="shape-head"><div><div class="section-caption">SECOND CRUCIBLE</div><strong>Filter / B</strong></div><select id="filterTypeB" aria-label="Filter B type"><option>Formant Bank</option><option>SVF Morph</option><option>Ladder LP</option><option>Comb</option><option>Notch</option></select></div><svg class="filter-vis" id="filterB" viewBox="0 0 260 58" preserveAspectRatio="none"></svg><div class="knob-grid three" id="filterKnobsB"></div></div>
+ <div class="shape-block"><div class="shape-head"><div><div class="section-caption">CRUCIBLE I</div><strong>Filter / A</strong></div><select id="filterTypeA" aria-label="Filter A type"><option>SVF Morph</option><option>Ladder LP</option><option>Formant Bank</option><option>Comb</option><option>Notch</option></select></div><svg class="filter-vis" id="filterA" viewBox="0 0 260 58" preserveAspectRatio="none"></svg><div class="knob-grid three" id="filterKnobsA"></div></div>
+ <div class="shape-block"><div class="shape-head"><div><div class="section-caption">CRUCIBLE II</div><strong>Filter / B</strong></div><select id="filterTypeB" aria-label="Filter B type"><option>Formant Bank</option><option>SVF Morph</option><option>Ladder LP</option><option>Comb</option><option>Notch</option></select></div><svg class="filter-vis" id="filterB" viewBox="0 0 260 58" preserveAspectRatio="none"></svg><div class="knob-grid three" id="filterKnobsB"></div></div>
  <div class="shape-block"><div class="shape-head"><div><div class="section-caption">AMPLITUDE & PHYSICAL FORM</div><strong>Envelope / Body</strong></div><small>TONAL GUARD</small></div><div class="knob-grid" id="envKnobs"></div><div class="divider"></div><div class="callrow"><label>Pitch handling</label><div class="segment" id="pitchMode"><button class="active" data-value="LOCK">LOCK</button><button data-value="EXP">EXP</button><button data-value="LEG">LEG</button></div></div><div class="callrow"><label>Voice behavior</label><select id="voiceMode" disabled title="Factory programs use polyphonic voice allocation"><option value="POLY">POLY</option></select></div><div class="callrow"><label>Filter architecture</label><select id="filterRoute"><option>PARALLEL</option><option>SERIAL A-B</option><option>SERIAL B-A</option></select></div></div>
  </div></section>
 </main>

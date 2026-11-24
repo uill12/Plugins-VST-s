@@ -1,7 +1,7 @@
-name: Albedo CP59 WaveEdit + CP57 Tempo GUI Regression
+name: Albedo CP60 FDN Polish + CP59 WaveEdit GUI Regression
 on:
   push:
-    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp59-waveedit-concepttree-note-safety]
+    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection]
   workflow_dispatch:
 permissions:
   contents: read
@@ -85,6 +85,11 @@ jobs:
         run: |
           python Albedo-JUCE-Native/tests/check_cp59_waveedit_gui.py
           if ($LASTEXITCODE -ne 0) { throw 'CP59 WaveEdit material menu or responsive GUI regression' }
+      - name: CP60 user polish: readable inspector, aligned filter menus, focus targets
+        shell: pwsh
+        run: |
+          python Albedo-JUCE-Native/tests/check_cp60_gui_polish.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP60 GUI styling clipping/overlap regression' }
       - name: Publish contextual GUI screenshots
         if: always()
         uses: actions/upload-artifact@v4

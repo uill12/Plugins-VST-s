@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(AlbedoJUCE VERSION 1.0.59 LANGUAGES C CXX RC)
+project(AlbedoJUCE VERSION 1.0.60 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -237,4 +237,25 @@ if(BUILD_TESTING AND WIN32)
   target_compile_definitions(AlbedoCP59WaveEditTest PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
   target_include_directories(AlbedoCP59WaveEditTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
   add_test(NAME cp59_waveedit_granular_midi_asio_buffers COMMAND AlbedoCP59WaveEditTest)
+endif()
+
+# CP60: integrated user DSP quality suite plus bounded-ASIO-FDN safety tests.
+if(BUILD_TESTING AND WIN32)
+  foreach(name IN ITEMS AlbedoCP60DspQuality AlbedoCP60FxRealtimeTest)
+    if(name STREQUAL "AlbedoCP60DspQuality")
+      set(source_file tests/cp60_dsp_quality.cpp)
+    else()
+      set(source_file tests/cp60_fx_rt.cpp)
+    endif()
+    add_executable(${name}
+      ${source_file}
+      "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp"
+      "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc"
+      "${CMAKE_CURRENT_BINARY_DIR}/albedo_waveedit_bank.rc")
+    target_compile_features(${name} PRIVATE cxx_std_20)
+    target_compile_definitions(${name} PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
+    target_include_directories(${name} PRIVATE "${ALBEDO_DSP_ROOT}/include")
+  endforeach()
+  add_test(NAME cp60_fdn_stereo_physical_voice_quality COMMAND AlbedoCP60DspQuality)
+  add_test(NAME cp60_fx_realtime_restart_and_modulation COMMAND AlbedoCP60FxRealtimeTest)
 endif()

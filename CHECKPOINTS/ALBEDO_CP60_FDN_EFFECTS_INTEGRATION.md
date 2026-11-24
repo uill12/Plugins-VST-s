@@ -1,0 +1,12 @@
+# Albedo CP60 — refinement integration, not a rewrite
+
+- Parent: CP59 WaveEdit Concept Tree, GitHub commit `4031821c141800bf9dbafdf4a49d19fa7d386bc7` (full Windows CI success).
+- Imported: user-supplied `Albedo_CP59_Refinamento.zip`, `CP59_RELATORIO.md` (from CP58R9 branch, 17 DSP quality checks).
+- Merger: `patches/cp60/apply_user_refinement.py` applies the eight DSP-only hunks **after** CP59's WaveEdit patch, with exact preimage guards. Does not overwrite CC0 WaveEdit resources, CP59 source IDs 32..55, arpeggiator or 192 programs.
+- DSP: 8-line stereo Householder FDN, ADAA tanh saturation, phase-accumulating stereo chorus, four-stage allpass diffuse, 10ms effect wet smoothing; anti-click retriggers and voice stealing, fractional-delay physical string.
+- Further fix: user patch had unbounded `std::fill()` of the full reverb FDN when a bypassed effect was re-enabled inside the audio callback. `apply_further_fx.py` replaces it with bounded ≤32 samples/line per host sample, and does not allow old tails to emerge while clearing. Reset during DAW stop remains explicit.
+- Further interconnection: mod matrix `Space / Mix` (existing destination ID 8) now modulates chorus and diffusion alongside reverb; route depth 0 gives the prior signal, and disabled FX remain disabled. No new parameter IDs.
+- Presets: `rebalance_fx.py` applies gentle, role-aware FDN wet/size balancing to 63 CP59 Concept Tree programs, without changing output trim, source type/material, name, index, filter, pitch, arpeggiator, clock, or source coupling; 129 other presets remain unchanged.
+- GUI: user visual polish applied to the canonical HTML (inspector title, compact spectral cards, CRUCIBLE I/II filters, hit targets, focus outline), preserving WebView2/JS layering.
+- QA: original 17 DSP tests pass locally merged with CP59 and new bounded-clear/reconnect tests pass (15 subcases 44.1–192 kHz). Windows CLAP/VST3 build and 192-preset audio review via GitHub CI; manual Bitwig/ASIO4ALL QA remains required.
+- Known future improvements: anti-aliased mip chain for other original PCM engine families (WaveEdit has 8-band mip), improved decimator response, TPT ladder, bounded per-source pre/post FX sends (needs parameter design), and output peak headroom under long FDN tails. Prioritize profiling before changing audio quality.
