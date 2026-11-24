@@ -31,3 +31,8 @@ CP61:
 Run all existing CP60R2 CTests, CP61OnsetMidiTest, 192-program Hi-Fi QA, 18,336-pair uniqueness test, resource integrity/sha256, CLAP/VST3 Windows packaging, GUI regression, target matcher.
 Only then update Drive project checkpoint. Do not overwrite CP60R2.
 **Hardware ASIO4ALL/Bitwig manual validation remains pending** even after CI success. For troubleshooting: solo Albedo in an empty project, no other latency-inducing plugins, 48 kHz at 128/256 then 512 samples; compare native interface ASIO driver when available. If audio is late only in Bitwig/ASIO4ALL while PCM begins immediately, measure driver input/output and host plugin delay compensation separately.
+
+## Recurrence after changing presets (user reproduction)
+User confirms a stuck note stops after changing/toggling a preset, then reappears later. CP60 preset switching invokes `pendingPanic` and `synth->allNotesOff()`, which stops held voices even when reverb is unchanged. That is consistent with an orphaned held/sustained gate and should not be mislabeled as reverb tail only. The cause of missing host MIDI Note Off events cannot be proven without Bitwig MIDI observation. Do **not** impose a timeout on legitimate held notes.
+
+Added CP61 recurring stress regression: 180 cycles across 44.1/48/88.2/96 kHz and 64/256/1024 frames. For each cycle start three overlapping notes of the same pitch on separate channels; deliver their Note Off events on a remapped channel, verify none remain; then sustain and switch/panic preset, verify no latched voice after release; follow with CC121 reset. Local C++ test PASS (180/180). CTest registered as `cp61_recurring_stuck_notes_after_preset_reset_180_cases`.

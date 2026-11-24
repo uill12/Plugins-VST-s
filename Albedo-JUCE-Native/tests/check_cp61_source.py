@@ -21,4 +21,9 @@ for x in ('44100','48000','88200','96000','64,128,256,512,1024','first<0','noteO
  assert x in test,x
 assert 'static constexpr int latency = lookahead - 1;' in guard
 assert 'lookahead = 64;' in guard
+recurring=(root/'Albedo-JUCE-Native/tests/cp61_repeated_preset_note_recovery.cpp').read_text(encoding='utf-8')
+assert 'AlbedoCP61RecurringNoteTest' in cmake
+assert 'cp61_recurring_stuck_notes_after_preset_reset_180_cases' in cmake
+for marker in ('for(int pass=0;pass<15;++pass)', 'synth->allNotesOff()', 'synth->noteOff(pitch,7)', 'synth->midiCC(121,0,1)'):
+ assert marker in recurring,marker
 print('CP61 PASS: 200 onset checks, MIDI press ordering/ID fallback and 63-sample output guard')

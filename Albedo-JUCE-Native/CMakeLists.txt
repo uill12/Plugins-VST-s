@@ -272,4 +272,13 @@ if(BUILD_TESTING AND WIN32)
   target_compile_definitions(AlbedoCP61OnsetMidiTest PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
   target_include_directories(AlbedoCP61OnsetMidiTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
   add_test(NAME cp61_note_onset_ownership_200_cases COMMAND AlbedoCP61OnsetMidiTest)
+  add_executable(AlbedoCP61RecurringNoteTest
+    tests/cp61_repeated_preset_note_recovery.cpp
+    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc"
+    "${CMAKE_CURRENT_BINARY_DIR}/albedo_waveedit_bank.rc")
+  target_compile_features(AlbedoCP61RecurringNoteTest PRIVATE cxx_std_20)
+  target_compile_definitions(AlbedoCP61RecurringNoteTest PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
+  target_include_directories(AlbedoCP61RecurringNoteTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
+  add_test(NAME cp61_recurring_stuck_notes_after_preset_reset_180_cases COMMAND AlbedoCP61RecurringNoteTest)
 endif()
