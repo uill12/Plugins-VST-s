@@ -30,7 +30,8 @@ for f in binary:
     payload=f.read_bytes()
     assert len(payload)>2_000_000 and payload[:2]==b"MZ",(f,len(payload))
     assert b"VTRB2\0\0\0" in payload, f"Missing embedded 32-material PCM bank in {f}"
-    assert b"ALBWT59\0" in payload, f"Missing embedded WaveEdit CC0 mip/grain bank in {f}"\n    sums.append(f"{hashlib.sha256(payload).hexdigest()}  {f.relative_to(root).as_posix()}")
+    assert b"ALBWT59\0" in payload, f"Missing embedded WaveEdit CC0 mip/grain bank in {f}"
+    sums.append(f"{hashlib.sha256(payload).hexdigest()}  {f.relative_to(root).as_posix()}")
 (root/"SHA256SUMS.txt").write_text("\n".join(sums)+"\n",encoding="utf-8")
 (root/"CP59_PACKAGE_QA.json").write_text(json.dumps({
     "checkpoint":"Albedo CP59 — WaveEdit Concept Tree and MIDI safety",
