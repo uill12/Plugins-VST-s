@@ -23,7 +23,7 @@ with sync_playwright() as p:
         result=page.evaluate("""()=>{
             const api=window.ALBEDO_CP04;
             const ids=[1010,1042,1074,1106];
-            const params=cp04Registry.parameters.filter(x=>ids.includes(x.id));
+            const params=api.registry.parameters.filter(x=>ids.includes(x.id));
             return {count:api.materials.length,tail:api.materials.slice(32),
                 range:params.map(x=>[x.id,x.min,x.max]), width:document.documentElement.scrollWidth,
                 viewport:innerWidth}

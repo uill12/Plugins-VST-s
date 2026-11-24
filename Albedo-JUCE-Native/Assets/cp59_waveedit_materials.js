@@ -4,7 +4,7 @@ const labels=["WT · Tidal","WT · Sohler Root","WT · Microwave Haze","WT · Sa
 function register(){
  const api=window.ALBEDO_CP04;if(!api||!Array.isArray(api.materials))return;
  if(api.materials.length===32)api.materials.push(...labels);
- for(const p of (typeof cp04Registry==='undefined'?[]:cp04Registry.parameters)){
+ for(const p of (api.registry?.parameters||[])){
   if(p.id>=1000&&p.id<=1127&&(p.id-1000)%32===10)p.max=55;
  }
  if(typeof api.refresh==='function')api.refresh();
