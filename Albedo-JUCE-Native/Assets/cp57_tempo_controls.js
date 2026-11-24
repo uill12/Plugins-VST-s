@@ -47,7 +47,7 @@ html.albedo-fit #page #cp57TempoControls select{font-size:8.5px;font-weight:700;
 #page.nigredo #cp57TempoControls select{background:#253d33;color:#dbe6da;border-color:#567263}
 `;style.textContent+=`
 html.albedo-fit #page #cp56Arp:not(.internal) [data-cp56-id="6029"]{display:none!important}
-html.albedo-fit #page #cp56Arp.internal .cp56-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
+html.albedo-fit #page #cp56Arp.internal .cp56-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
 #page .surface-title .eyebrow,#page .footer,#page .pattern-note{display:none!important}
 #page #networkPaths .conduit{stroke-linecap:round;stroke-linejoin:round}
 #page #networkPaths .conduit.active:not(.off){stroke-width:3.2;opacity:1}
@@ -97,7 +97,7 @@ function refresh(){
 function commit(id,v){
  api.setExtraParam?.(id,v);
  const old=document.querySelector('[data-arp="'+id+'"]');
- if(old){old.value=String(v);old.dispatchEvent(new Event('change',{bubbles:true}));}
+ if(old){old.value=String(v);}
  refresh();
 }
 rate.addEventListener('change',()=>commit(6021,Number(rate.value)));
