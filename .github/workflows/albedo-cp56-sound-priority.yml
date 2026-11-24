@@ -85,7 +85,7 @@ jobs:
         run: |
           python Albedo-JUCE-Native/tests/check_cp59_waveedit_gui.py
           if ($LASTEXITCODE -ne 0) { throw 'CP59 WaveEdit material menu or responsive GUI regression' }
-      - name: CP60 user polish: readable inspector, aligned filter menus, focus targets
+      - name: 'CP60 user polish: readable inspector, aligned filter menus, focus targets'
         shell: pwsh
         run: |
           python Albedo-JUCE-Native/tests/check_cp60_gui_polish.py
