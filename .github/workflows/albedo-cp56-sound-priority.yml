@@ -1,7 +1,7 @@
-name: Albedo CP58 ASIO Optimization + CP57 GUI Regression
+name: Albedo CP59 WaveEdit + CP57 Tempo GUI Regression
 on:
   push:
-    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp]
+    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp59-waveedit-concepttree-note-safety]
   workflow_dispatch:
 permissions:
   contents: read
@@ -40,6 +40,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --check Albedo-JUCE-Native/Assets/cp57_tempo_controls.js
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --check Albedo-JUCE-Native/Assets/cp59_waveedit_materials.js
+          if ($LASTEXITCODE -ne 0) { throw 'CP59 CC0 material browser JS syntax failed' }
           node Albedo-JUCE-Native/tests/check_cp52_browser.cjs --expanded
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $cpp=Get-Content -Raw Albedo-JUCE-Native/Source/AlbedoWebViewEditor.cpp
@@ -78,6 +80,11 @@ jobs:
         run: |
           python Albedo-JUCE-Native/tests/check_cp57_tempo_gui.py
           if ($LASTEXITCODE -ne 0) { throw 'CP57 real tempo parameter controls or window regression' }
+      - name: Test CP59 24 material options and responsive GUI in Edge
+        shell: pwsh
+        run: |
+          python Albedo-JUCE-Native/tests/check_cp59_waveedit_gui.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP59 WaveEdit material menu or responsive GUI regression' }
       - name: Publish contextual GUI screenshots
         if: always()
         uses: actions/upload-artifact@v4

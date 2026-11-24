@@ -12,12 +12,12 @@ resource=a.root/'resources/Albedo_CP59_WaveEdit_MorphGrain.albw'
 assert resource.exists() and resource.stat().st_size==6881308
 with resource.open('rb') as f:
  assert struct.unpack('<8sIIIII',f.read(28))==(b'ALBWT59\0',24,64,256,8,12288)
-cpp=(a.root/'src/vitriol_dsp.cpp').read_text()
-head=(a.root/'include/vitriol_dsp.hpp').read_text()
-params=(a.root/'include/vitriol_params.hpp').read_text()
-cmake=Path('Albedo-JUCE-Native/CMakeLists.txt').read_text()
-web=Path('Albedo-JUCE-Native/Source/AlbedoWebViewEditor.cpp').read_text()
-processor=Path('Albedo-JUCE-Native/Source/AlbedoProcessor.cpp').read_text()
+cpp=(a.root/'src/vitriol_dsp.cpp').read_text(encoding='utf-8')
+head=(a.root/'include/vitriol_dsp.hpp').read_text(encoding='utf-8')
+params=(a.root/'include/vitriol_params.hpp').read_text(encoding='utf-8')
+cmake=Path('Albedo-JUCE-Native/CMakeLists.txt').read_text(encoding='utf-8')
+web=Path('Albedo-JUCE-Native/Source/AlbedoWebViewEditor.cpp').read_text(encoding='utf-8')
+processor=Path('Albedo-JUCE-Native/Source/AlbedoProcessor.cpp').read_text(encoding='utf-8')
 for term in ('loadWaveEditBankBytes','waveEditSample','waveEditGrainSample','CC121'):
  assert term in cpp or term=='CC121' and 'if(cc==121)' in cpp,term
 assert 'waveEditTables_' in head and 'add(b+10,"Material",g,0,55' in params

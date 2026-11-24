@@ -6,7 +6,7 @@ from pathlib import Path
 import argparse
 p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True);a=p.parse_args()
 hp=a.root/'include/vitriol_dsp.hpp';pp=a.root/'include/vitriol_params.hpp';cp=a.root/'src/vitriol_dsp.cpp'
-h=hp.read_text();s=cp.read_text();pr=pp.read_text()
+h=hp.read_text(encoding='utf-8');s=cp.read_text(encoding='utf-8');pr=pp.read_text(encoding='utf-8')
 def rep(target,old,new,label):
  count=target.count(old)
  if count!=1:raise RuntimeError(f'CP59 {label}: expected one anchor, found {count}')
@@ -119,7 +119,7 @@ s=rep(s,' case 7:{ // timewarp / procedural one-shot sample; editable start and 
 # (some MIDI controllers/host bridges). Release only when pitch uniquely maps
 # to one held channel; do not steal other notes from a chord.
 arp=a.root/'include/AlbedoCellArp.inc'
-ss=arp.read_text()
+ss=arp.read_text(encoding='utf-8')
 needle=' if(found>=0){arpKeys_[found].down=false;arpPrune();}'
 ss=rep(ss,needle,''' if(found<0&&id<0&&n>=0){
   int owner=-1;bool ambiguous=false;
@@ -131,5 +131,5 @@ ss=rep(ss,needle,''' if(found<0&&id<0&&n>=0){
  }
  if(found>=0){arpKeys_[found].down=false;arpPrune();}''','arp unique pitch fallback')
 # No changes to non-selected historical sources or the always-on DAW clock.
-hp.write_text(h);pp.write_text(pr);cp.write_text(s);arp.write_text(ss)
+hp.write_text(h,encoding='utf-8');pp.write_text(pr,encoding='utf-8');cp.write_text(s,encoding='utf-8');arp.write_text(ss,encoding='utf-8')
 print('CP59 DSP PASS: Wavetable mipmaps, 48-cycle granular textures, note-off fallback')
