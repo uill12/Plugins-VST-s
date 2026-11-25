@@ -10,13 +10,13 @@ struct MidiIdleGuard {
  Clock::time_point lastMidi{};
  void arm(Clock::time_point now) noexcept { lastMidi=now; }
  bool onNoteOn(Clock::time_point now,bool anyKeysHeld,
-               bool sustainPedalDown,bool transportPlaying) noexcept {
+               bool sustainPedalDown) noexcept {
   const bool expired=lastMidi!=Clock::time_point{} &&
        now>lastMidi && now-lastMidi>idleLimit;
   lastMidi=now;
-  // Do not interrupt a deliberate long-held pad, sustain pedal or a
-  // sequencer/transport performance. A new idle note is a clean boundary.
-  return expired&&!anyKeysHeld&&!sustainPedalDown&&!transportPlaying;
+  // Only physical key/sustain ownership protects long notes. A running DAW
+  // transport without MIDI is still idle; its first new key must rearm too.
+  return expired&&!anyKeysHeld&&!sustainPedalDown;
  }
  void onOtherMidi(Clock::time_point now) noexcept { lastMidi=now; }
 };
