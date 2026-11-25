@@ -1,7 +1,7 @@
 name: Albedo CP61 Note Safety and CP60 GUI Regression
 on:
   push:
-    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership, albedo/cp62-arp-gui-no-accent, albedo/cp63r7-step-availability]
+    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership, albedo/cp62-arp-gui-no-accent, albedo/cp63r7-step-availability, albedo/cp64-arp-tempo-idle-notes]
   workflow_dispatch:
 permissions:
   contents: read
@@ -85,6 +85,11 @@ jobs:
         run: |
           python Albedo-JUCE-Native/tests/check_cp63_arp_popup.py
           if ($LASTEXITCODE -ne 0) { throw 'CP63 original controls reparent or responsive arpeggiator regression' }
+      - name: Check CP64 whole-synth MIDI idle and ARP timing source contracts
+        shell: pwsh
+        run: |
+          python Albedo-JUCE-Native/tests/check_cp64_source_contract.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP64 idle reentry/arp material contract failed' }
       - name: Test CP63R7 STEPS count controls 16 gate availability in Edge
         shell: pwsh
         run: |
