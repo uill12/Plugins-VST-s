@@ -97,6 +97,14 @@ with sync_playwright() as p:
         assert_window(page,12,width)
         page.locator('#cp54Popover [data-arp="6027"]').select_option("16")
         assert_window(page,16,width)
+        # The contextual native selector must mirror the true 16-step length.
+        assert page.locator('#cp54Popover [data-cp54-id="6027"]').input_value()=="16",(width,"detail/main step length mismatch")
+        # In DAW Sync the native tempo dial must not appear; INTERNAL reveals it.
+        assert page.locator('#cp54Popover [data-cp54-id="6029"]').is_hidden(),(width,"sync must hide BPM")
+        page.locator('#cp54Popover #cp57Clock').select_option("0")
+        assert page.locator('#cp54Popover [data-cp54-id="6029"]').is_visible(),(width,"internal BPM must appear")
+        page.locator('#cp54Popover #cp57Clock').select_option("1")
+        assert page.locator('#cp54Popover [data-cp54-id="6029"]').is_hidden(),(width,"returning to sync must hide BPM")
         assert page.locator('#steps [data-step="10"]').get_attribute("aria-pressed")=="true"
         assert page.evaluate("window.__stepProbe.every((n,i)=>n===document.querySelectorAll('#steps [data-step]')[i])"),(width,"popup node identity")
         page.screenshot(path=str(out/f"CP63R7_{width}x{height}_sixteen_steps.png"))
