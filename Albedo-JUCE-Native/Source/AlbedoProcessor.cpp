@@ -32,6 +32,7 @@ AlbedoProcessor::~AlbedoProcessor()
 void AlbedoProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     nextCallback={};
+    midiIdleGuard.arm(albedo::MidiIdleGuard::Clock::now());
     synth->prepare (sampleRate);
     juce::ignoreUnused(samplesPerBlock);
     rearField.prepare(sampleRate);
@@ -60,6 +61,9 @@ void AlbedoProcessor::recoverInterruptedAudio(int frames)
         // voice or 18-second wet tail when the host resumes.
         synth->reset();
         for(auto& channel:midiHeld) channel.fill(false);
+        for(auto& stamps:midiPressStamp) stamps.fill(0);
+        midiPedalDown.fill(false);
+        midiIdleGuard.arm(Clock::now());
         transportPlaying=false;
         outputGuard.reset();
     }
@@ -89,6 +93,8 @@ void AlbedoProcessor::panicVoices() noexcept
 {
     synth->allNotesOff();
     for(auto& channel:midiHeld)channel.fill(false);
+    for(auto& stamps:midiPressStamp)stamps.fill(0);
+    midiPedalDown.fill(false);
 }
 void AlbedoProcessor::syncArpClock()
 {
@@ -105,6 +111,9 @@ void AlbedoProcessor::syncArpClock()
             if(transportPlaying&&!playing){
                 synth->reset(); // Stop stale arpeggiator/sustain/FX state together.
                 for(auto& channel:midiHeld)channel.fill(false);
+                for(auto& stamps:midiPressStamp)stamps.fill(0);
+                midiPedalDown.fill(false);
+                midiIdleGuard.arm(albedo::MidiIdleGuard::Clock::now());
                 outputGuard.reset();
             }
             transportPlaying=playing;
@@ -118,6 +127,21 @@ void AlbedoProcessor::handleMidi (const juce::MidiMessage& m)
 {
     const int ch=juce::jlimit(0,15,m.getChannel()-1);
     if(m.isNoteOn()) {
+        // Restore clean DSP ownership at the FIRST new key after MIDI inactivity.
+        // Crucially, do not cut legitimate long-held notes, sustained chords,
+        // or an active DAW transport. This applies even when the arp is OFF.
+        bool held=false,pedal=false;
+        for(const auto& channel:midiHeld)for(bool down:channel)held|=down;
+        for(bool down:midiPedalDown)pedal|=down;
+        const bool rearm=midiIdleGuard.onNoteOn(
+            albedo::MidiIdleGuard::Clock::now(),held,pedal,transportPlaying);
+        if(!isNonRealtime()&&rearm) {
+            synth->reset();
+            outputGuard.reset();
+            for(auto& channel:midiHeld)channel.fill(false);
+            for(auto& stamps:midiPressStamp)stamps.fill(0);
+            midiPedalDown.fill(false);
+        }
         const int note=m.getNoteNumber();
         if(midiHeld[(size_t)ch][(size_t)note])
             synth->noteOff(note,ch); // A retrigger replaces one held key.
@@ -126,6 +150,7 @@ void AlbedoProcessor::handleMidi (const juce::MidiMessage& m)
         synth->noteOn(note,m.getFloatVelocity(),ch);
     }
     else if(m.isNoteOff()) {
+        midiIdleGuard.onOtherMidi(albedo::MidiIdleGuard::Clock::now());
         const int note=m.getNoteNumber();
         int owner=ch;
         if(!midiHeld[(size_t)ch][(size_t)note]) {
@@ -145,16 +170,24 @@ void AlbedoProcessor::handleMidi (const juce::MidiMessage& m)
         synth->noteOff(note,owner);
     }
     else if(m.isAllSoundOff() || m.isMidiStop()){
+        midiIdleGuard.onOtherMidi(albedo::MidiIdleGuard::Clock::now());
         synth->reset();for(auto& held:midiHeld)held.fill(false);
+        for(auto& stamps:midiPressStamp)stamps.fill(0);
+        midiPedalDown.fill(false);
         outputGuard.reset();
     }
     else if(m.isAllNotesOff()){
+        midiIdleGuard.onOtherMidi(albedo::MidiIdleGuard::Clock::now());
         synth->midiCC(123,0,ch);midiHeld[(size_t)ch].fill(false);
+        midiPressStamp[(size_t)ch].fill(0);midiPedalDown[(size_t)ch]=false;
     }
     else if(m.isController()) {
+        midiIdleGuard.onOtherMidi(albedo::MidiIdleGuard::Clock::now());
         const int cc=m.getControllerNumber();
-        if(cc==120){synth->reset();for(auto& held:midiHeld)held.fill(false);outputGuard.reset();return;}
-        if(cc==123){synth->midiCC(123,0,ch);midiHeld[(size_t)ch].fill(false);return;}
+        if(cc==120){synth->reset();for(auto& held:midiHeld)held.fill(false);for(auto& stamps:midiPressStamp)stamps.fill(0);midiPedalDown.fill(false);outputGuard.reset();return;}
+        if(cc==123){synth->midiCC(123,0,ch);midiHeld[(size_t)ch].fill(false);midiPressStamp[(size_t)ch].fill(0);midiPedalDown[(size_t)ch]=false;return;}
+        if(cc==64)midiPedalDown[(size_t)ch]=m.getControllerValue()>=64;
+        if(cc==121)midiPedalDown[(size_t)ch]=false;
         // CC121 resets controller state, including an orphaned sustain pedal.
         synth->midiCC(cc,m.getControllerValue(),ch); // Sustain and release belong to the event's MIDI channel.
     }
