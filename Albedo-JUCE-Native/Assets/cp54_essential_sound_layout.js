@@ -311,6 +311,19 @@ function sectionModulation(){
  heading('LFO configuration');
  nativeControls([4010,4011,4012,4013,4014]);
 }
+function syncArpDetails(){
+ if(activeKey!=='arp')return;
+ const isInternal=Number(api.state.cp04[6030]??1)<.5;
+ const bpm=popup.querySelector('[data-cp54-id="6029"]')?.closest('.cp54-native');
+ if(bpm)bpm.hidden=!isInternal;
+}
+document.addEventListener('change',e=>{
+ if(activeKey==='arp'&&e.target.matches?.('#cp57Clock,[data-arp="6030"]'))
+  queueMicrotask(syncArpDetails);
+});
+window.__JUCE__?.backend?.addEventListener?.('albedoUpdate',()=>{
+ if(activeKey==='arp')queueMicrotask(syncArpDetails);
+});
 function sectionArp(){
  heading('Clock · meter · pattern');
  // Reparent the actual controls, never clone them: existing CP57 and MIDI
@@ -321,6 +334,7 @@ function sectionArp(){
  moveOriginal('#cellArp #steps');
  heading('Articulation · original key velocity');
  nativeControls([6023,6026,6025,6027,6028,6029]);
+ syncArpDetails();
  heading('Cellular motion · note selection');
  moveOriginal('#cellArp .arp-lattice');
  heading('Pattern refinement');
@@ -342,7 +356,8 @@ function place(button){
  // Prefer adjacent placement; fall back to opposite side and finally clamp.
  let x=box.right+8;if(x+w>innerWidth-margin)x=box.left-w-8;
  if(x<margin)x=(innerWidth-w)/2;
- const h=Math.min(popup.scrollHeight,innerHeight-2*margin);
+ // The scroll height can under-report the fixed dialog's painted height.
+ const h=Math.min(Math.max(popup.getBoundingClientRect().height,popup.scrollHeight),innerHeight-2*margin);
  let y=box.top;
  if(y+h>innerHeight-margin)y=Math.max(margin,innerHeight-h-margin);
  popup.style.left=Math.round(Math.max(margin,Math.min(x,innerWidth-w-margin)))+'px';
@@ -362,6 +377,7 @@ function open(key){
  body.appendChild(intro);
  sections[key]();
  popup.hidden=scrim.hidden=false;
+ syncArpDetails();
  activeButton.setAttribute('aria-expanded','true');
  place(activeButton);
  popup.querySelector('#cp54Close').focus();
