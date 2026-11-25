@@ -281,4 +281,18 @@ if(BUILD_TESTING AND WIN32)
   target_compile_definitions(AlbedoCP61RecurringNoteTest PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
   target_include_directories(AlbedoCP61RecurringNoteTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
   add_test(NAME cp61_recurring_stuck_notes_after_preset_reset_180_cases COMMAND AlbedoCP61RecurringNoteTest)
+  # CP64: both note-on after idle (all instrument modes) and true synced
+  # 110 BPM 1/16 subdivision are native test contracts.
+  add_executable(AlbedoCP64MidiIdleGuardTest tests/cp64_idle_reentry.cpp)
+  target_compile_features(AlbedoCP64MidiIdleGuardTest PRIVATE cxx_std_20)
+  add_test(NAME cp64_first_note_after_idle_reentry COMMAND AlbedoCP64MidiIdleGuardTest)
+  add_executable(AlbedoCP64Arp110TempoTest
+    tests/cp64_arp_110_tempo.cpp
+    "${ALBEDO_DSP_ROOT}/src/vitriol_dsp.cpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/albedo_bank.rc"
+    "${CMAKE_CURRENT_BINARY_DIR}/albedo_waveedit_bank.rc")
+  target_compile_features(AlbedoCP64Arp110TempoTest PRIVATE cxx_std_20)
+  target_compile_definitions(AlbedoCP64Arp110TempoTest PRIVATE ALBEDO_CP53_TRANSPARENT_OUTPUT=1)
+  target_include_directories(AlbedoCP64Arp110TempoTest PRIVATE "${ALBEDO_DSP_ROOT}/include")
+  add_test(NAME cp64_110bpm_sync_and_internal_sixteenths COMMAND AlbedoCP64Arp110TempoTest)
 endif()
