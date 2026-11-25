@@ -2048,7 +2048,17 @@ function install(){$('#preset').innerHTML='<option value="">UNSAVED / MODIFIED</
  document.addEventListener('dblclick',e=>{const d=e.target.closest('.dial');if(!d)return;const k=d.dataset.key;applyDial(k,norm(k,specOf(k)[2]))});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#dialogBack').classList.remove('show');return}const d=e.target.closest('.dial');if(d){const k=d.dataset.key;let n=norm(k,valueOf(k));if(['ArrowUp','ArrowRight'].includes(e.key))n+=e.shiftKey?.005:.025;else if(['ArrowDown','ArrowLeft'].includes(e.key))n-=e.shiftKey?.005:.025;else if(e.key==='Home')n=0;else if(e.key==='End')n=1;else return;e.preventDefault();applyDial(k,n);return}if(e.target.closest('#xy')){let {x,y}=state.xy;if(e.key==='ArrowLeft')x-=.02;else if(e.key==='ArrowRight')x+=.02;else if(e.key==='ArrowUp')y-=.02;else if(e.key==='ArrowDown')y+=.02;else return;e.preventDefault();state.xy={x:clamp(x,0,1),y:clamp(y,0,1)};renderXY();mark();window.ALBEDO_NATIVE_CP27?.onXY(state.xy.x,state.xy.y);return}const n=e.target.closest('.node');if(n&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selectEngine(+n.dataset.index)}});
  renderAll();$('#preset').value=state.name;}
-window.ALBEDO_CP04={get state(){return state},mark,notify,selectEngine,presetLoad,importPatch,presets:NPRESETS,registry:cp04Registry,materials:cp04Materials,refresh:renderAll,setArpStep(step){seqIndex=Number(step);renderSteps()},refreshXY:renderXY,refreshRoutes:renderRoutes,get pulseRunning(){return seqTimer!==null},setPulse(on){if(on!==(seqTimer!==null)){if(on)startSeq();else stopSeq()}},applyHostDial:(k,v)=>applyDial(k,norm(k,v))};
+window.ALBEDO_CP04={get state(){return state},mark,notify,selectEngine,presetLoad,importPatch,presets:NPRESETS,registry:cp04Registry,materials:cp04Materials,refresh:renderAll,setArpStep(step){
+ const next=Number.isFinite(Number(step))?Math.trunc(Number(step)):-1;
+ if(seqIndex===next)return;
+ const previous=document.querySelector('#steps .step.current');
+ if(previous)previous.classList.remove('current');
+ seqIndex=next;
+ if(next>=0&&next<16){
+  const selected=document.querySelector('#steps [data-step="'+next+'"]');
+  if(selected)selected.classList.add('current');
+ }
+},refreshCells:renderCells,refreshXY:renderXY,refreshRoutes:renderRoutes,get pulseRunning(){return seqTimer!==null},setPulse(on){if(on!==(seqTimer!==null)){if(on)startSeq();else stopSeq()}},applyHostDial:(k,v)=>applyDial(k,norm(k,v))};
 install();
 })();
 </script>
@@ -2371,12 +2381,12 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
   else if(id===3110){s.pitchMode=PITCH[Math.max(0,Math.min(2,Math.round(value)))];document.querySelectorAll('#pitchMode button').forEach(b=>b.classList.toggle('active',b.dataset.value===s.pitchMode));}
   else if(id===3111){s.voiceMode=VOICES[0];document.getElementById('voiceMode').value=s.voiceMode;}
   else if(id===3112){s.tuning=TUNINGS[Math.max(0,Math.min(4,Math.round(value)))];document.getElementById('tuning').value=s.tuning;}
-  else if(id===4003){s.motionRule=RULES[Math.max(0,Math.min(3,Math.round(value)))];document.getElementById('rule').value=String(s.motionRule);needsRefresh=!batch;}
+  else if(id===4003){s.motionRule=RULES[Math.max(0,Math.min(3,Math.round(value)))];document.getElementById('rule').value=String(s.motionRule);if(!batch)api.refreshCells?.();}
   else if(id>=5000&&id<=5007){const i=Math.floor((id-5000)/2);if(id%2===0){s.effects[i].mix=value;const slider=document.querySelector(`[data-fxmix="${i}"]`);if(slider)slider.value=value;if(!batch)setDial('fx:'+i,value);}else{s.effects[i].on=value>=.5;needsRefresh=true;}}
   else if(id>=6000&&id<=6015){const i=id-6000;s.steps[i]=value>=.5;const button=document.querySelector(`[data-step="${i}"]`);if(button)button.classList.toggle('on',s.steps[i]);}
-  else if((id>=6022&&id<=6032)&&id!==6020&&id!==6021){const el=document.querySelector('[data-arp="'+id+'"]');if(el)el.value=String(Math.round(value));if(id===6030)window.ALBEDO_CP62_ARP?.syncClock();}
-  else if(id===6020){const b=document.getElementById('play');if(b)b.dataset.nativePulse=String(value>=.5);api.setPulse(value>=.5);}
-  else if(id===6021){s.division=value*1000;const c=document.getElementById('division');if(c)c.value=String(Math.round(s.division));}
+  else if((id>=6022&&id<=6032)&&id!==6020&&id!==6021){s.cp04=s.cp04||{};s.cp04[id]=value;const el=document.querySelector('[data-arp="'+id+'"]');if(el)el.value=String(Math.round(value));if(id===6030)window.ALBEDO_CP62_ARP?.syncClock();}
+  else if(id===6020){s.cp04=s.cp04||{};s.cp04[id]=value;const b=document.getElementById('play');if(b)b.dataset.nativePulse=String(value>=.5);api.setPulse(value>=.5);}
+  else if(id===6021){s.cp04=s.cp04||{};s.cp04[id]=value;s.division=value*1000;const c=document.getElementById('division');if(c)c.value=String(Math.round(s.division));}
   else if(id>=8000&&id<=8023){let i=Math.floor((id-8000)/3),j=(id-8000)%3;while(s.routes.length<=i)s.routes.push({src:SOURCE[0],dst:TARGET[0],depth:0});const item=s.routes[i];if(j===0)item.src=SOURCE[Math.round(value)]||SOURCE[0];else if(j===1)item.dst=TARGET[Math.round(value)]||TARGET[0];else item.depth=value;}
   else if(id===8300){s.routes.length=Math.min(s.routes.length,Math.max(0,Math.round(value)));if(!batch)api.refreshRoutes();}
   else if(id===9001){s.safety=value>=.5;const b=document.getElementById('safety');if(b){b.textContent=s.safety?'GUARD ON':'GUARD OFF';b.classList.toggle('active',s.safety);}}
