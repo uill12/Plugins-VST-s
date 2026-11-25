@@ -2740,7 +2740,14 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
 </script><script>
 // CP54: ARP refinements are reparented into a local popup while open. 
  // Delegate from document so controls send native parameter events in either parent. 
- document.addEventListener('change',e=>{if(e.target.matches?.('[data-arp]')&&e.target.value!==''){const id=Number(e.target.dataset.arp);window.ALBEDO_NATIVE_CP27?.onExtraParam(id,Number(e.target.value));}});
+ document.addEventListener('change',e=>{if(e.target.matches?.('[data-arp]')&&e.target.value!==''){
+ const id=Number(e.target.dataset.arp),value=Number(e.target.value);
+ if(Number.isInteger(id)&&Number.isFinite(value)){
+  // All real controls share one state and one native parameter dispatch,
+  // including when CP54 reparents their DOM nodes into the ARP popup.
+  window.ALBEDO_CP04?.setExtraParam?.(id,value);
+ }
+}});
 window.__JUCE__?.backend?.addEventListener('albedoArpStep',step=>window.ALBEDO_CP04?.setArpStep(step));
 </script>
 <style id="cp62-arp-layout">
