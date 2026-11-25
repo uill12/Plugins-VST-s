@@ -358,7 +358,10 @@ function place(button){
  if(x<margin)x=(innerWidth-w)/2;
  // The scroll height can under-report the fixed dialog's painted height.
  const h=Math.min(Math.max(popup.getBoundingClientRect().height,popup.scrollHeight),innerHeight-2*margin);
- let y=box.top;
+ // For bottom-stage dialogs, anchor near the viewport top so late layout,
+ // async font metrics or native control hydration cannot push the dialog out.
+ // Other contexts stay adjacent to their trigger.
+ let y=box.top>innerHeight*.54?margin:box.top;
  if(y+h>innerHeight-margin)y=Math.max(margin,innerHeight-h-margin);
  popup.style.left=Math.round(Math.max(margin,Math.min(x,innerWidth-w-margin)))+'px';
  popup.style.top=Math.round(Math.max(margin,y))+'px';
@@ -401,7 +404,23 @@ function close(restoreFocus=true){
 for(const [key,button] of buttons)button.addEventListener('click',()=>activeKey===key?close():open(key));
 popup.querySelector('#cp54Close').addEventListener('click',()=>close());
 scrim.addEventListener('pointerdown',()=>close());
-window.addEventListener('resize',()=>{if(activeKey)place(activeButton)},{passive:true});
+// A popup can change size after opening (responsive controls, font metrics,
+ // host automation). React to the painted size without rebuilding its DOM.
+ let placementPending=false;
+ const requestPlacement=()=>{
+  if(!activeKey||!activeButton||placementPending)return;
+  placementPending=true;
+  requestAnimationFrame(()=>{
+   placementPending=false;
+   if(activeKey&&activeButton)place(activeButton);
+  });
+ };
+ if(typeof ResizeObserver==='function'){
+  const observer=new ResizeObserver(()=>requestPlacement());
+  observer.observe(popup);
+  observer.observe(body);
+ }
+ window.addEventListener('resize',requestPlacement,{passive:true});
 window.__JUCE__?.backend?.addEventListener?.('albedoProgram',()=>{
  close(false);
  queueMicrotask(syncPrimary)
