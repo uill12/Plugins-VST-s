@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/rubedo-cp13r2-realtime-gui-ci.yml'
+      - '.github/workflows/rubedo-cp13r2-live-knobs-balance-ci.yml'
       - 'Rubedo-Atlas-Drumkit/checkpoints/CP13R2_LiveKnobs_Balance/**'
 permissions:
   contents: read
