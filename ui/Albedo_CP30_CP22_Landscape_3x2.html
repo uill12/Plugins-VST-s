@@ -1911,6 +1911,21 @@ html #page :focus-visible{outline:2px solid #c07a45!important;outline-offset:2px
   background:linear-gradient(145deg,#425e50,#263f34);color:#e2d5b8;border-color:#748777;
 }
 @media(prefers-reduced-motion:reduce){#steps .step{transition:none}}
+
+/* CP64 whole-instrument MIDI recovery: subtle warm mineral safety control. */
+#resetVoices{
+  min-width:104px;max-width:100%;min-height:28px;padding:5px 10px;
+  border:1px solid #ad846d;border-radius:5px;
+  color:#815849;font:800 9px/1.3 Arial,sans-serif;letter-spacing:.05em;
+  background:linear-gradient(145deg,#f7e8d6,#e6c8b7 58%,#cfa796);
+  box-shadow:inset 0 1px 0 #fff9ed,inset 0 -2px 0 #bb9083,0 2px 3px #4e343326;
+  cursor:pointer;
+}
+#resetVoices:not(:disabled):hover{filter:brightness(1.035)}
+#resetVoices:not(:disabled):active{transform:translateY(1px)}
+#resetVoices:focus-visible{outline:2px solid #b38749;outline-offset:2px}
+#page.nigredo #resetVoices{background:linear-gradient(145deg,#785d59,#4e3939);border-color:#a07a67;color:#f7d8bc}
+@media(max-width:760px){#page .utility .surface:first-child .subrow{flex-wrap:wrap;gap:7px}#resetVoices{min-width:96px}}
 </style></head>
 <body>
 <div class="page" id="page">
@@ -1979,7 +1994,7 @@ html #page :focus-visible{outline:2px solid #c07a45!important;outline-offset:2px
  </div></div></div></div>
  <div class="surface"><div class="surface-title"><div><div class="eyebrow">06 / POST-SYNTHESIS PROCESSING</div><h2>Spatium & Transform</h2></div><span class="seal">☽</span></div><div class="bodypad"><div id="fx"></div><div class="pattern-note">Insert processes / dry-wet mix / bypass. Processing algorithms are proposed.</div></div></div>
 </section>
-<section class="utility"><div class="surface"><div class="subrow"><div><span class="section-caption">VOICE & EXPRESSION</span><p><strong>MIDI · MPE</strong> / velocity, expression, pressure mapping</p></div><select id="tuning"><option>12-TET</option><option>JUST</option><option>PYTHAGOREAN</option><option>19-TET</option><option>24-TET</option></select></div></div><div class="surface"><div class="subrow"><div><span class="section-caption">HIGH FIDELITY TARGET</span><p><strong>64-BIT INTERNAL · OVERSAMPLED NONLINEAR PATHS</strong></p></div><select id="oversample"><option>AUTO</option><option>1×</option><option>2×</option><option>4×</option><option>8×</option></select></div></div><div class="surface"><div class="subrow"><div><span class="section-caption">MASTER CONDITION</span><p><strong>TONAL GUARD</strong> / predictable pitch · mono compatibility · headroom</p></div><button class="tiny-button active" id="safety">GUARD ON</button></div></div></section>
+<section class="utility"><div class="surface"><div class="subrow"><div><span class="section-caption">VOICE & EXPRESSION</span><p><strong>MIDI · MPE</strong> / velocity, expression, pressure mapping</p></div><select id="tuning"><option>12-TET</option><option>JUST</option><option>PYTHAGOREAN</option><option>19-TET</option><option>24-TET</option></select><button type="button" class="tiny-button" id="resetVoices" title="Clear stuck voices safely without restarting the plugin" aria-label="Reset all stuck MIDI notes and voices">✶ RESET NOTES</button></div></div><div class="surface"><div class="subrow"><div><span class="section-caption">HIGH FIDELITY TARGET</span><p><strong>64-BIT INTERNAL · OVERSAMPLED NONLINEAR PATHS</strong></p></div><select id="oversample"><option>AUTO</option><option>1×</option><option>2×</option><option>4×</option><option>8×</option></select></div></div><div class="surface"><div class="subrow"><div><span class="section-caption">MASTER CONDITION</span><p><strong>TONAL GUARD</strong> / predictable pitch · mono compatibility · headroom</p></div><button class="tiny-button active" id="safety">GUARD ON</button></div></div></section>
 <div class="footer"><em>Ex uno, omnia.</em><span>ALBEDO / QUINTESSENTIAL SYNTH — CP19R3 · LANDSCAPE WORKBENCH · DSP IN NATIVE PLUGIN</span><span>Inspired by architectural logic, not a reproduction of the engraving.</span></div>
 </div>
 
@@ -2123,7 +2138,14 @@ function install(){$('#preset').innerHTML='<option value="">UNSAVED / MODIFIED</
  document.addEventListener('input',e=>{const level=e.target.closest('[data-level]');if(level){const i=+level.dataset.level;state.engines[i].level=+level.value;$('#num'+i).textContent=level.value+'%';drawWave(i);mark()}const route=e.target.closest('[data-route][data-field]');if(route){const i=+route.dataset.route;state.routes[i][route.dataset.field]=route.dataset.field==='depth'?+route.value:route.value;route.title=route.value;mark()}const couple=e.target.closest('[data-couple]');if(couple){const i=+couple.dataset.couple;state.couplings[i]=+couple.value;couple.closest('.couple-item').querySelector('output').textContent=couple.value+'%';couple.closest('.couple-item').querySelector('small').textContent=+couple.value===0?'BYPASS · CLEAN':'CROSS-SOURCE INFLUENCE';mark()}const mix=e.target.closest('[data-fxmix]');if(mix){const i=+mix.dataset.fxmix;state.effects[i].mix=+mix.value;mix.parentElement.querySelector('small').textContent='MIX · '+mix.value+'%';mark()}});
  $('#method').addEventListener('change',e=>{state.engines[state.selected].method=e.target.value;renderSources();renderEditor();mark()});
  $('#addRoute').onclick=()=>{if(state.routes.length>=8){notify('8 symbolic routes maximum');return}state.routes.push({src:'LFO 1',dst:'Filter A Cutoff',depth:0});renderRoutes();mark()};
- $('#rule').onchange=e=>{state.motionRule=+e.target.value;renderCells();mark()};$('#filterTypeA').onchange=e=>{state.filterTypes[0]=e.target.value;mark()};$('#filterTypeB').onchange=e=>{state.filterTypes[1]=e.target.value;mark()};$('#filterRoute').onchange=e=>{state.filterRoute=e.target.value;mark()};$('#voiceMode').onchange=e=>{state.voiceMode=e.target.value;mark()};$('#tuning').onchange=e=>{state.tuning=e.target.value;mark()};$('#oversample').onchange=e=>{state.oversample=e.target.value;mark()};$('#safety').onclick=()=>{state.safety=!state.safety;$('#safety').textContent=state.safety?'GUARD ON':'GUARD OFF';$('#safety').classList.toggle('active',state.safety);mark()};$('#regen').onclick=()=>{const count=arpStepCount();state.steps=state.steps.map((v,i)=>i<count?Math.random()>.54:v);syncStepButtons();mark();for(let i=0;i<count;i++)window.ALBEDO_NATIVE_CP27?.onExtraParam(6000+i,state.steps[i]?1:0)};$('#arpFill').onclick=()=>{const count=arpStepCount();for(let i=0;i<count;i++)if(!state.steps[i]){state.steps[i]=true;window.ALBEDO_NATIVE_CP27?.onExtraParam(6000+i,1)}syncStepButtons();mark()};$('#play').onclick=()=>seqTimer?stopSeq():startSeq();$('#division').onchange=e=>{state.division=+e.target.value;if(seqTimer)startSeq()};
+ $('#rule').onchange=e=>{state.motionRule=+e.target.value;renderCells();mark()};$('#filterTypeA').onchange=e=>{state.filterTypes[0]=e.target.value;mark()};$('#filterTypeB').onchange=e=>{state.filterTypes[1]=e.target.value;mark()};$('#filterRoute').onchange=e=>{state.filterRoute=e.target.value;mark()};$('#voiceMode').onchange=e=>{state.voiceMode=e.target.value;mark()};$('#tuning').onchange=e=>{state.tuning=e.target.value;mark()};$('#oversample').onchange=e=>{state.oversample=e.target.value;mark()};$('#safety').onclick=()=>{state.safety=!state.safety;$('#safety').textContent=state.safety?'GUARD ON':'GUARD OFF';$('#safety').classList.toggle('active',state.safety);mark()};$('#resetVoices').onclick=()=>{
+ const send=window.ALBEDO_NATIVE_CP27?.onEmergencyReset;
+ if(typeof send==='function'){
+  send();
+  seqIndex=-1;syncStepButtons();
+  notify('Voice reset requested');
+ }else notify('RESET NOTES is available in the CLAP/VST3 plugin');
+};$('#regen').onclick=()=>{const count=arpStepCount();state.steps=state.steps.map((v,i)=>i<count?Math.random()>.54:v);syncStepButtons();mark();for(let i=0;i<count;i++)window.ALBEDO_NATIVE_CP27?.onExtraParam(6000+i,state.steps[i]?1:0)};$('#arpFill').onclick=()=>{const count=arpStepCount();for(let i=0;i<count;i++)if(!state.steps[i]){state.steps[i]=true;window.ALBEDO_NATIVE_CP27?.onExtraParam(6000+i,1)}syncStepButtons();mark()};$('#play').onclick=()=>seqTimer?stopSeq():startSeq();$('#division').onchange=e=>{state.division=+e.target.value;if(seqTimer)startSeq()};
  document.addEventListener('pointerdown',e=>{const d=e.target.closest('.dial');if(d){e.preventDefault();drag={type:'knob',el:d,id:e.pointerId,k:d.dataset.key,y:e.clientY,x:e.clientX,n:norm(d.dataset.key,valueOf(d.dataset.key))};d.setPointerCapture(e.pointerId);return}if(e.target.closest('#xy')){drag={type:'xy',id:e.pointerId};$('#xy').setPointerCapture(e.pointerId);setXY(e)}});
  document.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;if(drag.type==='knob'){const factor=e.shiftKey?.001:.008;applyDial(drag.k,drag.n+(drag.y-e.clientY)*factor+(e.clientX-drag.x)*factor*.13)}else setXY(e)});
  document.addEventListener('pointerup',e=>{if(drag&&drag.id===e.pointerId)drag=null});document.addEventListener('pointercancel',()=>drag=null);
@@ -2494,6 +2516,7 @@ window.VOICES_CP28_POLY="POLY · 12 VOICES";
  window.ALBEDO_NATIVE_CP27={
   onDial(k,value){const id=knobID(k);if(id>=0)post('param',id,value);},
   onExtraParam(id,value){if(Number.isInteger(id))post('param',id,value);},
+  onEmergencyReset(){post('panic',0);},
   onXY(x,y){post('param',2100,x*100);post('param',2101,y*100);},
   onPreset(name){const p=window.ALBEDO_PRESET_ATLAS?.catalog?.find(p=>p.factoryKey===name);if(p)post('preset',p.id);},
   receive(id,value){mute++;try{updateParam(id,value,false);}finally{mute--;}}
