@@ -80,6 +80,11 @@ jobs:
         run: |
           python Albedo-JUCE-Native/tests/check_cp57_tempo_gui.py
           if ($LASTEXITCODE -ne 0) { throw 'CP57 real tempo parameter controls or window regression' }
+      - name: Test CP63 responsive full arpeggiator editor in Edge
+        shell: pwsh
+        run: |
+          python Albedo-JUCE-Native/tests/check_cp63_arp_popup.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP63 original controls reparent or responsive arpeggiator regression' }
       - name: Test CP59 24 material options and responsive GUI in Edge
         shell: pwsh
         run: |
