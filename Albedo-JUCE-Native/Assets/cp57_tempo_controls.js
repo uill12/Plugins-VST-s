@@ -101,7 +101,9 @@ function commit(id,v){
  refresh();
 }
 rate.addEventListener('change',()=>commit(6021,Number(rate.value)));
-document.addEventListener('change',e=>{if(e.target.matches?.('[data-arp="6030"],[data-arp="6021"]'))queueMicrotask(refresh);});
+// CP63R4: any detailed ARP edit refreshes the shared pattern, meter,
+// division and BPM labels after the canonical HTML handler updates state.
+document.addEventListener('change',e=>{if(e.target.matches?.('[data-arp]'))queueMicrotask(refresh);});
 window.__JUCE__?.backend?.addEventListener?.('albedoUpdate',()=>queueMicrotask(refresh));
 window.__JUCE__?.backend?.addEventListener?.('albedoProgram',refresh);
 window.addEventListener('albedo:gui-patch-imported',refresh);
