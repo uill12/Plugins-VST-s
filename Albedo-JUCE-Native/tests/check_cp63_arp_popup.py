@@ -26,6 +26,15 @@ with sync_playwright() as p:
                    '[data-arp="6027"]','[data-arp="6028"]','[data-arp="6023"]'):
    assert page.locator("#cp54Popover "+selector).count()>0,(w,h,selector)
   assert page.locator('#cp54Popover [data-arp="6022"]').count()==0
+  # Native step telemetry must repaint one existing button rather than recreate 16.
+  untouched=page.evaluate("""()=>{
+    const first=document.querySelector('#steps .step');
+    window.__cp63StepProbe=first;
+    window.ALBEDO_CP04.setArpStep(3);
+    return first===document.querySelector('#steps .step') &&
+           document.querySelector('#steps [data-step="3"]').classList.contains('current');
+  }""")
+  assert untouched,(w,h,"non-destructive step highlighting")
   page.locator('#cp54Popover #cp57Clock').select_option("0")
   assert page.locator('#cp54Popover [data-cp54-id="6029"]').count()>0
   page.locator('#cp54Popover [data-arp="6025"]').select_option("2")
