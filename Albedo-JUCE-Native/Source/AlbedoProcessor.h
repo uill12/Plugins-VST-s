@@ -6,6 +6,7 @@
 #include "AlbedoMorphBank.hpp"
 #include "AlbedoRearField.hpp"
 #include "AlbedoOutputGuard.hpp"
+#include "AlbedoMidiIdleGuard.hpp"
 #include <array>
 #include <chrono>
 #include <atomic>
@@ -66,6 +67,8 @@ private:
     AlbedoRearField rearField;
     AlbedoOutputGuard outputGuard;
     std::array<std::array<bool,128>,16> midiHeld{};
+    std::array<bool,16> midiPedalDown{};
+    albedo::MidiIdleGuard midiIdleGuard{};
     // CP61: preserve press order across MIDI bridges that remap note-off channels.
     // Audio-thread-only, fixed storage: no callback allocations or locks.
     std::array<std::array<uint64_t,128>,16> midiPressStamp{};
