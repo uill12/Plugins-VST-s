@@ -65,7 +65,19 @@ with sync_playwright() as p:
           return window.ALBEDO_CP04.state.steps[10]===before && window.__arpSent.length===sent;
         }""")
         assert unchanged,(width,"disabled event guard")
-        # One enabled click changes both the UI and the native gate parameter.
+        # CP64: sculpted Albedo gate/buttons, and fill only the available steps.
+        assert page.locator("#arpFill").is_visible(),(width,"fill available")
+        page.locator("#arpFill").click()
+        assert page.evaluate("window.ALBEDO_CP04.state.steps.slice(0,4).every(Boolean)")
+        assert page.locator("#arpFill").is_disabled(),(width,"fill should be complete")
+        material=page.evaluate("""()=>{
+          const b=document.querySelector('#steps [data-step="1"]');
+          const s=getComputedStyle(b);
+          const fill=getComputedStyle(document.querySelector('#regen'));
+          return {background:s.backgroundImage,shadow:s.boxShadow,fillShadow:fill.boxShadow};
+        }""")
+        assert "gradient" in material["background"] and material["shadow"]!="none" and material["fillShadow"]!="none",(width,"albedo material styling",material)
+        # A normal click edits one active gate and emits one native parameter event.
         sent=page.evaluate("window.__arpSent.length")
         page.locator('#steps [data-step="2"]').click()
         assert page.evaluate('window.__arpSent.slice(-1)[0][0]')==6002,(width,"gate event ID")
