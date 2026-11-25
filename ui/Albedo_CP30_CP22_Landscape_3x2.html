@@ -1912,6 +1912,8 @@ html #page :focus-visible{outline:2px solid #c07a45!important;outline-offset:2px
 }
 @media(prefers-reduced-motion:reduce){#steps .step{transition:none}}
 
+/* CP64 popup: native BPM only appears for INTERNAL clock; preserve actual HTML hidden semantics. */
+#cp54Popover[data-section="arp"] .cp54-native[hidden]{display:none!important}
 /* CP64 whole-instrument MIDI recovery: subtle warm mineral safety control. */
 #resetVoices{
   min-width:0;max-width:100%;min-height:28px;padding:5px 8px;
@@ -2194,7 +2196,7 @@ function render(){document.getElementById('cp04Chambers').innerHTML=['IGNIS','AE
  if(id===1018)return method==='Noise';
  return true;
 }).map(i=>build(i,true)).join('');document.getElementById('cp04Globals').innerHTML=genIDs.map(i=>build(i,false)).join('');}
-function set(id,v){const p=lookup.get(id);if(!p||!Number.isFinite(v))return;api.state.cp04[id]=p.stepped?Math.round(Math.max(p.min,Math.min(p.max,v))):Math.max(p.min,Math.min(p.max,v));root.querySelectorAll('[data-cp-output="'+id+'"]').forEach(n=>n.textContent=show(p));root.querySelectorAll('.cp-knob[data-cp-id="'+id+'"]').forEach(n=>n.style.setProperty('--pct',100*(val(p)-p.min)/(p.max-p.min)));if(id===6027)api.refreshStepAvailability?.();api.mark();window.ALBEDO_NATIVE_CP27?.onExtraParam(id,api.state.cp04[id])}
+function set(id,v){const p=lookup.get(id);if(!p||!Number.isFinite(v))return;api.state.cp04[id]=p.stepped?Math.round(Math.max(p.min,Math.min(p.max,v))):Math.max(p.min,Math.min(p.max,v));root.querySelectorAll('[data-cp-output="'+id+'"]').forEach(n=>n.textContent=show(p));root.querySelectorAll('.cp-knob[data-cp-id="'+id+'"]').forEach(n=>n.style.setProperty('--pct',100*(val(p)-p.min)/(p.max-p.min)));if(id===6027)api.refreshStepAvailability?.();if(id>=6020&&id<=6032)window.ALBEDO_CP54_ESSENTIAL?.refresh?.();api.mark();window.ALBEDO_NATIVE_CP27?.onExtraParam(id,api.state.cp04[id])}
 api.setExtraParam=set; // CP54 contextual controls: reuse one authoritative bridge for all legacy Lab parameter IDs.
 let drag=null;root.addEventListener('click',e=>{const tab=e.target.closest('[data-cp-source]');if(tab){api.selectEngine(+tab.dataset.cpSource);render();return}if(e.target===root||e.target.id==='cp04LabClose')root.classList.remove('open')});root.addEventListener('input',e=>{const c=e.target.closest('select[data-cp-id],input[data-cp-id]');if(c)set(+c.dataset.cpId,+c.value)});
 root.addEventListener('pointerdown',e=>{const knob=e.target.closest('.cp-knob');if(!knob)return;e.preventDefault();let id=+knob.dataset.cpId,p=lookup.get(id);drag={id,y:e.clientY,initial:val(p),span:p.max-p.min,pid:e.pointerId};knob.setPointerCapture(e.pointerId)});root.addEventListener('pointermove',e=>{if(drag&&e.pointerId===drag.pid)set(drag.id,drag.initial+(drag.y-e.clientY)*drag.span*(e.shiftKey?.001:.008))});root.addEventListener('pointerup',()=>drag=null);root.addEventListener('pointercancel',()=>drag=null);
