@@ -52,7 +52,7 @@ with sync_playwright() as p:
     const ids=[6025,6031,6032];
     return Object.fromEntries(ids.map(id=>[id,window.__cp63ArpSent.filter(x=>x[0]===id).length]));
   }""")
-  assert all(counts[k]==1 for k in (6025,6031,6032)),(w,h,"exactly-once MIDI/host param bridge",counts)
+  assert all(counts[str(k)]==1 for k in (6025,6031,6032)),(w,h,"exactly-once MIDI/host param bridge",counts)
   # Simulated DAW automation must repaint one existing dial in-place.
   refreshed=page.evaluate("""()=>{
     const dial=document.querySelector('#cp54Popover [data-cp54-id="6023"]');
