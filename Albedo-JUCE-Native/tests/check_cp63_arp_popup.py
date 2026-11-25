@@ -53,6 +53,17 @@ with sync_playwright() as p:
     return Object.fromEntries(ids.map(id=>[id,window.__cp63ArpSent.filter(x=>x[0]===id).length]));
   }""")
   assert all(counts[k]==1 for k in (6025,6031,6032)),(w,h,"exactly-once MIDI/host param bridge",counts)
+  # Simulated DAW automation must repaint one existing dial in-place.
+  refreshed=page.evaluate("""()=>{
+    const dial=document.querySelector('#cp54Popover [data-cp54-id="6023"]');
+    if(!dial)return false;
+    window.ALBEDO_CP04.state.cp04[6023]=41;
+    window.ALBEDO_CP54_ESSENTIAL.refresh();
+    return dial===document.querySelector('#cp54Popover [data-cp54-id="6023"]') &&
+           Number(dial.getAttribute('aria-valuenow'))===41;
+  }""")
+  assert refreshed,(w,h,"live automation without DOM replacement")
+  assert page.locator('#cp54Popover .arp-internal-tempo').is_hidden(),(w,h,"one internal BPM control")
   page.locator("#cp54Close").click()
   assert not page.locator("#cp54Popover").is_visible()
   for selector in ("#steps","#cp57TempoControls","#cpArpPattern",".arp-options"):
