@@ -1,7 +1,7 @@
 name: Albedo CP61 MIDI Onset and Stuck Note Recovery Windows CLAP VST3
 on:
   push:
-    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp58r1-bounce-audio, albedo/cp58r2-browser-arp, albedo/cp58r3-spectral-cpu, albedo/cp58r4-nereida-arp, albedo/cp58r9-voicing, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership]
+    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp58r1-bounce-audio, albedo/cp58r2-browser-arp, albedo/cp58r3-spectral-cpu, albedo/cp58r4-nereida-arp, albedo/cp58r9-voicing, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership, albedo/cp62-arp-gui-no-accent]
     paths:
       - '.github/workflows/albedo-cp51-morph-tree-windows.yml'
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
@@ -11,6 +11,7 @@ on:
       - 'patches/cp59/**'
       - 'patches/cp60/**'
       - 'patches/cp61/**'
+      - 'patches/cp62/**'
       - 'patches/cp53_*.py'
       - 'patches/cp58_*.py'
       - 'patches/cp15_apply_part*.txt'
@@ -665,6 +666,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP60 bounded ASIO FDN and Space/FX modulation patch failed' }
           python patches/cp61/apply_note_ownership.py --root Albedo-Quintessential-Synth
           if ($LASTEXITCODE -ne 0) { throw 'CP61 deterministic channel/ID note ownership patch failed' }
+          python patches/cp62/remove_arp_velocity_accents.py --root Albedo-Quintessential-Synth
+          if ($LASTEXITCODE -ne 0) { throw 'CP62 arpeggiator velocity accents removal failed' }
           git clone --depth 1 https://github.com/smpldsnds/wavedit-online.git cp59-waveedit
           if ($LASTEXITCODE -ne 0) { throw 'CP59 public-domain WaveEdit source acquisition failed' }
           git -C cp59-waveedit checkout 1a8d80f7a062f36eca212f92f24f2ca6329b88ff
@@ -823,6 +826,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP60 WaveEdit+FDN+FX preset and GUI integration check failed' }
           python Albedo-JUCE-Native/tests/check_cp61_source.py
           if ($LASTEXITCODE -ne 0) { throw 'CP61 MIDI ownership and 1ms attack onset contract failed' }
+          python Albedo-JUCE-Native/tests/check_cp62_arp_contract.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP62 accent-free DSP and GUI contract failed' }
           python Albedo-JUCE-Native/tools/generate_recursive_forms.py --bank material --metadata Albedo-JUCE-Native/Metadata/material_factory_bank.json --output Albedo-JUCE-Native/Source/AlbedoMaterialBank.hpp
           if ($LASTEXITCODE -ne 0) { throw 'CP51 material header failed' }
           python Albedo-JUCE-Native/tools/generate_recursive_forms.py --bank creative --metadata Albedo-JUCE-Native/Metadata/recursive_forms_bank.json --output Albedo-JUCE-Native/Source/AlbedoCreativeBank.hpp
@@ -842,7 +847,7 @@ jobs:
       - name: Preserve reconstructed CP53 DSP source for voice/audio audit
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP61_Reconstructed_DSP_Source
+          name: Albedo_CP62_Reconstructed_DSP_Source
           path: |
             Albedo-Quintessential-Synth/src/vitriol_dsp.cpp
             Albedo-Quintessential-Synth/include/vitriol_dsp.hpp
@@ -955,7 +960,7 @@ jobs:
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP61_MIDI_Onset_NoteSafety_Windows_x64_CLAP_VST3
+          name: Albedo_CP62_AccentFreeArp_Windows_x64_CLAP_VST3
           path: dist-cp38/*
           if-no-files-found: error
       - name: Package and exercise Windows target reconstruction
