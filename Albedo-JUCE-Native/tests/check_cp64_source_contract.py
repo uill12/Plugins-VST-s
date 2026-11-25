@@ -15,7 +15,7 @@ for value in ("midiIdleGuard.onNoteOn(","!isNonRealtime()&&rearm","synth->reset(
 for value in ("MidiIdleGuard.hpp","midiPedalDown{}","midiIdleGuard{}"):
  assert value in header,value
 for value in ("idleLimit=std::chrono::seconds(30)","anyKeysHeld","sustainPedalDown",
-              "transportPlaying","lastMidi=now"):
+              "lastMidi=now","return expired&&!anyKeysHeld&&!sustainPedalDown;"):
  assert value in guard,value
 for value in ('id="arpFill"','FILL '+chr(39),'#steps .step:disabled','arpStepCount()',
               "onExtraParam(6000+i,1)","cp64-arp-identity",'id="resetVoices"',
