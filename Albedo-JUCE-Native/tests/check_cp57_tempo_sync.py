@@ -21,7 +21,7 @@ for token in ('cp57_tempo_controls.js','cp57_tempo_controls_js'):
  assert token in editor or token in cmake,token
 for token in ('albedoHostTempo','1/4','1/8','1/16','1/32','setExtraParam?.(id,v)'):
  assert token in ui,token
-assert re.search(r'VERSION 1\.0\.(?:57|58|59|60|61|63)',cmake), 'CP57 tempo sync remains compatible with CP58 metadata'
+assert re.search(r'VERSION 1\.0\.(?:57|58|59|60|61|63|64)',cmake), 'CP57 tempo sync remains compatible with CP58 metadata'
 for rate in (44100,48000,88200,96000):
  assert str(rate) in test
 assert 'synced->setArpTransport(.0625,true)' in test

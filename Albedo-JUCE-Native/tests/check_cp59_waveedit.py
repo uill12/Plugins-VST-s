@@ -21,7 +21,7 @@ processor=Path('Albedo-JUCE-Native/Source/AlbedoProcessor.cpp').read_text(encodi
 for term in ('loadWaveEditBankBytes','waveEditSample','waveEditGrainSample','CC121'):
  assert term in cpp or term=='CC121' and 'if(cc==121)' in cpp,term
 assert 'waveEditTables_' in head and 'add(b+10,"Material",g,0,55' in params
-assert ('VERSION 1.0.59' in cmake or 'VERSION 1.0.60' in cmake or 'VERSION 1.0.61' in cmake or 'VERSION 1.0.63' in cmake)
+assert ('VERSION 1.0.59' in cmake or 'VERSION 1.0.60' in cmake or 'VERSION 1.0.61' in cmake or 'VERSION 1.0.63' in cmake or 'VERSION 1.0.64' in cmake)
 assert 'albedo_waveedit_bank.rc' in cmake and 'AlbedoCP59WaveEditTest' in cmake
 assert 'cp59_waveedit_materials_js' in web
 assert "materials.extend" in Path('patches/cp50/export_recipes.py').read_text(encoding='utf-8'), 'Target matcher must recognize all 56 material IDs'
