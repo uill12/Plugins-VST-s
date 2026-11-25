@@ -8,8 +8,8 @@ from pathlib import Path
 
 parser=argparse.ArgumentParser()
 parser.add_argument("directory",type=Path)
-parser.add_argument("--version",default="1.0.61")
-parser.add_argument("--source",default="CP61")
+parser.add_argument("--version",default="1.0.63")
+parser.add_argument("--source",default="CP63R6")
 args=parser.parse_args()
 root=args.directory
 module=list(root.rglob("moduleinfo.json"))
@@ -33,9 +33,15 @@ for f in binary:
     assert b"ALBWT59\0" in payload, f"Missing embedded WaveEdit CC0 mip/grain bank in {f}"
     sums.append(f"{hashlib.sha256(payload).hexdigest()}  {f.relative_to(root).as_posix()}")
 (root/"SHA256SUMS.txt").write_text("\n".join(sums)+"\n",encoding="utf-8")
-(root/"CP61_PACKAGE_QA.json").write_text(json.dumps({
-    "checkpoint":"Albedo CP61 — MIDI Onset/Ownership Recovery and CP60 FDN Quality Preserved",
+(root/"CP63R6_PACKAGE_QA.json").write_text(json.dumps({
+    "checkpoint":"Albedo CP63R6 — responsive accent-free arpeggiator, host automation, CP61 MIDI safety and CP60 FDN quality",
     "version":args.version,
+    "build_date":"2026-11-25",
+    "gui_checkpoint":"CP63R6",
+    "arp_velocity_accents":False,
+    "legacy_arp_6022_compatible":True,
+    "arp_original_controls_live":True,
+    "arp_host_automation_in_place":True,
     "sources":"192 program IDs preserved; 63 Concept Tree patches revoiced with selected CC0 WaveEdit tables",
     "new_bank_display_label":"Morphogenic Fields",
     "new_bank_internal_key":"New",
@@ -61,5 +67,5 @@ for f in binary:
     "git_source":args.source,
     "bitwig_manual_validation":"pending"
 },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-print("CP61 strict metadata, PE64 + PCM24, SHA256: PASS")
+print("CP63R6 strict metadata, PE64 + PCM24, SHA256: PASS")
 print("\n".join(sums))
