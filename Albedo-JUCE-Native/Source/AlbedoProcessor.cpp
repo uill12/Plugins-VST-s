@@ -129,12 +129,12 @@ void AlbedoProcessor::handleMidi (const juce::MidiMessage& m)
     if(m.isNoteOn()) {
         // Restore clean DSP ownership at the FIRST new key after MIDI inactivity.
         // Crucially, do not cut legitimate long-held notes, sustained chords,
-        // or an active DAW transport. This applies even when the arp is OFF.
+        // including when the DAW transport is running. Applies with ARP OFF.
         bool held=false,pedal=false;
         for(const auto& channel:midiHeld)for(bool down:channel)held|=down;
         for(bool down:midiPedalDown)pedal|=down;
         const bool rearm=midiIdleGuard.onNoteOn(
-            albedo::MidiIdleGuard::Clock::now(),held,pedal,transportPlaying);
+            albedo::MidiIdleGuard::Clock::now(),held,pedal);
         if(!isNonRealtime()&&rearm) {
             synth->reset();
             outputGuard.reset();
