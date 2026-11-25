@@ -1,7 +1,7 @@
 name: Albedo CP61 Note Safety and CP60 GUI Regression
 on:
   push:
-    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership, albedo/cp62-arp-gui-no-accent]
+    branches: [albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership, albedo/cp62-arp-gui-no-accent, albedo/cp63r7-step-availability]
   workflow_dispatch:
 permissions:
   contents: read
@@ -85,6 +85,11 @@ jobs:
         run: |
           python Albedo-JUCE-Native/tests/check_cp63_arp_popup.py
           if ($LASTEXITCODE -ne 0) { throw 'CP63 original controls reparent or responsive arpeggiator regression' }
+      - name: Test CP63R7 STEPS count controls 16 gate availability in Edge
+        shell: pwsh
+        run: |
+          python Albedo-JUCE-Native/tests/check_cp63r7_step_availability.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP63R7 STEP knob gate availability, disabled event or native sync regression' }
       - name: Test CP59 24 material options and responsive GUI in Edge
         shell: pwsh
         run: |
@@ -105,4 +110,5 @@ jobs:
             qa-cp52-screenshots/*.png
             qa-cp55-stage-fit/*.png
             qa-cp56-sound-priority/*.png
+            qa-cp63r7-steps/*.png
           if-no-files-found: ignore

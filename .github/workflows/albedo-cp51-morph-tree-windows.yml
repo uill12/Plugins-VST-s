@@ -1,7 +1,7 @@
-name: Albedo CP63R6 Responsive Accent-free Arp Windows CLAP VST3
+name: Albedo CP63R7 Responsive Accent-free Arp Windows CLAP VST3
 on:
   push:
-    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp58r1-bounce-audio, albedo/cp58r2-browser-arp, albedo/cp58r3-spectral-cpu, albedo/cp58r4-nereida-arp, albedo/cp58r9-voicing, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership, albedo/cp62-arp-gui-no-accent]
+    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp58r1-bounce-audio, albedo/cp58r2-browser-arp, albedo/cp58r3-spectral-cpu, albedo/cp58r4-nereida-arp, albedo/cp58r9-voicing, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership, albedo/cp62-arp-gui-no-accent, albedo/cp63r7-step-availability]
     paths:
       - '.github/workflows/albedo-cp51-morph-tree-windows.yml'
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
@@ -847,7 +847,7 @@ jobs:
       - name: Preserve reconstructed CP53 DSP source for voice/audio audit
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP63R6_Reconstructed_DSP_Source
+          name: Albedo_CP63R7_Reconstructed_DSP_Source
           path: |
             Albedo-Quintessential-Synth/src/vitriol_dsp.cpp
             Albedo-Quintessential-Synth/include/vitriol_dsp.hpp
@@ -880,20 +880,20 @@ jobs:
           python Albedo-JUCE-Native/tests/cp58r1_bank_check.py Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb $clap.FullName $vst.FullName
           if ($LASTEXITCODE -ne 0) { throw 'Final plugin PCM resource 102 mismatch' }
           New-Item -ItemType Directory -Path 'dist-cp38' -Force | Out-Null
-          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP63R6_ResponsiveArp.clap'
+          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP63R7_ResponsiveArp.clap'
           $bundle=Get-ChildItem -Path build-cp38-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
           @(
-            'Checkpoint: Albedo CP63R6 accent-free live GUI/ARP, CP61 safe MIDI note ownership, 1ms arp-OFF onset, CP60 FDN/ADAA, CP59 WaveEdit, 192 preserved programs',
+            'Checkpoint: Albedo CP63R7 accent-free live GUI/ARP, CP61 safe MIDI note ownership, 1ms arp-OFF onset, CP60 FDN/ADAA, CP59 WaveEdit, 192 preserved programs',
             'Preset parameters: CP51 192 programs, retained; DSP tonal processing upgraded for clarity',
             "Git SHA: $env:GITHUB_SHA",
             "GitHub Run: $env:GITHUB_RUN_ID",
             'Host plugin identifier and internal product name retained for DAW session compatibility',
-            'Version: 1.0.63 | Date: 2026-11-25 | Checkpoint CP63R6 | QA: Windows CI; Bitwig ASIO4ALL manual test pending',
+            'Version: 1.0.63 | Date: 2026-11-25 | Checkpoint CP63R7 | QA: Windows CI; Bitwig ASIO4ALL manual test pending',
             'Windows: CLAP + VST3, WebView2, JUCE native; 63-sample latency; 12 voices AUTO',
             'CP51, CP52, CP53 and CP54 remain intact as rollback'
-          ) | Set-Content -Path 'dist-cp38/CP63R6_BUILD_PROVENANCE.txt' -Encoding utf8
+          ) | Set-Content -Path 'dist-cp38/CP63R7_BUILD_PROVENANCE.txt' -Encoding utf8
           python Albedo-JUCE-Native/tools/cp61_package_metadata.py dist-cp38 --source $env:GITHUB_SHA
           if ($LASTEXITCODE -ne 0) { throw 'CP61 VST3 strict JSON and binary package verification failed' }
           Get-ChildItem 'dist-cp38' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
@@ -961,7 +961,7 @@ jobs:
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP63R6_ResponsiveAccentFreeArp_Windows_x64_CLAP_VST3
+          name: Albedo_CP63R7_ResponsiveAccentFreeArp_Windows_x64_CLAP_VST3
           path: dist-cp38/*
           if-no-files-found: error
       - name: Package and exercise Windows target reconstruction
