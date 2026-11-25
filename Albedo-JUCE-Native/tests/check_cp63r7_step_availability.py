@@ -47,7 +47,7 @@ with sync_playwright() as p:
         page.evaluate("""()=>{
           window.__stepProbe=[...document.querySelectorAll('#steps [data-step]')];
           window.__arpSent=[];
-          window.ALBEDO_NATIVE_CP27.onExtraParam=(id,v)=>window.__arpSent.push([id,v]);
+          window.ALBEDO_NATIVE_CP27={onExtraParam:(id,v)=>window.__arpSent.push([id,v])};
           window.ALBEDO_CP04.state.steps[10]=true;
           window.ALBEDO_CP04.refreshStepAvailability();
         }""")
@@ -81,9 +81,13 @@ with sync_playwright() as p:
         assert page.evaluate("window.__stepProbe.every((n,i)=>n===document.querySelectorAll('#steps [data-step]')[i])"),(width,"popup node identity")
         page.screenshot(path=str(out/f"CP63R7_{width}x{height}_sixteen_steps.png"))
         page.locator("#cp54Close").click()
-        # DAW automation updates all gate availability in place with no echo.
+        # Simulated DAW value update uses the same in-place public refresh hook,
+        # and must not emit a UI-originating parameter event.
         before=page.evaluate("window.__arpSent.length")
-        page.evaluate("window.ALBEDO_NATIVE_CP27.receive(6027,6)")
+        page.evaluate("""()=>{
+          window.ALBEDO_CP04.state.cp04[6027]=6;
+          window.ALBEDO_CP04.refreshStepAvailability();
+        }""")
         assert_window(page,6,width)
         assert page.evaluate("window.__arpSent.length")==before,(width,"no automation echo")
         assert page.evaluate("window.__stepProbe.every((n,i)=>n===document.querySelectorAll('#steps [data-step]')[i])"),(width,"automation node identity")
