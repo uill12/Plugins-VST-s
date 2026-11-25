@@ -105,6 +105,7 @@ style.textContent=[
 '#cp54Popover .cp54-choice select{flex:1;min-width:0;padding:5px;border:1px solid #adbea8;border-radius:4px;background:#f7f2e2;color:#375b46}',
 '@media(max-width:690px){#cp54Popover .cp54-extra-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#page .cp54-trigger{padding:2px 5px;font-size:8px}}'
 ].join('\n');
+style.textContent+='\n'+"\n/* CP63: full interactive arpeggiator popup, responsive without a duplicated state graph. */\n#cp54Popover[data-section=\"arp\"]{max-width:calc(100vw - 20px);height:auto;max-height:calc(100dvh - 20px)}\n#cp54Popover[data-section=\"arp\"] .cp54-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 13px;align-content:start}\n#cp54Popover[data-section=\"arp\"] .cp54-intro{grid-column:1/-1}\n#cp54Popover[data-section=\"arp\"] .cp54-subhead{grid-column:1/-1;margin:5px 0 1px}\n#cp54Popover[data-section=\"arp\"] .cp54-original{min-width:0;overflow:visible}\n#cp54Popover[data-section=\"arp\"] .cp54-original:has(#cp57TempoControls){grid-column:1/-1}\n#cp54Popover[data-section=\"arp\"] #cp57TempoControls{display:flex!important;gap:6px;flex-wrap:wrap;justify-content:flex-start;width:100%}\n#cp54Popover[data-section=\"arp\"] #cp57TempoControls select{flex:1 1 95px;min-width:75px;max-width:none;font-size:11px;height:29px}\n#cp54Popover[data-section=\"arp\"] .cp54-original:has(.pattern-controls){grid-column:1/-1}\n#cp54Popover[data-section=\"arp\"] .pattern-controls{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-start;align-items:center}\n#cp54Popover[data-section=\"arp\"] .pattern-controls :is(button,select){min-height:29px;font-size:11px}\n#cp54Popover[data-section=\"arp\"] .cp54-original:has(#steps){grid-column:1/-1}\n#cp54Popover[data-section=\"arp\"] #steps{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:4px;width:100%;margin:0;padding:5px 0}\n#cp54Popover[data-section=\"arp\"] #steps .step{min-width:0;min-height:30px}\n#cp54Popover[data-section=\"arp\"] .cp54-extra-grid{grid-column:1/-1;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}\n#cp54Popover[data-section=\"arp\"] .cp54-native{min-width:0}\n#cp54Popover[data-section=\"arp\"] .cp54-original:has(.arp-lattice){grid-column:1/-1}\n#cp54Popover[data-section=\"arp\"] .arp-lattice{display:block!important;min-width:0;max-width:none}\n#cp54Popover[data-section=\"arp\"] .cp54-original:has(.arp-options){grid-column:1/-1}\n#cp54Popover[data-section=\"arp\"] .arp-options{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}\n#cp54Popover[data-section=\"arp\"] .arp-options label{min-width:0}\n#cp54Popover[data-section=\"arp\"] .arp-internal-tempo[hidden]{display:none!important}\n#cp54Popover[data-section=\"arp\"] :is(input,select,button,.cp54-rotary):focus-visible{outline:2px solid #b79456;outline-offset:2px}\n@media(max-width:620px){\n #cp54Popover[data-section=\"arp\"] .cp54-body{grid-template-columns:minmax(0,1fr)}\n #cp54Popover[data-section=\"arp\"] .cp54-extra-grid{grid-template-columns:repeat(3,minmax(0,1fr))}\n #cp54Popover[data-section=\"arp\"] .arp-options{grid-template-columns:repeat(2,minmax(0,1fr))}\n #cp54Popover[data-section=\"arp\"] #steps{gap:2px}\n #cp54Popover[data-section=\"arp\"] #steps .step{min-height:25px;font-size:9px}\n}\n";
 document.head.appendChild(style);
 
 // Dedicated, fixed main-stage selectors for the largest oscillator timbre changes.
@@ -311,9 +312,18 @@ function sectionModulation(){
  nativeControls([4010,4011,4012,4013,4014]);
 }
 function sectionArp(){
- heading('Cellular motion');
+ heading('Clock · meter · pattern');
+ // Reparent the actual controls, never clone them: existing CP57 and MIDI
+ // handlers continue to own state and are restored on popup close.
+ moveOriginal('#cp57TempoControls');
+ moveOriginal('#cellArp .pattern-controls');
+ heading('Step gates · 16 events');
+ moveOriginal('#cellArp #steps');
+ heading('Articulation · original key velocity');
+ nativeControls([6023,6026,6025,6027,6028,6029]);
+ heading('Cellular motion · note selection');
  moveOriginal('#cellArp .arp-lattice');
- heading('Arpeggiator pattern options');
+ heading('Pattern refinement');
  moveOriginal('#cellArp .arp-options');
 }
 function sectionFx(){
@@ -328,7 +338,7 @@ const sections={source:sectionSource,macro:sectionMacro,filter:sectionFilter,
  mod:sectionModulation,arp:sectionArp,fx:sectionFx,settings:sectionSettings};
 function place(button){
  const box=button.getBoundingClientRect();
- const margin=10,w=Math.min(480,innerWidth-margin*2);
+ const margin=10,w=Math.min(activeKey==='arp'?760:480,innerWidth-margin*2);
  // Prefer adjacent placement; fall back to opposite side and finally clamp.
  let x=box.right+8;if(x+w>innerWidth-margin)x=box.left-w-8;
  if(x<margin)x=(innerWidth-w)/2;
@@ -346,6 +356,7 @@ function open(key){
  lastFocus=document.activeElement;
  const config=configs.find(x=>x[0]===key);
  popup.querySelector('#cp54Title').textContent=config[3];
+ popup.dataset.section=key;
  body.replaceChildren();
  const intro=document.createElement('p');intro.className='cp54-intro';intro.textContent=config[4];
  body.appendChild(intro);
@@ -365,6 +376,7 @@ function close(restoreFocus=true){
  moved=[];
  popup.hidden=scrim.hidden=true;
  popup.style.top=popup.style.left='';
+ delete popup.dataset.section;
  body.replaceChildren();
  activeButton?.setAttribute('aria-expanded','false');
  activeKey=null;activeButton=null;mouseDrag=null;
