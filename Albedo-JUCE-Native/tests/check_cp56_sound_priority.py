@@ -52,7 +52,7 @@ with sync_playwright() as p:
         assert live(page,"#envKnobs>.param")==4,(width,height,"ADSR")
         assert live(page,"#cp56Source .cp56-param")==4,(width,height,"source detail")
         assert live(page,"#cp56Envelope .cp56-param")==4,(width,height,"filter env")
-        assert live(page,"#cp56Arp .cp56-param")==6,(width,height,"arp")
+        assert live(page,"#cp56Arp .cp56-param")==5,(width,height,"arp; 5 visible when sync clock hides internal tempo")
         assert live(page,"#fx .cp56-fx-param")==3,(width,height,"effect color")
         assert page.locator("#cp56Route").is_visible()
         macro_order = page.locator("#macros .dial").evaluate_all(
