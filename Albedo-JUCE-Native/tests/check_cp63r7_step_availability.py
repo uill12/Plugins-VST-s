@@ -47,10 +47,18 @@ with sync_playwright() as p:
         page.evaluate("""()=>{
           window.__stepProbe=[...document.querySelectorAll('#steps [data-step]')];
           window.__arpSent=[];
-          window.ALBEDO_NATIVE_CP27={onExtraParam:(id,v)=>window.__arpSent.push([id,v])};
+          window.__panicSent=0;
+          window.ALBEDO_NATIVE_CP27={
+            onExtraParam:(id,v)=>window.__arpSent.push([id,v]),
+            onEmergencyReset:()=>{window.__panicSent++;}
+          };
           window.ALBEDO_CP04.state.steps[10]=true;
           window.ALBEDO_CP04.refreshStepAvailability();
         }""")
+        # The whole-instrument panic control must remain accessible even with
+        # the ARP off; it routes to the native audio-thread reset request.
+        page.locator('#resetVoices').click()
+        assert page.evaluate('window.__panicSent')==1,(width,"whole-synth reset action")
         # Directly adjusting the real STEPS knob must not replace button nodes.
         page.evaluate("window.ALBEDO_CP04.setExtraParam(6027,4)")
         assert_window(page,4,width)
