@@ -185,6 +185,14 @@ void AlbedoWebViewEditor::receive(const juce::var& value)
         handleAction(parts[1]);
         return;
     }
+    if(parts[0]=="panic")
+    {
+        // GUI thread only sets an atomic reset request. All voices/FX/MIDI
+        // ownership are cleared by the audio thread at the next callback.
+        processor.reset();
+        fullSyncPending=true;
+        return;
+    }
     const auto id64=parts[1].getLargeIntValue();
     if(parts[0]=="preset")
     {
