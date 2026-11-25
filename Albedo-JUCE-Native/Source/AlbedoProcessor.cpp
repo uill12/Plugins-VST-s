@@ -55,6 +55,18 @@ void AlbedoProcessor::recoverInterruptedAudio(int frames)
         interrupted |= nextCallback!=Clock::time_point{} && now-nextCallback>std::chrono::seconds(2);
         const std::chrono::duration<double> duration(frames/std::max(1.0,getSampleRate()));
         nextCallback=now+std::chrono::duration_cast<Clock::duration>(duration);
+        // When the host continues callbacks during MIDI silence, clear
+        // abandoned DSP/FX state in an IDLE block, before the next note.
+        // This prevents reset work from delaying the first new key. A real
+        // held key or sustain pedal keeps the instrument alive indefinitely.
+        if(!interrupted && midiIdleGuard.lastMidi!=Clock::time_point{} &&
+           now>midiIdleGuard.lastMidi &&
+           now-midiIdleGuard.lastMidi>albedo::MidiIdleGuard::idleLimit){
+            bool held=false,pedal=false;
+            for(const auto& channel:midiHeld)for(bool down:channel)held|=down;
+            for(bool down:midiPedalDown)pedal|=down;
+            if(!held&&!pedal)interrupted=true;
+        }
     }
     if(interrupted){
         // CP59: a suspended ASIO callback must not resurrect an orphaned held
