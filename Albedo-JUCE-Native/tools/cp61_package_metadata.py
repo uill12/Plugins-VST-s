@@ -8,8 +8,8 @@ from pathlib import Path
 
 parser=argparse.ArgumentParser()
 parser.add_argument("directory",type=Path)
-parser.add_argument("--version",default="1.0.64")
-parser.add_argument("--source",default="CP64R1")
+parser.add_argument("--version",default="1.0.65")
+parser.add_argument("--source",default="CP65R1")
 args=parser.parse_args()
 root=args.directory
 module=list(root.rglob("moduleinfo.json"))
@@ -33,11 +33,11 @@ for f in binary:
     assert b"ALBWT59\0" in payload, f"Missing embedded WaveEdit CC0 mip/grain bank in {f}"
     sums.append(f"{hashlib.sha256(payload).hexdigest()}  {f.relative_to(root).as_posix()}")
 (root/"SHA256SUMS.txt").write_text("\n".join(sums)+"\n",encoding="utf-8")
-(root/"CP64R1_PACKAGE_QA.json").write_text(json.dumps({
-    "checkpoint":"Albedo CP64R1 — responsive accent-free arpeggiator, host automation, CP61 MIDI safety and CP60 FDN quality",
+(root/"CP65R1_PACKAGE_QA.json").write_text(json.dumps({
+    "checkpoint":"Albedo CP65R1 — Bioluminal Atlas: 192 TNSP-revoiced sounds, unified bank, MIDI and host-compatible CP64 core",
     "version":args.version,
     "build_date":"2026-11-25",
-    "gui_checkpoint":"CP64R1",
+    "gui_checkpoint":"CP65R1",
     "arp_velocity_accents":False,
     "legacy_arp_6022_compatible":True,
     "arp_original_controls_live":True,
@@ -67,5 +67,5 @@ for f in binary:
     "git_source":args.source,
     "bitwig_manual_validation":"pending"
 },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-print("CP64R1 strict metadata, PE64 + PCM24, SHA256: PASS")
+print("CP65R1 strict metadata, PE64 + PCM24, SHA256: PASS")
 print("\n".join(sums))
