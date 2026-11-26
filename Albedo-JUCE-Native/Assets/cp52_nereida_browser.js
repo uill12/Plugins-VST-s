@@ -128,7 +128,9 @@
   const role=document.getElementById('pbRole');
   const search=document.getElementById('pbSearch');
   const sort=document.getElementById('pbSort');
-  const libraryCounts=()=>[atlas.catalog,atlas.creative,atlas.newSounds||[]].reduce((a,b)=>a+b.length,0);
+  // CP65: atlas.catalog is the unified 192-program collection; creative and
+  // newSounds remain source-key dispatch views, not additional visible banks.
+  const libraryCounts=()=>atlas.catalog.length;
   function currentItems(){
     if(atlas.collection==='Factory')return atlas.catalog;
     if(atlas.collection==='Creative')return atlas.creative;
@@ -179,7 +181,7 @@
     const heading=document.createElement('div');
     heading.className='cp52-section';
     const h=document.createElement('h3');
-    h.textContent='LIBRARY / '+(atlas.collection==='New'?'MORPHOGENIC FIELDS':atlas.collection.toUpperCase());
+    h.textContent=atlas.collection==='Factory'?'ALBEDO / BIOLUMINAL ATLAS':atlas.collection==='User'?'USER PATCHES':atlas.collection.toUpperCase();
     heading.appendChild(h);
     navigation.appendChild(heading);
     if(atlas.collection==='User'){
@@ -194,12 +196,12 @@
     const footer=panel.querySelector('.preset-browser-footer');
     if(footer){
       const first=footer.querySelector('span');
-      if(first)first.textContent=libraryCounts()+' ACTIVE SOUNDS · LIBRARY × FAMILY × INSTRUMENT ROLE';
+      if(first)first.textContent=libraryCounts()+' SOUNDS · ONE BANK × FAMILY × INSTRUMENT ROLE';
     }
     const title=document.getElementById('presetBrowserTitle');
     if(title)title.textContent='Preset Browser';
     const hint=document.getElementById('presetBrowserHint');
-    if(hint)hint.textContent='Choose a library, family and instrument role; search and sort the full sound bank.';
+    if(hint)hint.textContent='One cohesive bank; choose tonal family and instrument role or search all 192 sounds.';
   }
   dialog.querySelectorAll('[data-collection]').forEach(tab=>{
     tab.addEventListener('click',()=>queueMicrotask(refresh));
