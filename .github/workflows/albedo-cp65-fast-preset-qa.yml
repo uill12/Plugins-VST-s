@@ -1,0 +1,62 @@
+name: Albedo CP65R1 Bioluminal Atlas Preset Generation QA
+on:
+  push:
+    branches: [albedo/cp65-bioluminal-unified-bank]
+    paths:
+      - '.github/workflows/albedo-cp65-fast-preset-qa.yml'
+      - 'patches/cp65/**'
+      - 'Albedo-JUCE-Native/tests/check_cp65_bioluminal.py'
+      - 'Albedo-JUCE-Native/Assets/cp52_nereida_browser.js'
+      - 'patches/cp51/patch_atlas_catalog.py'
+      - 'ui/Albedo_CP30_CP22_Landscape_3x2.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  generator-and-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Retrieve verified CP51 192-program generation inputs
+        uses: actions/download-artifact@v4
+        with:
+          name: Albedo_CP51_MorphTree_192_Generation_QA
+          repository: uill12/Plugins-VST-s
+          run-id: 44835756139
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: cp51-selected
+      - name: Generate CP65 TNSP voices and 192-entry unified browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in material_factory_bank.json recursive_forms_bank.json morph_expansion_bank.json; do
+            cp "cp51-selected/$f" "Albedo-JUCE-Native/Metadata/$f"
+          done
+          python Albedo-JUCE-Native/tools/refine_registers.py Albedo-JUCE-Native/Metadata
+          python patches/cp59/augment_presets.py --metadata Albedo-JUCE-Native/Metadata --selection patches/cp59/concept_tree_selection.json --report CP59_ConceptTree_Preset_QA.json
+          python patches/cp60/rebalance_fx.py --metadata Albedo-JUCE-Native/Metadata --report CP60_FX_Preset_Balance_QA.json
+          python patches/cp65/retimbre_bioluminal.py --metadata Albedo-JUCE-Native/Metadata --report CP65_Bioluminal_192_Generation_QA.json
+          python patches/cp51/patch_atlas_catalog.py ui/Albedo_CP30_CP22_Landscape_3x2.html Albedo-JUCE-Native/Metadata/morph_expansion_bank.json Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
+          python patches/cp65/unify_atlas.py ui/Albedo_CP30_CP22_Landscape_3x2.html
+          python Albedo-JUCE-Native/tests/check_cp65_bioluminal.py
+          python Albedo-JUCE-Native/tests/check_cp51_generator_atlas_boundary.py ui/Albedo_CP30_CP22_Landscape_3x2.html Albedo-JUCE-Native/Metadata/morph_expansion_bank.json
+          node Albedo-JUCE-Native/tests/check_cp52_browser.cjs --expanded
+          python Albedo-JUCE-Native/tests/check_cp41_atlas.py
+      - name: Archive regenerated program parameters and bank source for review
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP65R1_Bioluminal_192_Presets_and_Browser
+          path: |
+            Albedo-JUCE-Native/Metadata/material_factory_bank.json
+            Albedo-JUCE-Native/Metadata/recursive_forms_bank.json
+            Albedo-JUCE-Native/Metadata/morph_expansion_bank.json
+            CP65_Bioluminal_192_Generation_QA.json
+            ui/Albedo_CP30_CP22_Landscape_3x2.html
+          retention-days: 30
+          if-no-files-found: error
