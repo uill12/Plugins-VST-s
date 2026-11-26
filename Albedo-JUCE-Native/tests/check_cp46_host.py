@@ -89,27 +89,35 @@ def main():
                     && box.right <= document.documentElement.clientWidth+2
                     && box.bottom <= document.documentElement.clientHeight+2;
             }""",timeout=10000)
-            # The three CP51 library boundaries must reach the compiled
-            # processor through the real indexed factory-program loader.
+            # CP65R1: ONE factory bank contains all 192 programs. The
+            # historical Factory/Creative/New source-key IDs must still load
+            # native program 1/127/191, but their old separate tabs are now
+            # intentionally hidden. Search by the full source key instead.
             page.evaluate("""() => {
                 window.cp52ProgramEvents=[];
                 window.__JUCE__.backend.addEventListener('albedoProgram',p=>
                     window.cp52ProgramEvents.push(Number(p)));
             }""")
-            for library,selector,program in [
+            assert page.evaluate("window.ALBEDO_CP52_BROWSER.total") == 192
+            assert page.locator('[data-collection="Factory"]').is_visible()
+            assert page.locator('[data-collection="Creative"]').is_hidden()
+            assert page.locator('[data-collection="New"]').is_hidden()
+            for source,selector,program in [
                 ('Factory','Factory:1',1),
                 ('Creative','Creative:127',127),
                 ('New','New:191',191)
             ]:
-                page.locator('[data-collection="'+library+'"]').click()
-                page.locator('#pbItems [data-pb-choose="'+selector+'"]').click()
+                page.locator('#pbSearch').fill(selector)
+                row=page.locator('#pbItems [data-pb-choose="'+selector+'"]')
+                assert row.count()==1,(source,selector,"indexed program not visible in single bank")
+                row.click()
                 page.wait_for_function('program => window.cp52ProgramEvents.includes(program)',
                                        arg=program,timeout=10000)
                 assert page.locator('#presetBrowser').is_visible(), (
-                    'CP52 audition browser must remain open',library)
+                    'CP65 unified audition browser must remain open',source)
             page.keyboard.press('Escape')
             assert not page.locator('#presetBrowser').is_visible()
-            print('CP52 compiled CLAP resize buttons, modal clipping, 3 bank boundaries passed')
+            print('CP65 compiled CLAP single bank, 192 presets, host indices 1/127/191 and modal resizing passed')
             page.evaluate("""() => {
                 window.cp47Echo = {};
                 window.__JUCE__.backend.addEventListener('albedoUpdate',csv=>{
