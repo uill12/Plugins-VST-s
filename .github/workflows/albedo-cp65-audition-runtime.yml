@@ -1,0 +1,92 @@
+name: Albedo CP65R1 Audition Runtime Package (Verified Binaries)
+on:
+  push:
+    branches: [albedo/cp65-bioluminal-unified-bank]
+    paths: ['.github/workflows/albedo-cp65-audition-runtime.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  corrected-install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get EXACT Windows CI verified CLAP and VST3
+        uses: actions/download-artifact@v4
+        with:
+          name: Albedo_CP65R1_BioluminalAtlas_Windows_x64_CLAP_VST3
+          repository: uill12/Plugins-VST-s
+          run-id: 45730916745
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: original
+      - name: Repackage runtime files with correct version and Bioluminal Atlas label
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pathlib,shutil,json,hashlib,struct
+          original=pathlib.Path("original")
+          output=pathlib.Path("install")
+          output.mkdir(exist_ok=True)
+          assert len(list(original.glob("*.clap")))==1, "original verified CLAP missing"
+          clap=list(original.glob("*.clap"))[0]
+          vst=original/"Albedo Quintessential Synth JUCE.vst3"
+          assert vst.is_dir(), "original VST3 bundle missing"
+          module=vst/"Contents/Resources/moduleinfo.json"
+          info=json.loads(module.read_text("utf-8"))
+          assert info["Version"]=="1.0.65", "wrong VST3 internal version"
+          vbin=vst/"Contents/x86_64-win/Albedo Quintessential Synth JUCE.vst3"
+          def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+          original_sums=(original/"SHA256SUMS.txt").read_text("utf-8")
+          for item in [clap,vbin]:
+            b=item.read_bytes()
+            assert b[:2]==b"MZ",item
+            pe=struct.unpack_from("<I",b,0x3c)[0]
+            assert b[pe:pe+4]==b"PE\\x00\\x00" and struct.unpack_from("<H",b,pe+4)[0]==0x8664,item
+            assert sha(item) in original_sums, "source binary SHA256 does not match CI"
+          shutil.copytree(vst,output/vst.name)
+          shutil.copy2(clap,output/clap.name)
+          qa=json.loads((original/"CP65R1_PACKAGE_QA.json").read_text("utf-8-sig"))
+          qa.update({
+            "checkpoint":"Albedo CP65R1 / Bioluminal Atlas · 192 TNSP-generated preset vectors",
+            "new_bank_display_label":"ALBEDO · BIOLUMINAL ATLAS",
+            "visible_factory_program_count":192,
+            "morphogenic_presets_renamed":64,
+            "source_program_indices_preserved":True,
+            "native_binaries_unchanged":True,
+            "real_bitwig_audition":"pending; CP64R1 is user-confirmed stable rollback",
+            "exact_verified_build_git_source":"f3f52763e384da2fe97b555d4d7665e73018f52a",
+            "windows_build_run":45730916745,
+          })
+          (output/"CP65R1_PACKAGE_QA.json").write_text(json.dumps(qa,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+          provenance=(original/"CP65R1_BUILD_PROVENANCE.txt").read_text("utf-8-sig")
+          provenance=provenance.replace("Version: 1.0.63","Version: 1.0.65")
+          provenance=provenance.replace("CP51, CP52, CP53 and CP54 remain intact as rollback",
+             "CP64R1 (1.0.64) remains the user-confirmed stable rollback. CP65R1 is an audition candidate.")
+          assert "Version: 1.0.65" in provenance
+          (output/"CP65R1_BUILD_PROVENANCE.txt").write_text(provenance,encoding="utf-8")
+          readme=("ALBEDO CP65R1 · BIOLUMINAL ATLAS · Windows x64 CLAP/VST3\\n"
+                  "192 updated preset vectors in one visible bank; 64 new creative names.\\n"
+                  "User audition candidate, not a promoted stable release.\\n"
+                  "Back up the CP64R1 CLAP/VST3 before installing. The host plugin IDs are unchanged.\\n"
+                  "CLAP: Windows Common Files/CLAP; VST3: Windows Common Files/VST3.\\n"
+                  "17/17 native tests, 192/192 audible programs, 20 ASIO buffer/rate test scenarios,\\n"
+                  "18,336 output-shape pair comparisons passed in GitHub Windows CI.\\n"
+                  "Build source commit f3f52763e384da2fe97b555d4d7665e73018f52a\\n")
+          (output/"README_INSTALL.txt").write_text(readme,encoding="utf-8")
+          rows=[]
+          for f in [output/clap.name,output/vst.name/"Contents/x86_64-win/Albedo Quintessential Synth JUCE.vst3"]:
+            rows.append(sha(f)+"  "+str(f.relative_to(output)))
+          (output/"SHA256SUMS.txt").write_text("\\n".join(rows)+"\\n",encoding="utf-8")
+          assert (output/clap.name).stat().st_size==clap.stat().st_size
+          assert (output/vst.name/"Contents/x86_64-win/Albedo Quintessential Synth JUCE.vst3").stat().st_size==vbin.stat().st_size
+          print("CP65 INSTALL PASS: identical CI-verified CLAP/VST3, corrected metadata and SHA256",rows)
+          PY
+      - name: Publish install-only audition package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP65R1_BioluminalAtlas_Windows_x64_CLAP_VST3_INSTALL
+          path: install/*
+          retention-days: 30
+          if-no-files-found: error
