@@ -23,13 +23,13 @@ NAMES=(
     "Lantern Sonata","Violet Metronome","Feather Dynamo","Petal Engine",
     "Fresco Collider","Dancing Stems","Electric Minuet","Silken Spring",
     "Basilica Bells","Chrome Lullaby","Aurora Mechanism","Saffron Echo",
-    "Rootwork","Midnight Filament","Chapel Underwater","Emerald Marbles",
+    "Rootwork Choir","Midnight Filament","Chapel Underwater","Emerald Marbles",
     "Blackwater Organ","Limestone Flicker","Sleeping Machines","Subsoil Firefly",
-    "Stonewisp","Indigo Compass","Strata Bloom","Cinder Harp",
+    "Stonewisp Pulse","Indigo Compass","Strata Bloom","Cinder Harp",
     "Terra Madrigal","Quartz Pebbles","Nocturnal Vault","Echoing Tunnels",
     "Prism Garden","Lucent Aureole","Neon Fresco","Beryl Carousel",
     "Everbloom Piano","Cerulean Drops","Luminous Archive","Magenta Circuit",
-    "Starling Glass","Blooming Atlas","Golden Palisade","Tesserae",
+    "Starling Glass","Blooming Atlas","Golden Palisade","Tesserae Chimes",
     "Heliotrope Piano","Solar Pearls","Chroma Basilica","Dawn Weaving")
 assert len(NAMES)==len(set(NAMES))==64
 
