@@ -1,7 +1,7 @@
-name: Albedo CP64R1 Responsive Accent-free Arp Windows CLAP VST3
+name: Albedo CP65R1 Bioluminal 192 Unified Atlas Windows CLAP VST3
 on:
   push:
-    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp58r1-bounce-audio, albedo/cp58r2-browser-arp, albedo/cp58r3-spectral-cpu, albedo/cp58r4-nereida-arp, albedo/cp58r9-voicing, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership, albedo/cp62-arp-gui-no-accent, albedo/cp63r7-step-availability, albedo/cp64-arp-tempo-idle-notes]
+    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp58r1-bounce-audio, albedo/cp58r2-browser-arp, albedo/cp58r3-spectral-cpu, albedo/cp58r4-nereida-arp, albedo/cp58r9-voicing, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership, albedo/cp62-arp-gui-no-accent, albedo/cp63r7-step-availability, albedo/cp64-arp-tempo-idle-notes, albedo/cp65-bioluminal-unified-bank]
     paths:
       - '.github/workflows/albedo-cp51-morph-tree-windows.yml'
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
@@ -12,6 +12,7 @@ on:
       - 'patches/cp60/**'
       - 'patches/cp61/**'
       - 'patches/cp62/**'
+      - 'patches/cp65/**'
       - 'patches/cp53_*.py'
       - 'patches/cp58_*.py'
       - 'patches/cp15_apply_part*.txt'
@@ -830,6 +831,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP64 first-note idle recovery, 110 BPM 1/16 and ARP GUI contract failed' }
           python Albedo-JUCE-Native/tests/check_cp62_arp_contract.py
           if ($LASTEXITCODE -ne 0) { throw 'CP62 accent-free DSP and GUI contract failed' }
+          # CP65 TNSP: branch shared audible elements across ALL 192 programs.
+          # The source-vs-source sound generation is intentionally AFTER the
+          # verified CP59/60 source patches and BEFORE native header emission.
+          python patches/cp65/retimbre_bioluminal.py --metadata Albedo-JUCE-Native/Metadata --report CP65_Bioluminal_192_Generation_QA.json
+          if ($LASTEXITCODE -ne 0) { throw 'CP65 192-program tonal generation failed' }
           python Albedo-JUCE-Native/tools/generate_recursive_forms.py --bank material --metadata Albedo-JUCE-Native/Metadata/material_factory_bank.json --output Albedo-JUCE-Native/Source/AlbedoMaterialBank.hpp
           if ($LASTEXITCODE -ne 0) { throw 'CP51 material header failed' }
           python Albedo-JUCE-Native/tools/generate_recursive_forms.py --bank creative --metadata Albedo-JUCE-Native/Metadata/recursive_forms_bank.json --output Albedo-JUCE-Native/Source/AlbedoCreativeBank.hpp
@@ -838,6 +844,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP51 expanded bank header failed' }
           python patches/cp51/patch_atlas_catalog.py ui/Albedo_CP30_CP22_Landscape_3x2.html Albedo-JUCE-Native/Metadata/morph_expansion_bank.json Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
           if ($LASTEXITCODE -ne 0) { throw 'CP51 native Atlas/quick selection integration failed' }
+          python patches/cp65/unify_atlas.py ui/Albedo_CP30_CP22_Landscape_3x2.html
+          if ($LASTEXITCODE -ne 0) { throw 'CP65 unified 192-program preset browser failed' }
+          python Albedo-JUCE-Native/tests/check_cp65_bioluminal.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP65 tonal generation, creative names or one-bank contract failed' }
           python Albedo-JUCE-Native/tests/check_cp51_generator_atlas_boundary.py ui/Albedo_CP30_CP22_Landscape_3x2.html Albedo-JUCE-Native/Metadata/morph_expansion_bank.json
           if ($LASTEXITCODE -ne 0) { throw 'Morph Tree must remain generation-only; UI must use finished-sound categories' }
           node Albedo-JUCE-Native/tests/check_cp52_browser.cjs --expanded
@@ -846,10 +856,21 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP41 compact Atlas regressed' }
           node --check Albedo-JUCE-Native/Assets/juce_cp33_bridge.js
           if ($LASTEXITCODE -ne 0) { throw 'CP51 program sync script syntax failed' }
+      - name: Archive CP65 192 new preset vectors and TNSP branch provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: Albedo_CP65R1_Bioluminal_192_Preset_Parameters
+          path: |
+            Albedo-JUCE-Native/Metadata/material_factory_bank.json
+            Albedo-JUCE-Native/Metadata/recursive_forms_bank.json
+            Albedo-JUCE-Native/Metadata/morph_expansion_bank.json
+            CP65_Bioluminal_192_Generation_QA.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Preserve reconstructed CP53 DSP source for voice/audio audit
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP64R1_Reconstructed_DSP_Source
+          name: Albedo_CP65R1_Reconstructed_DSP_Source
           path: |
             Albedo-Quintessential-Synth/src/vitriol_dsp.cpp
             Albedo-Quintessential-Synth/include/vitriol_dsp.hpp
@@ -882,20 +903,20 @@ jobs:
           python Albedo-JUCE-Native/tests/cp58r1_bank_check.py Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb $clap.FullName $vst.FullName
           if ($LASTEXITCODE -ne 0) { throw 'Final plugin PCM resource 102 mismatch' }
           New-Item -ItemType Directory -Path 'dist-cp38' -Force | Out-Null
-          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP64R1_ResponsiveArp.clap'
+          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP65R1_BioluminalAtlas.clap'
           $bundle=Get-ChildItem -Path build-cp38-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
           @(
-            'Checkpoint: Albedo CP64R1 accent-free live GUI/ARP, CP61 safe MIDI note ownership, 1ms arp-OFF onset, CP60 FDN/ADAA, CP59 WaveEdit, 192 preserved programs',
-            'Preset parameters: CP51 192 programs, retained; DSP tonal processing upgraded for clarity',
+            'Checkpoint: Albedo CP65R1 accent-free live GUI/ARP, CP61 safe MIDI note ownership, 1ms arp-OFF onset, CP60 FDN/ADAA, CP59 WaveEdit, 192 preserved programs',
+            'Preset parameters: CP65 192 newly revoiced tonal programs, 64 newly named, unified Bioluminal Atlas bank; CP64 core retained',
             "Git SHA: $env:GITHUB_SHA",
             "GitHub Run: $env:GITHUB_RUN_ID",
             'Host plugin identifier and internal product name retained for DAW session compatibility',
-            'Version: 1.0.63 | Date: 2026-11-25 | Checkpoint CP64R1 | QA: Windows CI; Bitwig ASIO4ALL manual test pending',
+            'Version: 1.0.63 | Date: 2026-11-25 | Checkpoint CP65R1 | QA: Windows CI; Bitwig ASIO4ALL manual test pending',
             'Windows: CLAP + VST3, WebView2, JUCE native; 63-sample latency; 12 voices AUTO',
             'CP51, CP52, CP53 and CP54 remain intact as rollback'
-          ) | Set-Content -Path 'dist-cp38/CP64R1_BUILD_PROVENANCE.txt' -Encoding utf8
+          ) | Set-Content -Path 'dist-cp38/CP65R1_BUILD_PROVENANCE.txt' -Encoding utf8
           python Albedo-JUCE-Native/tools/cp61_package_metadata.py dist-cp38 --source $env:GITHUB_SHA
           if ($LASTEXITCODE -ne 0) { throw 'CP61 VST3 strict JSON and binary package verification failed' }
           Get-ChildItem 'dist-cp38' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
@@ -963,7 +984,7 @@ jobs:
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP64R1_ResponsiveAccentFreeArp_Windows_x64_CLAP_VST3
+          name: Albedo_CP65R1_BioluminalAtlas_Windows_x64_CLAP_VST3
           path: dist-cp38/*
           if-no-files-found: error
       - name: Package and exercise Windows target reconstruction
