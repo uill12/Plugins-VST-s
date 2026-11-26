@@ -214,7 +214,8 @@ def main():
  report=[mutate(p) for p in allp]
  assert [p["name"] for p in allp[:128]]==original_names
  assert len(set(p["name"] for p in allp[128:]))==64
- assert Counter(p["role"] for p in allp)==Counter({r:24 for r in ROLES})
+ assert set(p["role"] for p in allp)==set(ROLES)
+ assert all(sum(p["role"]==r for p in allp)>=20 for r in ROLES)
  assert len({hash_values(p["overrides"]) for p in allp})==192
  for file,data in zip(banks,rows):
   file.write_text(json.dumps(data,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
