@@ -107,7 +107,11 @@ def main():
                 ('Creative','Creative:127',127),
                 ('New','New:191',191)
             ]:
-                page.locator('#pbSearch').fill(selector)
+                name=page.evaluate(
+                    "program => window.ALBEDO_PRESET_ATLAS.catalog.find(p=>p.id===program)?.name",
+                    program)
+                assert name,(source,program,"missing unified preset")
+                page.locator('#pbSearch').fill(name)
                 row=page.locator('#pbItems [data-pb-choose="'+selector+'"]')
                 assert row.count()==1,(source,selector,"indexed program not visible in single bank")
                 row.click()
