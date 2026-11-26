@@ -43,7 +43,7 @@ jobs:
             b=item.read_bytes()
             assert b[:2]==b"MZ",item
             pe=struct.unpack_from("<I",b,0x3c)[0]
-            assert b[pe:pe+4]==b"PE\\x00\\x00" and struct.unpack_from("<H",b,pe+4)[0]==0x8664,item
+            assert b[pe:pe+2]==b"PE" and b[pe+2:pe+4]==bytes((0,0)) and struct.unpack_from("<H",b,pe+4)[0]==0x8664,item
             assert sha(item) in original_sums, "source binary SHA256 does not match CI"
           shutil.copytree(vst,output/vst.name)
           shutil.copy2(clap,output/clap.name)
@@ -59,26 +59,29 @@ jobs:
             "exact_verified_build_git_source":"f3f52763e384da2fe97b555d4d7665e73018f52a",
             "windows_build_run":45730916745,
           })
-          (output/"CP65R1_PACKAGE_QA.json").write_text(json.dumps(qa,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+          (output/"CP65R1_PACKAGE_QA.json").write_text(json.dumps(qa,ensure_ascii=False,indent=2)+chr(10),encoding="utf-8")
           provenance=(original/"CP65R1_BUILD_PROVENANCE.txt").read_text("utf-8-sig")
           provenance=provenance.replace("Version: 1.0.63","Version: 1.0.65")
           provenance=provenance.replace("CP51, CP52, CP53 and CP54 remain intact as rollback",
              "CP64R1 (1.0.64) remains the user-confirmed stable rollback. CP65R1 is an audition candidate.")
           assert "Version: 1.0.65" in provenance
           (output/"CP65R1_BUILD_PROVENANCE.txt").write_text(provenance,encoding="utf-8")
-          readme=("ALBEDO CP65R1 · BIOLUMINAL ATLAS · Windows x64 CLAP/VST3\\n"
-                  "192 updated preset vectors in one visible bank; 64 new creative names.\\n"
-                  "User audition candidate, not a promoted stable release.\\n"
-                  "Back up the CP64R1 CLAP/VST3 before installing. The host plugin IDs are unchanged.\\n"
-                  "CLAP: Windows Common Files/CLAP; VST3: Windows Common Files/VST3.\\n"
-                  "17/17 native tests, 192/192 audible programs, 20 ASIO buffer/rate test scenarios,\\n"
-                  "18,336 output-shape pair comparisons passed in GitHub Windows CI.\\n"
-                  "Build source commit f3f52763e384da2fe97b555d4d7665e73018f52a\\n")
+          readme=chr(10).join([
+              "ALBEDO CP65R1 · BIOLUMINAL ATLAS · Windows x64 CLAP/VST3",
+              "192 updated preset vectors in one visible bank; 64 new creative names.",
+              "User audition candidate, not a promoted stable release.",
+              "Back up CP64R1 CLAP/VST3 before installing. The host IDs are unchanged.",
+              "CLAP: Windows Common Files/CLAP; VST3: Windows Common Files/VST3.",
+              "17/17 native tests, 192/192 audible programs, 20 ASIO buffer/rate scenarios.",
+              "18,336 output-shape pair comparisons generated in GitHub Windows CI.",
+              "Build source commit f3f52763e384da2fe97b555d4d7665e73018f52a",
+              "",
+          ])
           (output/"README_INSTALL.txt").write_text(readme,encoding="utf-8")
           rows=[]
           for f in [output/clap.name,output/vst.name/"Contents/x86_64-win/Albedo Quintessential Synth JUCE.vst3"]:
             rows.append(sha(f)+"  "+str(f.relative_to(output)))
-          (output/"SHA256SUMS.txt").write_text("\\n".join(rows)+"\\n",encoding="utf-8")
+          (output/"SHA256SUMS.txt").write_text(chr(10).join(rows)+chr(10),encoding="utf-8")
           assert (output/clap.name).stat().st_size==clap.stat().st_size
           assert (output/vst.name/"Contents/x86_64-win/Albedo Quintessential Synth JUCE.vst3").stat().st_size==vbin.stat().st_size
           print("CP65 INSTALL PASS: identical CI-verified CLAP/VST3, corrected metadata and SHA256",rows)
