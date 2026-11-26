@@ -51,9 +51,9 @@ change("const p=[...creative,...newSounds].find(p=>p.factoryKey===q.value);",
 # semantics. No 'morph tree' UI filter and no renumbering.
 css="""
 <style id="cp65-unified-bank-style">
-#presetBrowser [data-collection="Creative"],
-#presetBrowser [data-collection="New"]{display:none!important}
-#presetBrowser [data-collection="Factory"]{
+#presetBrowser #pbCreative,
+#presetBrowser #pbNew{display:none!important}
+#presetBrowser #pbFactory{
  color:#395e53;border-color:#a29a76;
  background:linear-gradient(130deg,#e7f0e0,#f7edda 58%,#ead5bb);
  letter-spacing:.07em;white-space:nowrap
