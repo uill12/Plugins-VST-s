@@ -866,6 +866,8 @@ jobs:
           # native DSP descriptors and the compiled preset material IDs.
           python patches/cp66/sync_ui_schema.py ui/Albedo_CP30_CP22_Landscape_3x2.html
           if ($LASTEXITCODE -ne 0) { throw 'CP66 HTML/native material range mismatch' }
+          python patches/cp66/normalize_registered_ranges.py --metadata Albedo-JUCE-Native/Metadata --gui ui/Albedo_CP30_CP22_Landscape_3x2.html --report CP66_Registered_Range_Normalization_QA.json
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 native parameter range normalization failed' }
           python patches/cp66/audit_integrity.py --metadata Albedo-JUCE-Native/Metadata --gui ui/Albedo_CP30_CP22_Landscape_3x2.html --report CP66_Real_Parameter_Audit_QA.json
           if ($LASTEXITCODE -ne 0) { throw 'CP66 actual registered parameter integrity failed' }
           python -c "import json,pathlib; r=json.loads(pathlib.Path('CP66_Instrument_Quality_Candidates_QA.json').read_text()); assert r['preset_count']==192 and r['candidate_count']==1536; print('CP66 native metadata gate PASS')"
@@ -894,6 +896,7 @@ jobs:
             CP66_Instrument_Quality_Candidates_QA.json
             CP66_Timbre_Identity_QA.json
             CP66_Real_Parameter_Audit_QA.json
+            CP66_Registered_Range_Normalization_QA.json
           retention-days: 30
           if-no-files-found: error
       - name: Preserve reconstructed CP53 DSP source for voice/audio audit
