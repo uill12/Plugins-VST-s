@@ -86,6 +86,54 @@ def proposed(p,number):
         for e in range(1,active):
             k=str(1002+32*e)
             v[k]=clamp(float(v[k])*(.70+.09*((seed>>(4*e))&7)),4,84)
+    # Adaptive parameter topology: disable inactive engine contributions,
+    # transform active modulation/filter/FX structure, and add usable existing
+    # synthesis parameters where the source truly benefits. These are native
+    # registered IDs, NOT metadata-only phantom controls.
+    edits={"enabled":[],"disabled":[],"transformed":[]}
+    if active==1:
+        # One-source tone: disable unnecessary secondary source shapes and
+        # global motion instead of carrying a hidden 4-engine preset.
+        for e in (1,2,3):
+            b=1000+32*e
+            for j in (6,7,8,9):
+                key=str(b+j)
+                if key in v and float(v[key])!=0:
+                    v[key]=0; edits["disabled"].append(key)
+        for key in ("4013","4014"):
+            if key in v:
+                v[key]=0;edits["disabled"].append(key)
+    else:
+        # Selective modulation activation on a supporting source, not on
+        # every oscillator. Retain pitch stability and musical key tracking.
+        e=1 if active==2 else 1+(number%min(2,active-1))
+        b=1000+32*e
+        for j,amount in ((6,14+number*8),(7,82-number*6)):
+            key=str(b+j)
+            if key in v:
+                v[key]=clamp(amount,0,100);edits["transformed"].append(key)
+        if "4013" in v:
+            v["4013"]=clamp((0,12,28,43,0,61,19,36)[number],0,100)
+            edits["transformed"].append("4013")
+    # Filter bypass/routing can vary independently of oscillator timbre.
+    # Keep the valid stepped native enum instead of creating a new ID.
+    if "3012" in v:
+        v["3012"]=(0,1,2)[(number+idx//9)%3]
+        edits["transformed"].append("3012")
+    if "3010" in v:
+        v["3010"]=(0,1,2,3,4)[(number+idx//13)%5]
+        edits["transformed"].append("3010")
+    # FX enable bits: turning wet percentage to zero is insufficient if
+    # the generator leaves an effect state and CPU-expensive pathway enabled.
+    for mix_id,on_id in (("5002","5003"),("5004","5005"),("5006","5007")):
+        if on_id in v:
+            enabled=float(v.get(mix_id,0))>1 and active>1
+            v[on_id]=int(enabled)
+            edits["enabled" if enabled else "disabled"].append(on_id)
+    # Only reuse existing supported parameters. If a new runtime parameter
+    # is needed, it requires a coordinated DSP + registration + HTML + host
+    # state migration; never invent one in metadata.
+    assert all(k.isdecimal() for group in edits.values() for k in group)
     # Spectral filters and envelope are shaped for musical function, not
     # pasted identical across eight roles.
     role_cut={"Bass":.65,"Lead":1.50,"Pad":1.05,"Pluck":1.65,
@@ -118,7 +166,7 @@ def proposed(p,number):
     for e in range(active):
         if int(v[str(1000+32*e)])==6 and typ not in ("stochastic","evolving-granular"):
             v[str(1002+32*e)]=clamp(v[str(1002+32*e)],0,25)
-    return v
+    return v,edits
 
 def proxy_quality(p,v):
     root=p["root_material"];role=p["role"]
@@ -147,15 +195,15 @@ def generate(p,accepted,offer_count=8):
     original=p["overrides"]
     candidates=[]
     for n in range(offer_count):
-        v=proposed(p,n)
+        v,edits=proposed(p,n)
         score=proxy_quality(p,v)
         nearest=min((distance(feature(v),f) for f in accepted),default=1.)
         # A novelty bonus never overrides missing tone, instrument body or
         # quality. This is NOT a claim about audible distinctness.
         final=score+.12*min(1,nearest/.20)
-        candidates.append((final,score,nearest,n,v))
+        candidates.append((final,score,nearest,n,v,edits))
     candidates.sort(key=lambda x:(-x[0],-x[1],-x[2],x[3]))
-    overall,score,nearest,choice,winner=candidates[0]
+    overall,score,nearest,choice,winner,edits=candidates[0]
     safe=("1000","1003","1035","1067","1099","6020","6021","6023",
           "6029","6030","6031","6032","3111","3131","9000","9001")
     for k in safe:
@@ -168,6 +216,8 @@ def generate(p,accepted,offer_count=8):
        "candidates_generated":offer_count,"chosen_candidate":choice,
        "proxy_score":score,"nearest_parameter_distance":round(nearest,5),
        "changed_parameters":sum(before.get(k)!=float(winner[k]) for k in winner),
+       "parameter_topology_edits":edits,
+       "new_runtime_parameter_ids":[],"removed_host_parameter_ids":[],
        "is_audio_validated":False,"is_listening_validated":False,
        "requires_rendered_qa":True}
     return {"index":p["index"],**p["instrument_quality_search"]}
