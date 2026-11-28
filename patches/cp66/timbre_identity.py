@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""CP66 timbre identity and transformation feasibility for each terminal leaf.
+"""CP66 source-aware instrument potential for each terminal leaf.
 
 Source root defines characteristic spectral/temporal cues; terminal generators
-may transform only within a documented possibility envelope. This is a
+can transform beyond the original color when useful for a quality instrument. This is a
 parameter/provenance gate, not a substitute for listening to rendered audio.
 """
 import argparse, json, math
@@ -54,12 +54,15 @@ def evaluate(p):
       "root":typ,"source_table_id":table,"source_sha256":root["licensed_source_sha256"],
       "identity_anchor":identity["anchor"],
       "harmonic_identity":identity["harmonic"],
-      "permitted_transformations":list(identity["permit"]),
-      "avoid_transformations":list(identity["avoid"]),
+      "promising_transformations":list(identity["permit"]),
+      "risk_factors_to_evaluate":list(identity["avoid"]),
+      "transformations_are_recommendations_not_hard_limits":True,
+      "selection_criterion":"rendered instrument quality, musical function, perceptual usefulness and diversity",
       "complexity":complexity,"active_engine_indices":active,
       "table_is_audible":wavetable_found,"noise_audible":noise_active,
       "target_vs_render_validation":"pending",
-      "source_root_preserved":True}
+      "source_provenance_retained":True,
+      "original_timbre_preservation_optional":True}
     return {"index":p["index"],"root":typ,"active":len(active),
             "table_is_audible":wavetable_found,"noise_audible":noise_active,
             "identity_anchor":identity["anchor"],"render_comparison_required":True}
@@ -79,7 +82,7 @@ def main():
     args.report.write_text(json.dumps({"checkpoint":"CP66",
       "identity_contracts":len(results),"root_count":8,
       "complexity":dict(Counter(p["active"] for p in results)),
-      "status":"source identity gate passed; rendered DSP identity and distinction pending",
+      "status":"source provenance and structural checks only; instrument quality and distinctness pending rendered DSP QA",
       "presets":results},ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    print("CP66 identity: 192 source-root contracts; render QA still required")
+    print("CP66 potential: 192 source-aware possibility profiles; instrument-quality render QA required")
 if __name__=="__main__": main()
