@@ -907,6 +907,15 @@ jobs:
             Albedo-Quintessential-Synth/include/AlbedoCellArp.inc
           retention-days: 14
           if-no-files-found: error
+      - name: Reconfigure JUCE after CP66 final preset headers and HTML assets
+        shell: pwsh
+        run: |
+          # Initial CMake configure predates CP51/CP66 asset regeneration.
+          # Refresh BinaryData and target sources against FINAL CP66 bytes.
+          cmake -S Albedo-JUCE-Native -B build-cp38-juce
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 final asset CMake reconfiguration failed' }
+          python patches/cp66/audit_integrity.py --metadata Albedo-JUCE-Native/Metadata --gui ui/Albedo_CP30_CP22_Landscape_3x2.html --report CP66_Real_Parameter_Audit_QA.json
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 final source/GUI metadata mismatch before compile' }
       - name: Build JUCE VST3 and CLAP plugins
         shell: pwsh
         run: |
