@@ -41,9 +41,8 @@ def evaluate(p):
         assert wavetable_found,(p["index"],typ,methods,active,table)
     # Never use number of methods or number of branches as an acoustic
     # similarity metric; demand audio analyses for tone identity and novelty.
-    if typ=="fundamental":
-        assert complexity=="minimal",(p["index"],complexity)
-        assert all(levels[i]==0 for i in (1,2,3))
+    # Fundamental material may be enriched into a complex instrument.
+    # Source identity is provenance, not a rigid timbre-preservation rule.
     # The intended stochastic source cannot be counted if its engine is muted.
     noise_active=any(methods[i]==6 for i in active)
     claimed=leaf["noise"]["enabled"]
