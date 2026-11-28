@@ -40,6 +40,7 @@ jobs:
           python patches/cp65/retimbre_bioluminal.py --metadata Albedo-JUCE-Native/Metadata --report CP65_Bioluminal_192_Generation_QA.json
           python patches/cp66/wolfram_generate.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Wolfram_QA.json
           python patches/cp66/balance_generators.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Generator_Balance_QA.json
+          python patches/cp66/terminal_concept_tree.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Terminal_Concept_Tree_QA.json
           python - <<'PY'
           import json
           from pathlib import Path
@@ -54,7 +55,11 @@ jobs:
               assert int(v['6031'])==w['arpeggiator_character']
               assert len(set(int(v[str(1000+32*i)]) for i in range(4)))==4
               assert 0<=float(v['1002'])<=100
-          print('CP66 metadata validation passed for all 192')
+          report=json.loads(Path('CP66_Terminal_Concept_Tree_QA.json').read_text())
+          assert report['preset_count']==192
+          assert report['noise_used_count']>0 and report['noise_off_count']>0
+          assert len({x['index'] for x in report['presets']})==192
+          print('CP66 metadata validation passed for all 192 terminal branches')
           PY
       - name: Store parameter-generation output for review
         uses: actions/upload-artifact@v4
@@ -66,5 +71,6 @@ jobs:
             Albedo-JUCE-Native/Metadata/morph_expansion_bank.json
             CP66_Wolfram_QA.json
             CP66_Generator_Balance_QA.json
+            CP66_Terminal_Concept_Tree_QA.json
           retention-days: 30
           if-no-files-found: error
