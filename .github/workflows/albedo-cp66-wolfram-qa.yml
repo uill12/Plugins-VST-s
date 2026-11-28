@@ -38,11 +38,12 @@ jobs:
           python patches/cp59/augment_presets.py --metadata Albedo-JUCE-Native/Metadata --selection patches/cp59/concept_tree_selection.json --report CP59_ConceptTree_Preset_QA.json
           python patches/cp60/rebalance_fx.py --metadata Albedo-JUCE-Native/Metadata --report CP60_FX_Preset_Balance_QA.json
           python patches/cp65/retimbre_bioluminal.py --metadata Albedo-JUCE-Native/Metadata --report CP65_Bioluminal_192_Generation_QA.json
-          python -m py_compile patches/cp66/root_materials.py patches/cp66/wolfram_generate.py patches/cp66/balance_generators.py patches/cp66/terminal_concept_tree.py
+          python -m py_compile patches/cp66/root_materials.py patches/cp66/wolfram_generate.py patches/cp66/balance_generators.py patches/cp66/terminal_concept_tree.py patches/cp66/timbre_identity.py
           python patches/cp66/root_materials.py --metadata Albedo-JUCE-Native/Metadata --selection patches/cp59/concept_tree_selection.json --report CP66_Root_Materials_QA.json
           python patches/cp66/wolfram_generate.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Wolfram_QA.json
           python patches/cp66/balance_generators.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Generator_Balance_QA.json
           python patches/cp66/terminal_concept_tree.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Terminal_Concept_Tree_QA.json
+          python patches/cp66/timbre_identity.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Timbre_Identity_QA.json
           python - <<'PY'
           import json
           from pathlib import Path
@@ -68,6 +69,9 @@ jobs:
           assert any(x['active_engines']==1 for x in report['presets'])
           assert any(x['active_engines']>=3 for x in report['presets'])
           assert len({x['index'] for x in report['presets']})==192
+          identity=json.loads(Path('CP66_Timbre_Identity_QA.json').read_text())
+          assert identity['identity_contracts']==192
+          assert all(x['identity_anchor'] for x in identity['presets'])
           print('CP66 metadata validation passed for all 192 terminal branches')
           PY
       - name: Store parameter-generation output for review
@@ -82,5 +86,6 @@ jobs:
             CP66_Wolfram_QA.json
             CP66_Generator_Balance_QA.json
             CP66_Terminal_Concept_Tree_QA.json
+            CP66_Timbre_Identity_QA.json
           retention-days: 30
           if-no-files-found: error
