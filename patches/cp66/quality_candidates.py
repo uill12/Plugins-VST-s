@@ -229,12 +229,18 @@ def generate(p,accepted,offer_count=8):
         v,edits=proposed(p,n)
         score=proxy_quality(p,v)
         nearest=min((distance(feature(v),f) for f in accepted),default=1.)
-        # A novelty bonus never overrides missing tone, instrument body or
-        # quality. This is NOT a claim about audible distinctness.
-        final=score+.12*min(1,nearest/.20)
-        candidates.append((final,score,nearest,n,v,edits))
-    candidates.sort(key=lambda x:(-x[0],-x[1],-x[2],x[3]))
-    overall,score,nearest,choice,winner,edits=candidates[0]
+        # Proxy score first; this never certifies audio quality.
+        candidates.append((score,nearest,n,v,edits))
+    highest=max(c[0] for c in candidates)
+    # The quality-first screen is deliberately a separate stage. Parameter
+    # novelty is considered only within a narrowly comparable proxy band.
+    threshold=max(0.55,highest-.045)
+    eligible=[c for c in candidates if c[0]>=threshold]
+    if not eligible:
+        # Do not silently claim a low proxy candidate is "high quality".
+        eligible=[c for c in candidates if c[0]==highest]
+    eligible.sort(key=lambda c:(-c[1],-c[0],c[2]))
+    score,nearest,choice,winner,edits=eligible[0]
     safe=("1000","1003","1035","1067","1099","6020","6021","6023",
           "6029","6030","6031","6032","3111","3131","9000","9001")
     for k in safe:
@@ -256,7 +262,9 @@ def generate(p,accepted,offer_count=8):
     p["instrument_quality_search"]={
        "method":"source-aware divergent generation with role/quality proxy and diversity",
        "candidates_generated":offer_count,"chosen_candidate":choice,
-       "proxy_score":score,"nearest_parameter_distance":round(nearest,5),
+       "proxy_score":score,"proxy_best_available":highest,
+       "quality_proxy_floor":threshold,"screened_candidate_count":len(eligible),
+       "nearest_parameter_distance":round(nearest,5),
        "changed_parameters":sum(before.get(k)!=float(winner[k]) for k in winner),
        "parameter_topology_edits":edits,
        "new_runtime_parameter_ids":[],"removed_host_parameter_ids":[],
