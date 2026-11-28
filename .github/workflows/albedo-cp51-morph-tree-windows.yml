@@ -1,4 +1,4 @@
-name: Albedo CP66 quality-first synthesis Windows CLAP VST3
+name: Albedo Native Windows CI (CP51–CP66)
 on:
   push:
     branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp58r1-bounce-audio, albedo/cp58r2-browser-arp, albedo/cp58r3-spectral-cpu, albedo/cp58r4-nereida-arp, albedo/cp58r9-voicing, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership, albedo/cp62-arp-gui-no-accent, albedo/cp63r7-step-availability, albedo/cp64-arp-tempo-idle-notes, albedo/cp65-bioluminal-unified-bank, albedo/cp66-wolfram-preset-arp]
@@ -881,7 +881,7 @@ jobs:
       - name: Archive CP65 192 new preset vectors and TNSP branch provenance
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP65R1_Bioluminal_192_Preset_Parameters
+          name: Albedo_CP66_Experimental_192_Preset_Parameters
           path: |
             Albedo-JUCE-Native/Metadata/material_factory_bank.json
             Albedo-JUCE-Native/Metadata/recursive_forms_bank.json
@@ -899,7 +899,7 @@ jobs:
       - name: Preserve reconstructed CP53 DSP source for voice/audio audit
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP65R1_Reconstructed_DSP_Source
+          name: Albedo_CP66_Experimental_Reconstructed_DSP_Source
           path: |
             Albedo-Quintessential-Synth/src/vitriol_dsp.cpp
             Albedo-Quintessential-Synth/include/vitriol_dsp.hpp
@@ -932,22 +932,24 @@ jobs:
           python Albedo-JUCE-Native/tests/cp58r1_bank_check.py Albedo-Quintessential-Synth/resources/Albedo_Materia32_PCM24_96k.vtrb $clap.FullName $vst.FullName
           if ($LASTEXITCODE -ne 0) { throw 'Final plugin PCM resource 102 mismatch' }
           New-Item -ItemType Directory -Path 'dist-cp38' -Force | Out-Null
-          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP65R1_BioluminalAtlas.clap'
+          Copy-Item $clap.FullName 'dist-cp38/Albedo_CP66_Experimental.clap'
           $bundle=Get-ChildItem -Path build-cp38-juce -Recurse -Directory -Filter '*.vst3' | Select-Object -First 1
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
           @(
-            'Checkpoint: Albedo CP65R1 accent-free live GUI/ARP, CP61 safe MIDI note ownership, 1ms arp-OFF onset, CP60 FDN/ADAA, CP59 WaveEdit, 192 preserved programs',
+            'Checkpoint: Albedo CP66 EXPERIMENTAL; 192 root-first presets from 1536 parameter candidates; CP65R1 stable rollback preserved',
             'Preset parameters: CP65 192 newly revoiced tonal programs, 64 newly named, unified Bioluminal Atlas bank; CP64 core retained',
             "Git SHA: $env:GITHUB_SHA",
             "GitHub Run: $env:GITHUB_RUN_ID",
             'Host plugin identifier and internal product name retained for DAW session compatibility',
-            'Version: 1.0.63 | Date: 2026-11-25 | Checkpoint CP65R1 | QA: Windows CI; Bitwig ASIO4ALL manual test pending',
+            'Version: 1.0.66 | Date: 2026-11-28 | Checkpoint CP66 experimental | Audio/Bitwig ASIO4ALL listening tests not completed',
             'Windows: CLAP + VST3, WebView2, JUCE native; 63-sample latency; 12 voices AUTO',
             'CP51, CP52, CP53 and CP54 remain intact as rollback'
-          ) | Set-Content -Path 'dist-cp38/CP65R1_BUILD_PROVENANCE.txt' -Encoding utf8
-          python Albedo-JUCE-Native/tools/cp61_package_metadata.py dist-cp38 --source $env:GITHUB_SHA
-          if ($LASTEXITCODE -ne 0) { throw 'CP61 VST3 strict JSON and binary package verification failed' }
+          ) | Set-Content -Path 'dist-cp38/CP66_EXPERIMENTAL_BUILD_PROVENANCE.txt' -Encoding utf8
+          python Albedo-JUCE-Native/tools/cp61_package_metadata.py dist-cp38 --version 1.0.66 --source $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 VST3 binary strict metadata and hashes failed' }
+          python patches/cp66/package_release.py dist-cp38
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 experimental package provenance generation failed' }
           Get-ChildItem 'dist-cp38' -Recurse -File | ForEach-Object { Write-Host "$($_.FullName) $((Get-FileHash $_.FullName -Algorithm SHA256).Hash)" }
       - name: CP53 emit 192-program HiFi and MIDI lifecycle QA report
         shell: pwsh
@@ -1013,7 +1015,7 @@ jobs:
       - name: Publish native JUCE VST3 and CLAP
         uses: actions/upload-artifact@v4
         with:
-          name: Albedo_CP65R1_BioluminalAtlas_Windows_x64_CLAP_VST3
+          name: Albedo_CP66_Experimental_Windows_x64_CLAP_VST3
           path: dist-cp38/*
           if-no-files-found: error
       - name: Package and exercise Windows target reconstruction
