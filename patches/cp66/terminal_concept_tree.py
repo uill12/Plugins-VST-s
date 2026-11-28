@@ -81,7 +81,7 @@ def process(p,ordinal):
     methods=topology(v,idx,role,architecture,gesture,seed)
     for e,method in enumerate(methods):v[str(1000+32*e)]=method
 
-    has_noise=architecture in NOISE_ALLOW[role]
+    has_noise=architecture in NOISE_ALLOW[role] and int(v["1000"])!=6
     noise_engine=3 if has_noise and methods[3]!=6 else 2
     if has_noise:
         # Normally place stochastic excitation as a supporting engine.
