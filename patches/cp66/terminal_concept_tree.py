@@ -83,18 +83,19 @@ def process(p,ordinal):
     methods=topology(v,idx,role,architecture,gesture,seed)
     for e,method in enumerate(methods):v[str(1000+32*e)]=method
 
-    has_noise=(architecture in NOISE_ALLOW[role] and complexity!="minimal" and int(v["1000"])!=6)
-    noise_engine=3 if has_noise and methods[3]!=6 else 2
+    # Noise must occupy an AUDIBLE auxiliary engine. Two-layer patches reserve
+    # B for pitched/root material; they are noise-free by choice. Three/four
+    # layers may allocate C/D to a shaped stochastic exciter.
+    active_count={"minimal":1,"restrained":2,"layered":3,"dense":4}[complexity]
+    has_noise=(active_count>=3 and
+               (root.get("type")=="stochastic" or architecture in NOISE_ALLOW[role]))
+    noise_engine=2 if active_count==3 else 3
     if has_noise:
-        # Normally place stochastic excitation as a supporting engine.
-        if methods[noise_engine]==6:
-            pass
-        else:
-            # Replace one supporting engine only, never the primary.
-            methods[noise_engine]=6
-            if methods[3-noise_engine+1] == 6:
-                raise AssertionError("duplicate noise topology")
-            v[str(1000+32*noise_engine)]=6
+        # Source identity belongs to the tonal core; noise is purposeful
+        # excitation, NEVER a blanket of hiss and NEVER an inactive layer.
+        assert int(v["1000"])!=6,(idx,"noise cannot be the pitched root")
+        methods[noise_engine]=6
+        v[str(1000+32*noise_engine)]=6
     # If a non-wavetable root selects licensed WaveEdit material, retain an
     # actual wavetable support engine instead of discarding source diversity.
     # Do not replace the intentionally assigned noise exciter.
@@ -240,6 +241,8 @@ def main():
     assert len(set(keys))==192
     assert len({p["index"] for p in report})==192
     assert all(p["noise"]["enabled"] == (6 in p["synthesis_methods"]) for p in report)
+    assert all(x["noise"]["level_control"]>0 for x in report if x["noise"]["enabled"])
+    assert all(x["noise"]["enabled"] for x in report if x["root_type"]=="stochastic")
     assert any(x["active_engines"]==1 for x in report)
     assert any(x["active_engines"]>=3 for x in report)
     for path,bank in zip(paths,banks):
