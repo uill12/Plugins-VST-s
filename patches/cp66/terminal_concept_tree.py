@@ -99,14 +99,15 @@ def process(p,ordinal):
     # actual wavetable support engine instead of discarding source diversity.
     # Do not replace the intentionally assigned noise exciter.
     if root.get("table_id") is not None and int(v["1000"])!=1 and complexity!="minimal":
-        support=next((e for e in (1,2,3)
-                      if int(v[str(1000+32*e)])==1),None)
-        if support is None:
-            support=next((e for e in (1,2,3)
-                          if int(v[str(1000+32*e)])!=6),None)
-        if support is not None:
-            v[str(1000+32*support)]=1
-            v[str(1010+32*support)]=int(root["table_id"])
+        # Engine B is audible for every non-minimal complexity. Swap the
+        # wavetable there if needed, rather than accidentally loading it on a
+        # muted C/D generator while claiming audible source preservation.
+        existing=next((e for e in (1,2,3) if int(v[str(1000+32*e)])==1),None)
+        if existing is not None and existing!=1:
+            v[str(1000+32*existing)],v["1032"]=v["1032"],v[str(1000+32*existing)]
+        else:
+            v["1032"]=1
+        v["1042"]=int(root["table_id"])
     # When root material itself is a wavetable, its root ID must survive every
     # later terminal generator stage. Root material is not an optional label.
     if int(v["1000"])==1 and root.get("table_id") is not None:
