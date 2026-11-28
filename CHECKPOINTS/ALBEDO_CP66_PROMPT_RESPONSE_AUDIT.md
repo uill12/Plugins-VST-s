@@ -2,7 +2,7 @@
 
 Status: **EXPERIMENTAL SOURCE CHECKPOINT**. No verified CP66 CLAP/VST3, 192-preset
 listening pass or Bitwig/ASIO4ALL approval is implied by these commits.
-Stable rollback remains CP65R1 (user-reported stable core: CP64R1).
+The **user-confirmed working baseline is CP64R1**. CP65R1 is the predecessor development/CI reference and must not be described as user-approved stable without host confirmation.
 
 This document compares the user's *actual* recent requests against what was
 committed. The previous assistant described several architectural intentions
@@ -32,7 +32,7 @@ as though they were finished audio results. Those claims are corrected below.
 - Both the small Linux source-generation QA and the extended native Windows
   build invoke these checks (pending CI verification).
 - Native CMake version and experimental artifact metadata were updated so
-  CP65R1 is not accidentally replaced or mislabeled.
+  CP64R1 and CP65R1 are not accidentally overwritten or mislabeled.
 
 ## Outstanding blockers — do not call CP66 stable
 
