@@ -38,13 +38,15 @@ jobs:
           python patches/cp59/augment_presets.py --metadata Albedo-JUCE-Native/Metadata --selection patches/cp59/concept_tree_selection.json --report CP59_ConceptTree_Preset_QA.json
           python patches/cp60/rebalance_fx.py --metadata Albedo-JUCE-Native/Metadata --report CP60_FX_Preset_Balance_QA.json
           python patches/cp65/retimbre_bioluminal.py --metadata Albedo-JUCE-Native/Metadata --report CP65_Bioluminal_192_Generation_QA.json
-          python -m py_compile patches/cp66/root_materials.py patches/cp66/wolfram_generate.py patches/cp66/balance_generators.py patches/cp66/terminal_concept_tree.py patches/cp66/timbre_identity.py patches/cp66/quality_candidates.py
+          python -m py_compile patches/cp66/root_materials.py patches/cp66/wolfram_generate.py patches/cp66/balance_generators.py patches/cp66/terminal_concept_tree.py patches/cp66/timbre_identity.py patches/cp66/quality_candidates.py patches/cp66/sync_ui_schema.py patches/cp66/audit_integrity.py
           python patches/cp66/root_materials.py --metadata Albedo-JUCE-Native/Metadata --selection patches/cp59/concept_tree_selection.json --report CP66_Root_Materials_QA.json
           python patches/cp66/wolfram_generate.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Wolfram_QA.json
           python patches/cp66/balance_generators.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Generator_Balance_QA.json
           python patches/cp66/terminal_concept_tree.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Terminal_Concept_Tree_QA.json
           python patches/cp66/quality_candidates.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Instrument_Quality_Candidates_QA.json
           python patches/cp66/timbre_identity.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Timbre_Identity_QA.json
+          python patches/cp66/sync_ui_schema.py ui/Albedo_CP30_CP22_Landscape_3x2.html
+          python patches/cp66/audit_integrity.py --metadata Albedo-JUCE-Native/Metadata --gui ui/Albedo_CP30_CP22_Landscape_3x2.html --report CP66_Real_Parameter_Audit_QA.json
           python - <<'PY'
           import json
           from pathlib import Path
@@ -93,5 +95,6 @@ jobs:
             CP66_Terminal_Concept_Tree_QA.json
             CP66_Timbre_Identity_QA.json
             CP66_Instrument_Quality_Candidates_QA.json
+            CP66_Real_Parameter_Audit_QA.json
           retention-days: 30
           if-no-files-found: error
