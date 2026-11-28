@@ -123,6 +123,21 @@ def proposed(p,number):
     if "3010" in v:
         v["3010"]=(0,1,2,3,4)[(number+idx//13)%5]
         edits["transformed"].append("3010")
+    # Earlier minimal patches still inherited always-on saturation/diffusion
+    # from their CP65 parents, which reintroduced the same harmonic color.
+    # A clean tone must be allowed to remain clean; richer material may choose
+    # coloration, but it is not mandatory.
+    if active==1:
+        for key in ("5000","5006"):
+            v[key]=0
+            edits["disabled"].append(key)
+        for key in ("5001","5007"):
+            v[key]=0
+            edits["disabled"].append(key)
+    else:
+        v["5000"]=clamp((0,4,9,15,2,22,7,13)[number],0,28)
+        v["5001"]=int(float(v["5000"])>1)
+        edits["enabled" if v["5001"] else "disabled"].append("5001")
     # FX enable bits: turning wet percentage to zero is insufficient if
     # the generator leaves an effect state and CPU-expensive pathway enabled.
     for mix_id,on_id in (("5002","5003"),("5004","5005"),("5006","5007")):
