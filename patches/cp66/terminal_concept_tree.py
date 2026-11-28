@@ -107,6 +107,10 @@ def process(p,ordinal):
         if support is not None:
             v[str(1000+32*support)]=1
             v[str(1010+32*support)]=int(root["table_id"])
+    # When root material itself is a wavetable, its root ID must survive every
+    # later terminal generator stage. Root material is not an optional label.
+    if int(v["1000"])==1 and root.get("table_id") is not None:
+        v["1010"]=int(root["table_id"])
     assert len({v[str(1000+32*e)] for e in range(4)})==4,(idx,methods)
 
     # If a source preset already uses stochastic primary, retain its identity
