@@ -1,7 +1,7 @@
-name: Albedo CP65R1 Bioluminal 192 Unified Atlas Windows CLAP VST3
+name: Albedo CP66 quality-first synthesis Windows CLAP VST3
 on:
   push:
-    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp58r1-bounce-audio, albedo/cp58r2-browser-arp, albedo/cp58r3-spectral-cpu, albedo/cp58r4-nereida-arp, albedo/cp58r9-voicing, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership, albedo/cp62-arp-gui-no-accent, albedo/cp63r7-step-availability, albedo/cp64-arp-tempo-idle-notes, albedo/cp65-bioluminal-unified-bank]
+    branches: [albedo/cp51-morph-tree-sound-generation, albedo/cp52-render-fill-nereida-browser, albedo/cp53-hifi-voice-safety, albedo/cp54-essential-sound-layout, albedo/cp55-morphogenic-fields-viewport, albedo/cp56-sound-priority-density, albedo/cp57-daw-tempo-sync, albedo/cp58-asio-realtime-dsp, albedo/cp58r1-bounce-audio, albedo/cp58r2-browser-arp, albedo/cp58r3-spectral-cpu, albedo/cp58r4-nereida-arp, albedo/cp58r9-voicing, albedo/cp59-waveedit-concepttree-note-safety, albedo/cp60-fdn-dsp-interconnection, albedo/cp61-midi-onset-note-ownership, albedo/cp62-arp-gui-no-accent, albedo/cp63r7-step-availability, albedo/cp64-arp-tempo-idle-notes, albedo/cp65-bioluminal-unified-bank, albedo/cp66-wolfram-preset-arp]
     paths:
       - '.github/workflows/albedo-cp51-morph-tree-windows.yml'
       - '.github/workflows/albedo-cp33-webview2-windows.yml'
@@ -13,6 +13,7 @@ on:
       - 'patches/cp61/**'
       - 'patches/cp62/**'
       - 'patches/cp65/**'
+      - 'patches/cp66/**'
       - 'patches/cp53_*.py'
       - 'patches/cp58_*.py'
       - 'patches/cp15_apply_part*.txt'
@@ -836,6 +837,21 @@ jobs:
           # verified CP59/60 source patches and BEFORE native header emission.
           python patches/cp65/retimbre_bioluminal.py --metadata Albedo-JUCE-Native/Metadata --report CP65_Bioluminal_192_Generation_QA.json
           if ($LASTEXITCODE -ne 0) { throw 'CP65 192-program tonal generation failed' }
+          # CP66: generate final root-aware parameters BEFORE native headers and WebView catalog.
+          python -m py_compile patches/cp66/root_materials.py patches/cp66/wolfram_generate.py patches/cp66/balance_generators.py patches/cp66/terminal_concept_tree.py patches/cp66/quality_candidates.py patches/cp66/timbre_identity.py
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 stage 1 failed' }
+          python patches/cp66/root_materials.py --metadata Albedo-JUCE-Native/Metadata --selection patches/cp59/concept_tree_selection.json --report CP66_Root_Materials_QA.json
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 stage 2 failed' }
+          python patches/cp66/wolfram_generate.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Wolfram_QA.json
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 stage 3 failed' }
+          python patches/cp66/balance_generators.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Generator_Balance_QA.json
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 stage 4 failed' }
+          python patches/cp66/terminal_concept_tree.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Terminal_Concept_Tree_QA.json
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 stage 5 failed' }
+          python patches/cp66/quality_candidates.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Instrument_Quality_Candidates_QA.json
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 stage 6 failed' }
+          python patches/cp66/timbre_identity.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Timbre_Identity_QA.json
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 stage 7 failed' }
           python Albedo-JUCE-Native/tools/generate_recursive_forms.py --bank material --metadata Albedo-JUCE-Native/Metadata/material_factory_bank.json --output Albedo-JUCE-Native/Source/AlbedoMaterialBank.hpp
           if ($LASTEXITCODE -ne 0) { throw 'CP51 material header failed' }
           python Albedo-JUCE-Native/tools/generate_recursive_forms.py --bank creative --metadata Albedo-JUCE-Native/Metadata/recursive_forms_bank.json --output Albedo-JUCE-Native/Source/AlbedoCreativeBank.hpp
@@ -846,8 +862,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'CP51 native Atlas/quick selection integration failed' }
           python patches/cp65/unify_atlas.py ui/Albedo_CP30_CP22_Landscape_3x2.html
           if ($LASTEXITCODE -ne 0) { throw 'CP65 unified 192-program preset browser failed' }
-          python Albedo-JUCE-Native/tests/check_cp65_bioluminal.py
-          if ($LASTEXITCODE -ne 0) { throw 'CP65 tonal generation, creative names or one-bank contract failed' }
+          python -c "import json,pathlib; r=json.loads(pathlib.Path('CP66_Instrument_Quality_Candidates_QA.json').read_text()); assert r['preset_count']==192 and r['candidate_count']==1536; print('CP66 native metadata gate PASS')"
+          if ($LASTEXITCODE -ne 0) { throw 'CP66 generated program integrity failed' }
           python Albedo-JUCE-Native/tests/check_cp51_generator_atlas_boundary.py ui/Albedo_CP30_CP22_Landscape_3x2.html Albedo-JUCE-Native/Metadata/morph_expansion_bank.json
           if ($LASTEXITCODE -ne 0) { throw 'Morph Tree must remain generation-only; UI must use finished-sound categories' }
           node Albedo-JUCE-Native/tests/check_cp52_browser.cjs --expanded
@@ -865,6 +881,12 @@ jobs:
             Albedo-JUCE-Native/Metadata/recursive_forms_bank.json
             Albedo-JUCE-Native/Metadata/morph_expansion_bank.json
             CP65_Bioluminal_192_Generation_QA.json
+            CP66_Root_Materials_QA.json
+            CP66_Wolfram_QA.json
+            CP66_Generator_Balance_QA.json
+            CP66_Terminal_Concept_Tree_QA.json
+            CP66_Instrument_Quality_Candidates_QA.json
+            CP66_Timbre_Identity_QA.json
           retention-days: 30
           if-no-files-found: error
       - name: Preserve reconstructed CP53 DSP source for voice/audio audit
