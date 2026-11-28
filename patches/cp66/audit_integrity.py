@@ -70,6 +70,10 @@ def audit(metadata,gui,report_path):
                        and int(v[str(1010+32*e)])==int(root["table_id"])
                        for e in range(4)),(idx,"selected source inaudible")
         assert leaf["source_levels"]==[float(v[str(1002+32*e)]) for e in range(4)]
+        if active==1:
+            assert all(float(v[str(k)])==0 for k in (5000,5001,5002,5003,5004,5005,5006,5007)),(idx,"minimal patch still colored by FX")
+        else:
+            assert int(v["5001"])==(1 if float(v["5000"])>1 else 0),(idx,"saturation bypass mismatch")
         for mix,enabled in ((5002,5003),(5004,5005),(5006,5007)):
             assert int(v[str(enabled)]) in (0,1)
             assert int(v[str(enabled)])==(1 if float(v[str(mix)])>1 and active>1 else 0),(idx,mix)
