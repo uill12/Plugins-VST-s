@@ -95,6 +95,18 @@ def process(p,ordinal):
             if methods[3-noise_engine+1] == 6:
                 raise AssertionError("duplicate noise topology")
             v[str(1000+32*noise_engine)]=6
+    # If a non-wavetable root selects licensed WaveEdit material, retain an
+    # actual wavetable support engine instead of discarding source diversity.
+    # Do not replace the intentionally assigned noise exciter.
+    if root.get("table_id") is not None and int(v["1000"])!=1 and complexity!="minimal":
+        support=next((e for e in (1,2,3)
+                      if int(v[str(1000+32*e)])==1),None)
+        if support is None:
+            support=next((e for e in (1,2,3)
+                          if int(v[str(1000+32*e)])!=6),None)
+        if support is not None:
+            v[str(1000+32*support)]=1
+            v[str(1010+32*support)]=int(root["table_id"])
     assert len({v[str(1000+32*e)] for e in range(4)})==4,(idx,methods)
 
     # If a source preset already uses stochastic primary, retain its identity
