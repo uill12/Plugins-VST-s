@@ -210,6 +210,16 @@ def generate(p,accepted,offer_count=8):
         assert winner.get(k)==original.get(k),(p["index"],k)
     assert len([e for e in range(4) if float(winner[str(1002+32*e)])>0])==COMPLEXITY_ACTIVE[p["root_material"]["complexity"]]
     p["overrides"]=winner
+    # Runtime-visible metadata must describe the final selected parameters,
+    # not pre-search topology or levels from a previous stage.
+    terminal=p["concept_tree_terminal"]
+    terminal["source_levels"]=[float(winner[str(1002+32*e)]) for e in range(4)]
+    terminal["active_engines"]=sum(x>0 for x in terminal["source_levels"])
+    terminal["spectral_contour"]=[winner[k] for k in ("3000","3003","3001","3004")]
+    terminal["noise"]["audible"]=any(int(winner[str(1000+32*e)])==6 and float(winner[str(1002+32*e)])>0 for e in range(4))
+    if "generator_balance" in p:
+        p["generator_balance"]["nominal_source_levels"]=terminal["source_levels"]
+        p["generator_balance"]["synthesis_methods"]=[int(winner[str(1000+32*e)]) for e in range(4)]
     accepted.append(feature(winner))
     p["instrument_quality_search"]={
        "method":"source-aware divergent generation with role/quality proxy and diversity",
@@ -228,7 +238,7 @@ def main():
     arg.add_argument("--report",required=True,type=Path)
     arg.add_argument("--candidates",type=int,default=8)
     args=arg.parse_args()
-    assert 4<=args.candidates<=16
+    assert args.candidates==8, "CP66 currently provides exactly eight validated divergent candidate architectures"
     paths=[args.metadata/name for name in BANKS]
     banks=[json.loads(path.read_text(encoding="utf-8")) for path in paths]
     patches=sum(banks,[])
