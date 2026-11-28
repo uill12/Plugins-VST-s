@@ -937,14 +937,14 @@ jobs:
           if (!$bundle) { throw 'VST3 bundle directory missing' }
           Copy-Item -Path $bundle.FullName -Destination 'dist-cp38/' -Recurse -Force
           @(
-            'Checkpoint: Albedo CP66 EXPERIMENTAL; 192 root-first presets from 1536 parameter candidates; CP65R1 stable rollback preserved',
+            'Checkpoint: Albedo CP66 EXPERIMENTAL; 192 root-first presets from 1536 parameter candidates; CP64R1 user-confirmed stable; CP65R1 predecessor retained',
             'Preset parameters: CP65 192 newly revoiced tonal programs, 64 newly named, unified Bioluminal Atlas bank; CP64 core retained',
             "Git SHA: $env:GITHUB_SHA",
             "GitHub Run: $env:GITHUB_RUN_ID",
             'Host plugin identifier and internal product name retained for DAW session compatibility',
             'Version: 1.0.66 | Date: 2026-11-28 | Checkpoint CP66 experimental | Audio/Bitwig ASIO4ALL listening tests not completed',
             'Windows: CLAP + VST3, WebView2, JUCE native; 63-sample latency; 12 voices AUTO',
-            'CP51, CP52, CP53 and CP54 remain intact as rollback'
+            'CP64R1 remains the user-confirmed stable rollback; CP66 stays experimental'
           ) | Set-Content -Path 'dist-cp38/CP66_EXPERIMENTAL_BUILD_PROVENANCE.txt' -Encoding utf8
           python Albedo-JUCE-Native/tools/cp61_package_metadata.py dist-cp38 --version 1.0.66 --source $env:GITHUB_SHA
           if ($LASTEXITCODE -ne 0) { throw 'CP66 VST3 binary strict metadata and hashes failed' }
