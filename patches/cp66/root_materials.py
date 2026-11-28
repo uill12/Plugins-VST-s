@@ -70,6 +70,8 @@ def generate(p,selected,used,role_number):
       "table_id":source_id,"table_name":table["file"],
       "licensed_source_sha256":table["sha256"],
       "source_family":table["family"],
+      "sample_reference_is_audible":complexity!=0 or primary==1,
+      "root_audio_material":"WaveEdit wavetable + native DSP" if complexity!=0 or primary==1 else "native synthesis only; WaveEdit table is reference",
       "primary_method":primary,
       "stochastic_root_uses_tonal_anchor":root==7,
       "measured_source_features":table["feature"],
