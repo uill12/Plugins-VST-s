@@ -36,14 +36,21 @@ def generate(p,selected,used,role_number):
     complexity=(role_number//2+role_number%3)%len(COMPLEXITIES)
     if root==0:complexity=0  # clean fundamental allowed to be truly elementary
     if root==1 and role_number%2==0:complexity=0
+    if root==7:complexity=2+(role_number%2)  # tonal core + audible noise excitation
     table=choose(root,selected,idx,used)
     used[table["id"]]+=1
     source_id=32+table["id"]
     # Source type determines PRIMARY synthesis architecture, not merely which
     # wavetable file is loaded. Reusing method 1 everywhere caused same-color
     # harmonic shapes even when the material file changed.
-    primary_methods=(0,1,1,5,4,8,3,6)
+    primary_methods=(0,1,1,5,4,8,3,5)
     primary=primary_methods[root]
+    if root==7:
+        # Noise-only primary cannot carry a dependable melodic pitch. Use an
+        # appropriate tonal resonator and keep stochastic excitation as a
+        # deliberate secondary source (assigned in the terminal stage).
+        primary={"Bass":0,"Lead":8,"Pad":3,"Pluck":5,
+                 "Keys":2,"Percussion":5,"Drone":3,"Texture":4}[role]
     v["1000"]=primary
     if primary==1:
         v["1010"]=source_id
@@ -63,6 +70,7 @@ def generate(p,selected,used,role_number):
       "licensed_source_sha256":table["sha256"],
       "source_family":table["family"],
       "primary_method":primary,
+      "stochastic_root_uses_tonal_anchor":root==7,
       "measured_source_features":table["feature"],
       "source_selection":"root-specific spectral feature ranking with usage diversity",
       "audio_similarity_pending":True}
