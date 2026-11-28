@@ -27,8 +27,9 @@ data.update({
     "asio4all_manual_validation":"pending",
     "sonic_distinctness":"unverified",
     "audible_quality":"unverified",
-    "release_status":"EXPERIMENTAL — not a replacement for CP65R1",
-    "verified_rollback":"CP65R1"
+    "release_status":"EXPERIMENTAL — not a replacement for the user-confirmed CP64R1",
+    "user_confirmed_stable_rollback":"CP64R1",
+    "development_predecessor":"CP65R1"
 })
 out=root/"CP66_EXPERIMENTAL_PACKAGE_QA.json"
 out.write_text(json.dumps(data,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
