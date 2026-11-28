@@ -39,17 +39,21 @@ def generate(p,selected,used,role_number):
     table=choose(root,selected,idx,used)
     used[table["id"]]+=1
     source_id=32+table["id"]
-    # Keep root source as a real audible material in compatible synthesis modes.
-    # For clean analog and noise roots, preserve the existing primary method and
-    # use a wavetable as an audible B/C source when source method 1 is required.
-    if root in (0,1,2,3,4,5,6):
-        v["1000"]=1
+    # Source type determines PRIMARY synthesis architecture, not merely which
+    # wavetable file is loaded. Reusing method 1 everywhere caused same-color
+    # harmonic shapes even when the material file changed.
+    primary_methods=(0,1,1,5,4,8,3,6)
+    primary=primary_methods[root]
+    v["1000"]=primary
+    if primary==1:
         v["1010"]=source_id
-        v["1006"]=round((12,22,51,37,66,73,82)[root],2)
-        v["1007"]=round((5,12,32,18,47,65,58)[root],2)
-        v["1008"]=round((0,5,13,10,26,42,34)[root],2)
+        v["1006"]=(15,29,49,36,69,81,75,27)[root]
+        v["1007"]=(3,12,27,18,54,61,49,8)[root]
+        v["1008"]=(0,5,12,9,33,47,31,5)[root]
     else:
-        # Stochastic root is not required to become a continuous noise bed.
+        # The terminal stage will route this table to an audible supporting
+        # wavetable engine only if the endpoint uses more than one generator.
+        # Minimal endpoints use the primary synth alone by design.
         v["1032"]=1
         v["1042"]=source_id
     p["root_material"]={
@@ -58,6 +62,7 @@ def generate(p,selected,used,role_number):
       "table_id":source_id,"table_name":table["file"],
       "licensed_source_sha256":table["sha256"],
       "source_family":table["family"],
+      "primary_method":primary,
       "measured_source_features":table["feature"],
       "source_selection":"root-specific spectral feature ranking with usage diversity",
       "audio_similarity_pending":True}
