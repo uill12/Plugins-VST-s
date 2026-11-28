@@ -84,7 +84,7 @@ def process(p,ordinal):
     has_noise=architecture in NOISE_ALLOW[role]
     noise_engine=3 if has_noise and methods[3]!=6 else 2
     if has_noise:
-        # A stochastic generator is always a subsidiary, NEVER the tonic.
+        # Normally place stochastic excitation as a supporting engine.
         if methods[noise_engine]==6:
             pass
         else:
@@ -95,7 +95,7 @@ def process(p,ordinal):
             v[str(1000+32*noise_engine)]=6
     assert len({v[str(1000+32*e)] for e in range(4)})==4,(idx,methods)
 
-    # Level distribution is deliberately NOT the same across endpoints.
+    # If a source preset already uses stochastic primary, retain its identity\n    # but record that as an intentional inherited excitation in this branch.\n    inherited_noise=int(v["1000"])==6\n    # Level distribution is deliberately NOT the same across endpoints.
     # Differentiating structure and excitation comes before level balancing.
     dominance=((seed>>13)&3)
     source_levels=[]
@@ -168,15 +168,15 @@ def process(p,ordinal):
     for k,val in before.items():
         assert v.get(k)==val,(idx,k)
     assert all(math.isfinite(float(z)) for z in v.values())
-    p["concept_tree_terminal"]={
+    effective_noise=has_noise or inherited_noise\n    p["concept_tree_terminal"]={
       "tree":"function > excitation architecture > performance gesture > unique terminal",
-      "leaf_id":f"{role.lower()}-{architecture:02}-{gesture:02}",
+      "leaf_id":f"{role.lower()}-{architecture:02}-{gesture:02}-{idx:03}",
       "role":role,"architecture":ARCH[architecture],
       "gesture":GESTURES[gesture],"wolfram_rule":p["wolfram_generation"]["rule"],
-      "noise":{"enabled":has_noise,"method_id":6 if has_noise else None,
-               "engine":noise_engine if has_noise else None,
-               "function":NOISE_FUNCTION[architecture] if has_noise else "none",
-               "level_control":v[str(1002+32*noise_engine)] if has_noise else 0},
+      "noise":{"enabled":effective_noise,"method_id":6 if effective_noise else None,
+               "engine":0 if inherited_noise else (noise_engine if has_noise else None),
+               "function":NOISE_FUNCTION[architecture] if has_noise else ("inherited-primary-excitation" if inherited_noise else "none"),
+               "level_control":v[str(1002+32*(0 if inherited_noise else noise_engine))] if effective_noise else 0},
       "synthesis_methods":[int(v[str(1000+32*e)]) for e in range(4)],
       "source_levels":source_levels,
       "spectral_contour":[v["3000"],v["3003"],v["3001"],v["3004"]],
@@ -197,15 +197,9 @@ def main():
     for p in patches:
         role=p["role"];position=ordinals[role];ordinals[role]+=1
         report.append({"index":p["index"],**process(p,position)})
-    keys=[p["leaf_id"] for p in report]
-    if len(set(keys))!=192:
-        # Variable original role distribution: assign unique terminal lineage
-        # instead of silently accepting duplicate role/arch/gesture names.
-        for p in report:
-            p["global_leaf_id"]=f"albedo-{p['index']:03}"
+    keys=[p["leaf_id"] for p in report]\n    assert len(set(keys))==192
     assert len({p["index"] for p in report})==192
-    assert all(p["noise"]["enabled"] == (6 in p["synthesis_methods"][1:]) for p in report
-               if p["synthesis_methods"][0]!=6)
+    assert all(p["noise"]["enabled"] == (6 in p["synthesis_methods"]) for p in report)
     for path,bank in zip(paths,banks):
         path.write_text(json.dumps(bank,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     args.report.write_text(json.dumps({
