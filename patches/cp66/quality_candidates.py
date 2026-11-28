@@ -201,7 +201,7 @@ def proxy_quality(p,v):
     base-=.14*max(0,.08-mid)
     base-=.1*max(0,float(v["3001"])/100-.86)
     if n==1:base+=.07
-    if root["type"]=="fundamental" and sum(spectral[1:])>.65:base-=.3
+    if root["type"]=="fundamental" and root["complexity"]=="minimal" and sum(spectral[1:])>.65:base-=.1
     if root["type"]=="metallic-spectral" and max(spectral)<.4:base-=.25
     # Structure/provenance: never evaluate for similarity to a named artist.
     return round(clamp(base,0,1),5)
