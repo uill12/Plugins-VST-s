@@ -46,6 +46,7 @@ jobs:
           python patches/cp66/quality_candidates.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Instrument_Quality_Candidates_QA.json
           python patches/cp66/timbre_identity.py --metadata Albedo-JUCE-Native/Metadata --report CP66_Timbre_Identity_QA.json
           python patches/cp66/sync_ui_schema.py ui/Albedo_CP30_CP22_Landscape_3x2.html
+          python patches/cp66/normalize_registered_ranges.py --metadata Albedo-JUCE-Native/Metadata --gui ui/Albedo_CP30_CP22_Landscape_3x2.html --report CP66_Registered_Range_Normalization_QA.json
           python patches/cp66/audit_integrity.py --metadata Albedo-JUCE-Native/Metadata --gui ui/Albedo_CP30_CP22_Landscape_3x2.html --report CP66_Real_Parameter_Audit_QA.json
           python - <<'PY'
           import json
@@ -96,5 +97,6 @@ jobs:
             CP66_Timbre_Identity_QA.json
             CP66_Instrument_Quality_Candidates_QA.json
             CP66_Real_Parameter_Audit_QA.json
+            CP66_Registered_Range_Normalization_QA.json
           retention-days: 30
           if-no-files-found: error
