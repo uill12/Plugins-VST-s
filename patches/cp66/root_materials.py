@@ -34,7 +34,8 @@ def generate(p,selected,used,role_number):
     # Rotate root categories across each instrument role, not global index.
     root=(role_number*5+role_number//8)%len(ROOTS)
     complexity=(role_number//2+role_number%3)%len(COMPLEXITIES)
-    if root==0:complexity=0  # clean fundamental allowed to be truly elementary
+    # A simple fundamental is eligible for both simple and rich instruments;
+    # complexity is a possibility, never a mandatory property of the root.
     if root==1 and role_number%2==0:complexity=0
     if root==7:complexity=2+(role_number%2)  # tonal core + audible noise excitation
     table=choose(root,selected,idx,used)
