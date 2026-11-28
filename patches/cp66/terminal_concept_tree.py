@@ -73,15 +73,17 @@ def process(p,ordinal):
     assert role in ROLES and "wolfram_generation" in p
     # The ordinal within each role, not the global program ID, spreads the six
     # conceptual architectures evenly across each instrument function.
-    architecture=ordinal%6
+    root=p.get("root_material",{})
+    architecture=(ordinal%6+("metallic" in root.get("type","")))%6
     gesture=(ordinal//6)%4
+    complexity=root.get("complexity","layered")
     seed=int(p["wolfram_generation"]["seed"])
     before={k:v.get(k) for k in ("1000","1003","1035","1067","1099",
               "6020","6021","6023","6030","9000","9001","3111","3131")}
     methods=topology(v,idx,role,architecture,gesture,seed)
     for e,method in enumerate(methods):v[str(1000+32*e)]=method
 
-    has_noise=architecture in NOISE_ALLOW[role] and int(v["1000"])!=6
+    has_noise=(architecture in NOISE_ALLOW[role] and complexity!="minimal" and int(v["1000"])!=6)
     noise_engine=3 if has_noise and methods[3]!=6 else 2
     if has_noise:
         # Normally place stochastic excitation as a supporting engine.
@@ -95,7 +97,10 @@ def process(p,ordinal):
             v[str(1000+32*noise_engine)]=6
     assert len({v[str(1000+32*e)] for e in range(4)})==4,(idx,methods)
 
-    # If a source preset already uses stochastic primary, retain its identity\n    # but record that as an intentional inherited excitation in this branch.\n    inherited_noise=int(v["1000"])==6\n    # Level distribution is deliberately NOT the same across endpoints.
+    # If a source preset already uses stochastic primary, retain its identity
+    # but record that as an intentional inherited excitation in this branch.
+    inherited_noise=int(v["1000"])==6
+    # Level distribution is deliberately NOT the same across endpoints.
     # Differentiating structure and excitation comes before level balancing.
     dominance=((seed>>13)&3)
     source_levels=[]
@@ -116,6 +121,15 @@ def process(p,ordinal):
             value=min(value,45)
         v[str(1002+32*e)]=clamp(value,4,89)
         source_levels.append(v[str(1002+32*e)])
+    # A sparse root may use just its primary source, unlike the prior uniform 4-engine wash.
+    if complexity=="minimal":
+        v["1002"]=min(88,max(62,float(v["1002"])))
+        for e in (1,2,3):v[str(1002+32*e)]=0
+    elif complexity=="restrained":
+        for e in (2,3):v[str(1002+32*e)]=0
+    elif complexity=="layered":
+        v["1098"]=0
+    source_levels=[v[str(1002+32*e)] for e in range(4)]
     # Spectral ranges diverge by architectures: different tonal materials,
     # modulation/partial profiles and resonant envelopes per endpoint.
     spectral_base=((11,67,25,72),(81,27,58,14),(39,65,18,82),
@@ -137,6 +151,10 @@ def process(p,ordinal):
     envelope("3101",ROLE_DECAY[role],(.18,.76,.43,.91)[gesture])
     envelope("3103",ROLE_RELEASE[role],(.14,.33,.64,.94)[gesture])
     envelope("3102",ROLE_SUSTAIN[role],(.28,.48,.72,.90)[gesture])
+    # Do not impose a common bright spectral wash on minimal / simple roots.
+    if complexity=="minimal":
+        for e in (1,2,3):
+            for j in (6,7,8,9):v[str(1000+32*e+j)]=0
     # Resonant contour and spectra vary strongly, without touching pitch.
     cutoff_base=(330,1100,2200,740,3800,1350)[architecture]
     role_scale={"Bass":.7,"Lead":1.7,"Pad":1.3,"Pluck":2.,
@@ -153,8 +171,9 @@ def process(p,ordinal):
     v["4001"]=clamp((16,66,45,59,83,28)[architecture]+gesture*3,0,100)
     v["4002"]=clamp((68,17,43,39,11,86)[architecture],0,100)
     # Sensible acoustic space only when it complements instrument function.
-    v["5004"]=clamp((7,9,13,12,16,24)[architecture],0,29)
-    v["5002"]=clamp((8,5,17,12,24,18)[architecture],0,27)
+    v["5004"]=0 if complexity=="minimal" else clamp((7,9,13,12,16,24)[architecture],0,29)
+    v["5002"]=0 if complexity=="minimal" else clamp((8,5,17,12,24,18)[architecture],0,27)
+    if complexity=="minimal":v["4001"]=0
     # Never add sustained broadband noise to every patch via a wet effect.
     if has_noise:
         # Noise generator profile: shaped by source-specific harmonic and
@@ -168,10 +187,13 @@ def process(p,ordinal):
     for k,val in before.items():
         assert v.get(k)==val,(idx,k)
     assert all(math.isfinite(float(z)) for z in v.values())
-    effective_noise=has_noise or inherited_noise\n    p["concept_tree_terminal"]={
+    effective_noise=has_noise or inherited_noise
+    p["concept_tree_terminal"]={
       "tree":"function > excitation architecture > performance gesture > unique terminal",
       "leaf_id":f"{role.lower()}-{architecture:02}-{gesture:02}-{idx:03}",
       "role":role,"architecture":ARCH[architecture],
+      "root_type":root.get("type","legacy"),"complexity":complexity,
+      "active_engines":sum(v[str(1002+32*e)]>0 for e in range(4)),
       "gesture":GESTURES[gesture],"wolfram_rule":p["wolfram_generation"]["rule"],
       "noise":{"enabled":effective_noise,"method_id":6 if effective_noise else None,
                "engine":0 if inherited_noise else (noise_engine if has_noise else None),
@@ -197,9 +219,12 @@ def main():
     for p in patches:
         role=p["role"];position=ordinals[role];ordinals[role]+=1
         report.append({"index":p["index"],**process(p,position)})
-    keys=[p["leaf_id"] for p in report]\n    assert len(set(keys))==192
+    keys=[p["leaf_id"] for p in report]
+    assert len(set(keys))==192
     assert len({p["index"] for p in report})==192
     assert all(p["noise"]["enabled"] == (6 in p["synthesis_methods"]) for p in report)
+    assert any(x["active_engines"]==1 for x in report)
+    assert any(x["active_engines"]>=3 for x in report)
     for path,bank in zip(paths,banks):
         path.write_text(json.dumps(bank,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     args.report.write_text(json.dumps({
