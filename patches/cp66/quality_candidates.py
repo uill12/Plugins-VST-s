@@ -230,7 +230,8 @@ def generate(p,accepted,offer_count=8):
     # not pre-search topology or levels from a previous stage.
     terminal=p["concept_tree_terminal"]
     terminal["source_levels"]=[float(winner[str(1002+32*e)]) for e in range(4)]
-    terminal["active_engines"]=sum(x>0 for x in terminal["source_levels"])\n    terminal["source_enabled"]=[int(winner[str(1001+32*e)]) for e in range(4)]
+    terminal["active_engines"]=sum(x>0 for x in terminal["source_levels"])
+    terminal["source_enabled"]=[int(winner[str(1001+32*e)]) for e in range(4)]
     terminal["spectral_contour"]=[winner[k] for k in ("3000","3003","3001","3004")]
     terminal["noise"]["audible"]=any(int(winner[str(1000+32*e)])==6 and float(winner[str(1002+32*e)])>0 for e in range(4))
     if "generator_balance" in p:
