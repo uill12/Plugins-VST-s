@@ -25,3 +25,32 @@ Development branch: `albedo/cp66-wolfram-preset-arp`; parent: verified `albedo/c
 - Explicit stuck-note, idle-resume, arpeggiator OFF, long-held chord, sustain, timing at 110 BPM / 1/16 and 12-voice tests.
 
 **Status:** CP66 generator/balance source added to the development branch. Its outputs, GUI integration, binary compilation and listening validation are not yet verified. CP65R1 remains the usable rollback.
+
+## CP66 terminal-leaf Concept Tree (revised design)
+
+User correction: **every preset must be the end of a significantly diverging branch**.
+Concept Tree is a generative search, not a similarity-only filter.
+The tree now follows:
+
+```
+Instrument role (8)
+  -> Excitation architecture (6)
+    -> Articulation / temporal gesture (4)
+      -> Unique final preset leaf with Wolfram rule, generator arrangement,
+         harmonic topology, filter structure and deliberate noise policy
+```
+
+Implemented in `patches/cp66/terminal_concept_tree.py`, run **after** `wolfram_generate.py` and `balance_generators.py`. Each leaf has a unique ID, structural lineage and source/ADSR/spectral definitions. Existing program indices, root/keytracking, musical clock and note safety are held constant.
+
+### Conscious noise
+The actual instrument registry identifies `6 = Noise / Stochastic`, not a generic wave method. Noise is not mandatory for every sound:
+- dry tonal branches use NO additional noise;
+- transient branches use a short attack excitation where appropriate;
+- breath branches supply air and onset;
+- friction branches add rasp and resonant friction;
+- granular branches supply particles/texture;
+- environmental-bed branches provide controlled air and diffuse texture.
+
+Noise amplitude is bounded by instrument role, typically much lower than the pitched body, and it is restricted to an intentional source rather than global broadband hiss. Original primary noise sounds are retained and explicitly labeled as inherited stochastic excitation. This currently controls the method and its existing spectral/filter parameters; it does **not** claim independent colored-noise filters or measured signal-band energy that the synth doesn't implement.
+
+**Important:** nominal generator percentages and metadata uniqueness cannot prove perceptually distinct sounds. The release gate must render all 192 programs, measure waveform/envelope/spectral/temporal features, detect highly similar endpoints (within and across roles), then regenerate those leaves through a different architecture or material path. The final GUI must reflect any new runtime control accurately; CP66 currently reuses existing method, oscillator-level, envelope, filter, cellular and Wolfram fields without inventing controls.
