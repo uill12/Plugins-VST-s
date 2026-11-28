@@ -57,6 +57,11 @@ def audit(metadata,gui,report_path):
             if method==6 and power:has_stochastic=True
             if method==1 and power and int(v[str(b+10)])==int(root["table_id"]):
                 source[int(root["table_id"])]+=1
+        wavetable_active=any(int(v[str(1000+32*e)])==1
+                             and int(v[str(1001+32*e)])==1
+                             and int(v[str(1010+32*e)])==int(root["table_id"])
+                             for e in range(4))
+        assert bool(root["sample_reference_is_audible"])==wavetable_active,(idx,"source reference confused with audible sample")
         expected={"minimal":1,"restrained":2,"layered":3,"dense":4}[root["complexity"]]
         assert active==expected==leaf["active_engines"],(idx,active,expected,leaf["active_engines"])
         assert leaf["noise"]["audible"]==has_stochastic,(idx,"noise metadata mismatch")
