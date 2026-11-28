@@ -166,6 +166,22 @@ def proposed(p,number):
     for e in range(active):
         if int(v[str(1000+32*e)])==6 and typ not in ("stochastic","evolving-granular"):
             v[str(1002+32*e)]=clamp(v[str(1002+32*e)],0,25)
+    # The previous CP66 stage set source levels to zero but left source power
+    # switches ON. That can waste CPU and display misleading active engines.
+    # Make the actual native 1001/1033/1065/1097 enabled flags consistent.
+    for e in range(4):
+        enabled=int(float(v[str(1002+32*e)])>0)
+        key=str(1001+32*e)
+        v[key]=enabled
+        edits["enabled" if enabled else "disabled"].append(key)
+    # Existing older metadata sometimes stored Arp Character=4 even though
+    # 6024 has a registered [0..3] range. Wolfram expansion belongs to 6031,
+    # which is already generated separately and is NOT altered here.
+    if "6024" in v:
+        corrected=max(0,min(3,int(round(float(v["6024"])))))
+        if v["6024"]!=corrected:
+            v["6024"]=corrected
+            edits["transformed"].append("6024")
     return v,edits
 
 def proxy_quality(p,v):
@@ -214,7 +230,7 @@ def generate(p,accepted,offer_count=8):
     # not pre-search topology or levels from a previous stage.
     terminal=p["concept_tree_terminal"]
     terminal["source_levels"]=[float(winner[str(1002+32*e)]) for e in range(4)]
-    terminal["active_engines"]=sum(x>0 for x in terminal["source_levels"])
+    terminal["active_engines"]=sum(x>0 for x in terminal["source_levels"])\n    terminal["source_enabled"]=[int(winner[str(1001+32*e)]) for e in range(4)]
     terminal["spectral_contour"]=[winner[k] for k in ("3000","3003","3001","3004")]
     terminal["noise"]["audible"]=any(int(winner[str(1000+32*e)])==6 and float(winner[str(1002+32*e)])>0 for e in range(4))
     if "generator_balance" in p:
